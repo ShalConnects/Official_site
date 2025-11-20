@@ -1,0 +1,85 @@
+PADDLE PAYMENT SETUP INSTRUCTIONS
+==================================
+
+✅ COMPLETED:
+- Frontend integration with Paddle checkout
+- Download page with transaction verification UI
+- Route setup for /download page
+- Paddle IDs configured in PluginPage.tsx
+
+📋 NEXT STEPS - Backend API Setup:
+
+1. DEPLOY BACKEND API ENDPOINTS
+   
+   You need to deploy two API endpoints:
+   - /api/verify-transaction
+   - /api/download
+   
+   Example files are in: /api/verify-transaction.js and /api/download.js
+
+2. DEPLOYMENT OPTIONS:
+
+   Option A: Vercel (Recommended - Easiest)
+   - Copy /api/verify-transaction.js to your project
+   - Copy /api/download.js to your project
+   - Deploy to Vercel
+   - API routes will work automatically
+
+   Option B: Netlify Functions
+   - Copy functions to /netlify/functions/
+   - Update export format (see comments in files)
+   - Deploy to Netlify
+
+   Option C: Express.js Server
+   - Create Express.js server
+   - Add routes from the example files
+   - Deploy to your hosting
+
+3. CONFIGURE FILE DELIVERY:
+
+   Option 1: Use Paddle's Built-in Delivery (Easiest)
+   - Upload ZIP file in Paddle dashboard
+   - Paddle automatically emails download links
+   - No backend needed for file delivery
+   - Update DownloadPage to show "Check your email" message
+
+   Option 2: Your Own Server/CDN
+   - Upload plugin ZIP to your server or CDN
+   - Update PLUGIN_FILE_PATH in /api/download.js
+   - Backend serves file after verification
+
+4. TEST THE FLOW:
+
+   1. Click "Buy Pro Version" on plugin page
+   2. Complete test purchase in Paddle
+   3. Should redirect to /download?transaction=xxx
+   4. Download page verifies transaction
+   5. Shows download button
+   6. User downloads plugin
+
+5. SECURITY NOTES:
+
+   - API key is in backend files - keep them secure
+   - Never expose API key in frontend code
+   - Use environment variables in production
+   - Verify transactions server-side only
+   - Consider rate limiting on download endpoint
+
+6. ENVIRONMENT VARIABLES (Production):
+
+   Create .env file or set in hosting:
+   PADDLE_API_KEY=REMOVED_API_KEY
+   PLUGIN_FILE_URL=https://your-cdn.com/plugin.zip
+
+7. QUICK START (If using Paddle's file delivery):
+
+   - Upload plugin ZIP in Paddle dashboard
+   - Customers get download link via email automatically
+   - Download page can just show success message
+   - No backend file serving needed
+
+CURRENT STATUS:
+✅ Frontend ready
+⏳ Backend API needs deployment
+⏳ File delivery needs configuration
+
