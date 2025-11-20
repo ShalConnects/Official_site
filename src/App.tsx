@@ -1,58 +1,105 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, ArrowRight, Zap, Users, Target, Mail, Phone, MapPin, Award, TrendingUp, Clock, CheckCircle, Star, Quote, ExternalLink, XCircle, ChevronDown, Palette, Code, Wrench, FileCode, ShoppingBag, Layout, Package, Store, List, Image, Smartphone, Globe, Share2, FileText, Layers, Calendar, Home, Briefcase, MoreHorizontal, Workflow, ArrowUp, Search, Rocket } from 'lucide-react';
+import { X, Zap, Target, TrendingUp, Clock, CheckCircle, Star, Quote, ExternalLink, XCircle, ChevronDown, Palette, Code, Wrench, FileCode, Layout, Package, Store, List, Image, Smartphone, Globe, Share2, FileText, Layers, Home, Briefcase, MoreHorizontal, ArrowUp, ArrowRight, Mail, Search, Workflow, Rocket } from 'lucide-react';
 import { SiWordpress, SiShopify, SiWix, SiEbay, SiAmazon, SiWalmart, SiAndroid, SiLinkedin, SiX, SiWhatsapp } from 'react-icons/si';
 import Logo from './components/Logo';
 import ServicePage from './pages/ServicePage';
 import PluginPage from './pages/PluginPage';
 import DownloadPage from './pages/DownloadPage';
 
+// Type definitions
+interface Particle {
+  id: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  baseSize: number;
+  size: number;
+  baseOpacity: number;
+  opacity: number;
+  colorIntensity: number;
+}
+
+interface ParticleConnection {
+  from: { x: number; y: number };
+  to: { x: number; y: number };
+  distance: number;
+  opacity: number;
+}
+
+interface FormData {
+  name: string;
+  email: string;
+  message: string;
+  service: string;
+}
+
+interface FormErrors {
+  name?: string;
+  email?: string;
+  message?: string;
+  service?: string;
+}
+
+interface Project {
+  id: number;
+  title: string;
+  category: string;
+  color: string;
+  description: string;
+  results: string;
+  services: string[];
+}
+
+interface Stats {
+  projects: number;
+  clients: number;
+  years: number;
+  satisfaction: number;
+}
+
 function ShalConnectsPortfolio() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
-  const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['main']));
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
-  const swipeNavRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [formData, setFormData] = useState({ name: '', email: '', message: '', service: '' });
-  const [formErrors, setFormErrors] = useState({});
+  const [formData, setFormData] = useState<FormData>({ name: '', email: '', message: '', service: '' });
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [isServiceDropdownOpen, setIsServiceDropdownOpen] = useState(false);
   const [hoveredServiceIndex, setHoveredServiceIndex] = useState<number | null>(null);
-  const [visibleSections, setVisibleSections] = useState(new Set());
-  const [activeTab, setActiveTab] = useState(0);
+  const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
+  const [activeTab] = useState(0);
   const [activeServiceCard, setActiveServiceCard] = useState(0);
-  const [visibleServiceCards, setVisibleServiceCards] = useState(new Set());
+  const [visibleServiceCards, setVisibleServiceCards] = useState<Set<string>>(new Set());
   const [selectedProcessStep, setSelectedProcessStep] = useState<number | null>(null);
   const [activeProcessTab, setActiveProcessTab] = useState<'subSteps' | 'deliverables' | 'questions'>('subSteps');
-  const sectionRefs = useRef({});
-  const servicesSectionRef = useRef(null);
+  const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const moreMenuRef = useRef<HTMLDivElement>(null);
-  const serviceCardRefs = useRef({});
+  const serviceCardRefs = useRef<Record<string, HTMLElement | null>>({});
   const serviceDropdownRef = useRef<HTMLDivElement>(null);
   const hasScrolledToContactRef = useRef(false);
   const location = useLocation();
   const navigate = useNavigate();
   
   // Stats counter animation
-  const [stats, setStats] = useState({ projects: 0, clients: 0, years: 0, satisfaction: 0 });
-  const statsTarget = { projects: 150, clients: 200, years: 8, satisfaction: 98 };
+  const [stats, setStats] = useState<Stats>({ projects: 0, clients: 0, years: 0, satisfaction: 0 });
+  const statsTarget: Stats = { projects: 150, clients: 200, years: 8, satisfaction: 98 };
 
   // Mouse position for interactive effects
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const heroRef = useRef(null);
+  const heroRef = useRef<HTMLDivElement | null>(null);
   
   // Interactive particles state
-  const [particles, setParticles] = useState([]);
-  const particlesRef = useRef([]);
-  const [particleConnections, setParticleConnections] = useState([]);
+  const [particles, setParticles] = useState<Particle[]>([]);
+  const particlesRef = useRef<Particle[]>([]);
+  const [particleConnections, setParticleConnections] = useState<ParticleConnection[]>([]);
 
   // Scroll progress and active section tracking
   useEffect(() => {
@@ -277,7 +324,7 @@ function ShalConnectsPortfolio() {
       const steps = 60;
       const stepDuration = duration / steps;
 
-      Object.keys(statsTarget).forEach((key) => {
+      (Object.keys(statsTarget) as Array<keyof Stats>).forEach((key) => {
         let current = 0;
         const increment = statsTarget[key] / steps;
         const timer = setInterval(() => {
@@ -349,7 +396,7 @@ function ShalConnectsPortfolio() {
 
   // Mouse movement tracking for hero section
   useEffect(() => {
-    const handleMouseMove = (e) => {
+    const handleMouseMove = (e: MouseEvent) => {
       if (heroRef.current) {
         const rect = heroRef.current.getBoundingClientRect();
         const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -393,10 +440,10 @@ function ShalConnectsPortfolio() {
   useEffect(() => {
     if (particlesRef.current.length === 0) return;
 
-    let animationFrame;
+    let animationFrame: number;
     let lastUpdate = 0;
     
-    const animate = (timestamp) => {
+    const animate = (timestamp: number) => {
       if (timestamp - lastUpdate < 16) {
         animationFrame = requestAnimationFrame(animate);
         return;
@@ -497,6 +544,12 @@ function ShalConnectsPortfolio() {
     };
 
     animate(0);
+    
+    return () => {
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+    };
     return () => {
       if (animationFrame) cancelAnimationFrame(animationFrame);
     };
@@ -843,64 +896,15 @@ function ShalConnectsPortfolio() {
     }
   ];
 
-  const scrollToSection = (id) => {
+  const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     element?.scrollIntoView({ behavior: 'smooth' });
     setIsMenuOpen(false);
   };
 
-  // Swipeable navigation sections
-  const swipeableSections = [
-    { label: 'Home', id: 'home', icon: Home },
-    { label: 'Services', id: 'services', icon: Zap },
-    { label: 'Process', id: 'process', icon: Workflow },
-    { label: 'Work', id: 'work', icon: Briefcase },
-    { label: 'Contact', id: 'contact', icon: Mail }
-  ];
-
-  const currentSectionIndex = swipeableSections.findIndex(s => s.id === activeSection);
-  const minSwipeDistance = 50;
-
-  const onTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const onTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const onTouchEnd = (e: React.TouchEvent) => {
-    if (!touchStart || !touchEnd) return;
-    
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
-
-    // Only process swipe if it's a significant horizontal swipe
-    if (Math.abs(distance) > minSwipeDistance) {
-      if (isLeftSwipe && currentSectionIndex < swipeableSections.length - 1) {
-        // Swipe left - next section
-        e.preventDefault();
-        const nextSection = swipeableSections[currentSectionIndex + 1];
-        scrollToSection(nextSection.id);
-      }
-      
-      if (isRightSwipe && currentSectionIndex > 0) {
-        // Swipe right - previous section
-        e.preventDefault();
-        const prevSection = swipeableSections[currentSectionIndex - 1];
-        scrollToSection(prevSection.id);
-      }
-    }
-    
-    // Reset touch positions
-    setTouchStart(null);
-    setTouchEnd(null);
-  };
 
   const validateForm = () => {
-    const errors = {};
+    const errors: FormErrors = {};
     if (!formData.name.trim()) errors.name = 'Name is required';
     if (!formData.email.trim()) {
       errors.email = 'Email is required';
@@ -912,7 +916,7 @@ function ShalConnectsPortfolio() {
     return Object.keys(errors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
     
@@ -951,10 +955,10 @@ function ShalConnectsPortfolio() {
     }
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (formErrors[name]) {
+    if (formErrors[name as keyof FormErrors]) {
       setFormErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
@@ -1135,7 +1139,7 @@ function ShalConnectsPortfolio() {
         id="home" 
         ref={(el) => {
           sectionRefs.current.home = el;
-          heroRef.current = el;
+          heroRef.current = el as HTMLDivElement | null;
         }}
         className="min-h-[600px] sm:min-h-[700px] md:min-h-[80vh] flex items-start justify-center relative overflow-hidden pt-4 sm:pt-6 md:pt-8"
       >
@@ -2260,7 +2264,7 @@ function ShalConnectsPortfolio() {
                     name="message"
                     value={formData.message}
                     onChange={handleInputChange}
-                    rows="4"
+                    rows={4}
                     placeholder="Tell us about your project"
                     className={`w-full bg-gray-900 border rounded-lg sm:rounded-xl px-4 py-3 sm:px-6 sm:py-4 text-sm sm:text-base focus:outline-none transition-colors resize-none ${
                       formErrors.message 
@@ -2607,7 +2611,7 @@ function ShalConnectsPortfolio() {
     <Routes>
       <Route path="/download" element={<DownloadPage />} />
       <Route path="/services/wordpress/plugins/:pluginSlug" element={<PluginPage />} />
-      <Route path="/services/:serviceSlug" element={<ServicePage serviceCategories={serviceCategories} />} />
+      <Route path="/services/:serviceSlug" element={<ServicePage serviceCategories={serviceCategories as any} />} />
       <Route path="/" element={portfolioContent} />
     </Routes>
   );

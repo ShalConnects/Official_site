@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { Download, CheckCircle, XCircle, Loader2, ArrowLeft, AlertCircle } from 'lucide-react';
 import Breadcrumbs from '../components/Breadcrumbs';
 
@@ -16,7 +16,6 @@ interface TransactionData {
 
 export default function DownloadPage() {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [verified, setVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);

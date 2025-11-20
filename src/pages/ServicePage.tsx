@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, Mail, Phone, Zap, Shield, Clock, Users, TrendingUp, ArrowRight, ChevronDown, ChevronUp, Star, Quote, Search, Workflow, Code, Rocket, ExternalLink, Menu, X as XIcon } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Zap, Shield, Clock, Users, TrendingUp, ChevronDown, ChevronUp, Star, Quote, ExternalLink, Menu, X as XIcon } from 'lucide-react';
 import { SiWhatsapp } from 'react-icons/si';
 import Breadcrumbs from '../components/Breadcrumbs';
 import PageSidebar from '../components/PageSidebar';

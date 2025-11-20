@@ -8,7 +8,8 @@ import { useState, useEffect } from 'react';
 declare global {
   interface Window {
     Paddle?: {
-      Setup: (options: { vendor: number }) => void;
+      Initialize: (options: { seller?: number; token?: string; environment?: 'sandbox' | 'production' }) => void;
+      Setup?: (options: { vendor: number }) => void; // Legacy v1 API
       Checkout: {
         open: (options: { 
           items?: Array<{ priceId: string; quantity?: number }>;
@@ -19,7 +20,7 @@ declare global {
           };
         }) => void;
       };
-      Environment: {
+      Environment?: {
         set: (env: 'sandbox' | 'production') => void;
       };
     };
@@ -187,12 +188,46 @@ export default function PluginPage() {
 
   // Initialize Paddle
   useEffect(() => {
-    if (plugin && window.Paddle && plugin.paddleVendorId && plugin.paddleVendorId > 0) {
-      // Set environment to production (using live API keys)
-      window.Paddle.Environment.set('production');
-      
-      // Initialize Paddle with your vendor ID
-      window.Paddle.Setup({ vendor: plugin.paddleVendorId });
+    const initPaddle = () => {
+      if (plugin && window.Paddle && plugin.paddleVendorId && plugin.paddleVendorId > 0) {
+        try {
+          // Paddle v2 uses Initialize instead of Setup
+          // Vendor ID is the same as Seller ID
+          if (window.Paddle.Initialize) {
+            window.Paddle.Initialize({
+              seller: plugin.paddleVendorId,
+              environment: 'production', // Use 'sandbox' for testing
+            });
+          } else if (window.Paddle.Setup) {
+            // Fallback for v1 API
+            if (window.Paddle.Environment) {
+              window.Paddle.Environment.set('production');
+            }
+            window.Paddle.Setup({ vendor: plugin.paddleVendorId });
+          }
+        } catch (error) {
+          console.error('Error initializing Paddle:', error);
+        }
+      }
+    };
+
+    // Wait for Paddle to load if not already available
+    if (window.Paddle) {
+      initPaddle();
+    } else {
+      // Check periodically for Paddle to load (max 5 seconds)
+      let attempts = 0;
+      const maxAttempts = 50; // 5 seconds at 100ms intervals
+      const checkPaddle = setInterval(() => {
+        attempts++;
+        if (window.Paddle) {
+          clearInterval(checkPaddle);
+          initPaddle();
+        } else if (attempts >= maxAttempts) {
+          clearInterval(checkPaddle);
+          console.warn('Paddle failed to load after 5 seconds');
+        }
+      }, 100);
     }
   }, [plugin]);
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, ExternalLink, ArrowRight } from 'lucide-react';
+import { X, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface SubService {
