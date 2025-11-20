@@ -66,7 +66,7 @@ export default function PluginPage() {
       paddleProductId: 'pro_01kafwx8k4bw47cfh5w95smm7m', // Paddle Product ID
       paddlePriceId: 'pri_01kafx042cwqdh525d9ts9fj6v', // Paddle Price ID
       paddleVendorId: 252028, // Paddle Vendor ID
-      price: '$49', // Display price
+      price: '$24.99', // Display price
       features: [
         { icon: Image, title: 'Custom Images', desc: 'Add custom images to each product variation' },
         { icon: Zap, title: 'Multiple Styles', desc: 'Choose from various display styles and layouts' },
