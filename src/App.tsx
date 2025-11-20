@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { Routes, Route, useLocation, useNavigate, Link } from 'react-router-dom';
 import { X, Zap, Target, TrendingUp, Clock, CheckCircle, Star, Quote, ExternalLink, XCircle, ChevronDown, Palette, Code, Wrench, FileCode, Layout, Package, Store, List, Image, Smartphone, Globe, Share2, FileText, Layers, Home, Briefcase, MoreHorizontal, ArrowUp, ArrowRight, Mail, Search, Workflow, Rocket } from 'lucide-react';
 import { SiWordpress, SiShopify, SiWix, SiEbay, SiAmazon, SiWalmart, SiAndroid, SiLinkedin, SiX, SiWhatsapp } from 'react-icons/si';
 import Logo from './components/Logo';
 import ServicePage from './pages/ServicePage';
 import PluginPage from './pages/PluginPage';
 import DownloadPage from './pages/DownloadPage';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import RefundPolicy from './pages/RefundPolicy';
 
 // Type definitions
 interface Particle {
@@ -2412,8 +2415,9 @@ function ShalConnectsPortfolio() {
             <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 text-center sm:text-left">
               <p className="text-gray-500 text-xs sm:text-sm">© 2025 ShalConnects. All rights reserved.</p>
               <div className="flex justify-center flex-wrap gap-3 sm:gap-4 md:gap-6 text-gray-500 text-xs sm:text-sm">
-                <a href="#" className="hover:text-green-400 transition-colors">Privacy</a>
-                <a href="#" className="hover:text-green-400 transition-colors">Terms</a>
+                <Link to="/privacy" className="hover:text-green-400 transition-colors">Privacy</Link>
+                <Link to="/terms" className="hover:text-green-400 transition-colors">Terms</Link>
+                <Link to="/refund" className="hover:text-green-400 transition-colors">Refund Policy</Link>
               </div>
             </div>
           </div>
@@ -2612,6 +2616,9 @@ function ShalConnectsPortfolio() {
       <Route path="/download" element={<DownloadPage />} />
       <Route path="/services/wordpress/plugins/:pluginSlug" element={<PluginPage />} />
       <Route path="/services/:serviceSlug" element={<ServicePage serviceCategories={serviceCategories as any} />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfService />} />
+      <Route path="/refund" element={<RefundPolicy />} />
       <Route path="/" element={portfolioContent} />
     </Routes>
   );
