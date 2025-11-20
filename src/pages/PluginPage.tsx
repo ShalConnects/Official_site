@@ -91,7 +91,7 @@ export default function PluginPage() {
         'WooCommerce 6.x, 7.x, 8.x'
       ],
       freeFeatures: [
-        { feature: 'Display styles', free: '4 basic styles', pro: '10+ advanced styles' },
+        { feature: 'Display styles', free: '3 basic styles', pro: '7 styles total' },
         { feature: 'Performance', free: 'Basic', pro: 'Lazy loading, CDN, optimization' },
         { feature: 'Updates', free: 'WordPress.org updates', pro: 'Your own update server' },
         { feature: 'Support', free: 'Community', pro: 'Priority support' }
@@ -174,10 +174,8 @@ export default function PluginPage() {
   const tocItems = [
     { id: 'overview', label: 'Overview' },
     { id: 'features', label: 'Key Features' },
-    { id: 'screenshots', label: 'Screenshots' },
     { id: 'comparison', label: 'Free vs Pro' },
     { id: 'display-styles', label: 'Display Styles' },
-    { id: 'compatibility', label: 'Compatibility' },
     { id: 'installation', label: 'Installation Guide' },
     { id: 'download', label: 'Download' }
   ];
@@ -402,155 +400,104 @@ export default function PluginPage() {
               </p>
               
               {/* Main Showcase Container */}
-              <div className="relative bg-gray-800/30 rounded-2xl border border-gray-700/50 p-6 sm:p-8 lg:p-12 overflow-hidden">
-                <div className="relative grid lg:grid-cols-2 gap-8 items-start">
+              <div className="relative bg-gray-800/30 rounded-2xl border border-gray-700/50 p-4 sm:p-6 md:p-8 lg:p-12 overflow-hidden">
+                <div className="relative space-y-6 sm:space-y-8">
                   
-                  {/* Left Side - Admin Interface */}
-                  <div className="relative">
-                    {/* Callout Box 1 - Visual Variation Management */}
-                    <div className="absolute -top-4 -left-4 z-20 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-xl font-semibold text-sm sm:text-base whitespace-nowrap">
-                      Visual Variation Management
-                      <div className="absolute -bottom-2 left-8 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-blue-600"></div>
-                    </div>
-                    
-                    <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden mt-8">
-                      {/* WordPress Admin Header */}
-                      <div className="bg-gray-100 border-b border-gray-200 px-4 py-3 flex items-center gap-3">
-                        <div className="w-8 h-8 bg-blue-600 rounded"></div>
-                        <div className="flex-1">
-                          <div className="h-2 bg-gray-300 rounded w-32 mb-1"></div>
-                          <div className="h-1.5 bg-gray-200 rounded w-24"></div>
-                        </div>
+                  {/* Top Row - Screenshots */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 items-stretch">
+                    {/* Visual Designer */}
+                    <div className="relative flex flex-col">
+                      <div className="absolute -top-2 -left-2 sm:-top-3 sm:-left-3 lg:-top-4 lg:-left-4 z-20 bg-blue-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 rounded-lg shadow-xl font-semibold text-xs sm:text-sm lg:text-base whitespace-nowrap">
+                        Visual Designer
+                        <div className="absolute -bottom-1.5 sm:-bottom-2 left-4 sm:left-6 lg:left-8 w-0 h-0 border-l-4 border-r-4 border-t-4 sm:border-l-6 sm:border-r-6 sm:border-t-6 lg:border-l-8 lg:border-r-8 lg:border-t-8 border-transparent border-t-blue-600"></div>
                       </div>
                       
-                      {/* Admin Content */}
-                      <div className="p-6">
-                        <div className="mb-4">
-                          <div className="h-4 bg-gray-200 rounded w-48 mb-2"></div>
-                          <div className="h-3 bg-gray-100 rounded w-32"></div>
-                        </div>
-                        
-                        {/* Variation Images Grid */}
-                        <div className="grid grid-cols-3 gap-3 mb-4">
-                          {[1, 2, 3, 4, 5, 6].map((i) => (
-                            <div key={i} className="aspect-square bg-gradient-to-br from-blue-100 to-purple-100 rounded border-2 border-gray-300 flex items-center justify-center">
-                              <Image size={24} className="text-gray-400" />
-                            </div>
-                          ))}
-                        </div>
-                        
-                        <div className="flex gap-2">
-                          <div className="h-8 bg-blue-600 rounded text-white px-4 flex items-center text-sm font-medium">
-                            Upload Image
-                          </div>
-                          <div className="h-8 bg-gray-200 rounded px-4 flex items-center text-sm text-gray-600">
-                            Remove
-                          </div>
-                        </div>
+                      <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden mt-6 sm:mt-7 lg:mt-8 flex-1 flex items-center justify-center">
+                        <img 
+                          src="/images/screenshot-visual-designer.png" 
+                          alt="Visual Designer Interface"
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Visual Variation Management */}
+                    <div className="relative flex flex-col">
+                      <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 lg:-top-4 lg:-right-4 z-20 bg-blue-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 rounded-lg shadow-xl font-semibold text-xs sm:text-sm lg:text-base">
+                        <span className="whitespace-normal sm:whitespace-nowrap">Visual Variation Management</span>
+                        <div className="absolute -bottom-1.5 sm:-bottom-2 right-4 sm:right-6 lg:right-8 w-0 h-0 border-l-4 border-r-4 border-t-4 sm:border-l-6 sm:border-r-6 sm:border-t-6 lg:border-l-8 lg:border-r-8 lg:border-t-8 border-transparent border-t-blue-600"></div>
+                      </div>
+                      
+                      <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden mt-6 sm:mt-7 lg:mt-8 flex-1 flex items-center justify-center">
+                        <img 
+                          src="/images/screenshot-visual-variation-management.png" 
+                          alt="Visual Variation Management Interface"
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
                       </div>
                     </div>
                   </div>
 
-                  {/* Right Side - Multiple Features */}
-                  <div className="space-y-6">
-                    
-                    {/* Display Styles Showcase */}
-                    <div className="relative">
-                      {/* Callout Box 2 - Multiple Display Styles */}
-                      <div className="absolute -top-4 -right-4 z-20 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-xl font-semibold text-sm sm:text-base whitespace-nowrap">
+                  {/* Bottom Row - Features */}
+                  <div className="flex justify-center">
+                    {/* Multiple Display Styles */}
+                    <div className="relative max-w-2xl w-full">
+                      <div className="absolute -top-2 -left-2 sm:-top-3 sm:-left-3 lg:-top-4 lg:-left-4 z-20 bg-blue-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 rounded-lg shadow-xl font-semibold text-xs sm:text-sm lg:text-base whitespace-nowrap">
                         Multiple Display Styles
-                        <div className="absolute -bottom-2 right-8 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-blue-600"></div>
+                        <div className="absolute -bottom-1.5 sm:-bottom-2 left-4 sm:left-6 lg:left-8 w-0 h-0 border-l-4 border-r-4 border-t-4 sm:border-l-6 sm:border-r-6 sm:border-t-6 lg:border-l-8 lg:border-r-8 lg:border-t-8 border-transparent border-t-blue-600"></div>
                       </div>
                       
-                      <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden mt-8 p-6">
-                        <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden mt-6 sm:mt-7 lg:mt-8 p-4 sm:p-5 lg:p-6">
+                        <div className="grid grid-cols-2 gap-2 sm:gap-3">
                           {/* Square Thumbnails */}
-                          <div className="space-y-2">
-                            <div className="h-3 bg-gray-200 rounded w-24 mb-2"></div>
-                            <div className="flex gap-2">
+                          <div className="space-y-1 sm:space-y-2">
+                            <div className="h-2 sm:h-3 bg-gray-200 rounded w-16 sm:w-24 mb-1 sm:mb-2"></div>
+                            <div className="flex gap-1 sm:gap-2">
                               {[1, 2, 3].map((i) => (
-                                <div key={i} className="w-16 h-16 bg-gradient-to-br from-green-200 to-blue-200 rounded border border-gray-300"></div>
+                                <div key={i} className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-green-200 to-blue-200 rounded border border-gray-300"></div>
                               ))}
                             </div>
                           </div>
                           
                           {/* Circular Thumbnails */}
-                          <div className="space-y-2">
-                            <div className="h-3 bg-gray-200 rounded w-24 mb-2"></div>
-                            <div className="flex gap-2">
+                          <div className="space-y-1 sm:space-y-2">
+                            <div className="h-2 sm:h-3 bg-gray-200 rounded w-16 sm:w-24 mb-1 sm:mb-2"></div>
+                            <div className="flex gap-1 sm:gap-2">
                               {[1, 2, 3].map((i) => (
-                                <div key={i} className="w-16 h-16 bg-gradient-to-br from-purple-200 to-pink-200 rounded-full border border-gray-300"></div>
+                                <div key={i} className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-purple-200 to-pink-200 rounded-full border border-gray-300"></div>
                               ))}
                             </div>
                           </div>
                           
                           {/* Color Swatches */}
-                          <div className="space-y-2">
-                            <div className="h-3 bg-gray-200 rounded w-24 mb-2"></div>
-                            <div className="flex gap-2">
+                          <div className="space-y-1 sm:space-y-2">
+                            <div className="h-2 sm:h-3 bg-gray-200 rounded w-16 sm:w-24 mb-1 sm:mb-2"></div>
+                            <div className="flex gap-1 sm:gap-2">
                               {[1, 2, 3, 4].map((i) => (
-                                <div key={i} className="w-10 h-10 rounded-full border-2 border-gray-400" style={{ backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'][i-1] }}></div>
+                                <div key={i} className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full border-2 border-gray-400" style={{ backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'][i-1] }}></div>
                               ))}
                             </div>
                           </div>
                           
                           {/* Button Style */}
-                          <div className="space-y-2">
-                            <div className="h-3 bg-gray-200 rounded w-24 mb-2"></div>
-                            <div className="space-y-1">
+                          <div className="space-y-1 sm:space-y-2">
+                            <div className="h-2 sm:h-3 bg-gray-200 rounded w-16 sm:w-24 mb-1 sm:mb-2"></div>
+                            <div className="space-y-0.5 sm:space-y-1">
                               {[1, 2].map((i) => (
-                                <div key={i} className="h-8 bg-gray-100 rounded border border-gray-300 flex items-center px-2">
-                                  <div className="w-6 h-6 bg-gradient-to-br from-blue-200 to-purple-200 rounded mr-2"></div>
-                                  <div className="h-2 bg-gray-300 rounded flex-1"></div>
+                                <div key={i} className="h-6 sm:h-7 lg:h-8 bg-gray-100 rounded border border-gray-300 flex items-center px-1.5 sm:px-2">
+                                  <div className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 bg-gradient-to-br from-blue-200 to-purple-200 rounded mr-1 sm:mr-2"></div>
+                                  <div className="h-1.5 sm:h-2 bg-gray-300 rounded flex-1"></div>
                                 </div>
                               ))}
                             </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Visual Designer & Compatibility Row */}
-                    <div className="grid grid-cols-2 gap-4">
-                      
-                      {/* Visual Designer */}
-                      <div className="relative">
-                        {/* Callout Box 3 - Visual Designer */}
-                        <div className="absolute -top-3 -left-3 z-20 bg-blue-600 text-white px-3 py-1.5 rounded-lg shadow-xl font-semibold text-xs sm:text-sm whitespace-nowrap">
-                          Visual Designer
-                          <div className="absolute -bottom-1.5 left-6 w-0 h-0 border-l-6 border-r-6 border-t-6 border-transparent border-t-blue-600"></div>
-                        </div>
-                        
-                        <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden mt-6 p-4">
-                          <div className="space-y-2 mb-3">
-                            <div className="h-2 bg-gray-200 rounded w-full"></div>
-                            <div className="h-2 bg-gray-200 rounded w-3/4"></div>
-                          </div>
-                          <div className="flex gap-2 mb-3">
-                            <div className="w-8 h-8 bg-blue-100 rounded border border-blue-300"></div>
-                            <div className="w-8 h-8 bg-purple-100 rounded border border-purple-300"></div>
-                            <div className="w-8 h-8 bg-green-100 rounded border border-green-300"></div>
-                          </div>
-                          <div className="h-6 bg-gray-100 rounded border border-gray-300"></div>
-                        </div>
-                      </div>
-
-                      {/* Universal Compatibility */}
-                      <div className="relative">
-                        {/* Callout Box 4 - Universal Compatibility */}
-                        <div className="absolute -top-3 -right-3 z-20 bg-blue-600 text-white px-3 py-1.5 rounded-lg shadow-xl font-semibold text-xs sm:text-sm whitespace-nowrap">
-                          Universal Compatibility
-                          <div className="absolute -bottom-1.5 right-6 w-0 h-0 border-l-6 border-r-6 border-t-6 border-transparent border-t-blue-600"></div>
-                        </div>
-                        
-                        <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden mt-6 p-4">
-                          <div className="space-y-2">
-                            {['Elementor', 'Divi', 'Bricks', 'Gutenberg'].map((name, i) => (
-                              <div key={i} className="flex items-center gap-2">
-                                <CheckCircle2 size={14} className="text-green-500 flex-shrink-0" />
-                                <span className="text-xs text-gray-600 font-medium">{name}</span>
-                              </div>
-                            ))}
                           </div>
                         </div>
                       </div>
@@ -560,51 +507,6 @@ export default function PluginPage() {
               </div>
             </div>
           </section>
-
-          {/* Screenshots Section */}
-          {plugin.screenshots && plugin.screenshots.length > 0 && (
-            <section id="screenshots" className="py-16 bg-gray-800/30">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-center">
-                  See It In Action
-                </h2>
-                <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto">
-                  Explore the powerful features and intuitive interface of Variation Images Pro
-                </p>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {plugin.screenshots.map((screenshot, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-gray-800/50 rounded-xl border border-gray-700/50 overflow-hidden hover:border-gray-600/50 transition-all hover:scale-105 group"
-                    >
-                      <div className="relative overflow-hidden bg-gray-900">
-                        <img 
-                          src={screenshot.image} 
-                          alt={screenshot.alt}
-                          className="w-full h-auto transition-transform duration-300 group-hover:scale-105"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const placeholder = target.parentElement?.querySelector('.placeholder-icon');
-                            if (placeholder) {
-                              (placeholder as HTMLElement).style.display = 'flex';
-                            }
-                          }}
-                        />
-                        <div className="placeholder-icon hidden absolute inset-0 items-center justify-center bg-gray-800">
-                          <Image size={48} style={{ color: '#176641' }} className="opacity-50" />
-                        </div>
-                      </div>
-                      <div className="p-4">
-                        <h3 className="text-lg font-semibold text-white mb-2">{screenshot.title}</h3>
-                        <p className="text-gray-400 text-sm">{screenshot.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-          )}
 
           {/* Features Section */}
           <section id="features" className="py-16 bg-gray-800/30">
@@ -631,51 +533,6 @@ export default function PluginPage() {
           </div>
         </div>
       </section>
-
-          {/* Screenshots Section */}
-          {plugin.screenshots && plugin.screenshots.length > 0 && (
-            <section id="screenshots" className="py-16">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-center">
-                  See It In Action
-                </h2>
-                <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto">
-                  Explore the powerful features and intuitive interface of Variation Images Pro
-                </p>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {plugin.screenshots.map((screenshot, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-gray-800/50 rounded-xl border border-gray-700/50 overflow-hidden hover:border-gray-600/50 transition-all hover:scale-105 group"
-                    >
-                      <div className="relative overflow-hidden bg-gray-900">
-                        <img 
-                          src={screenshot.image} 
-                          alt={screenshot.alt}
-                          className="w-full h-auto transition-transform duration-300 group-hover:scale-105"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const placeholder = target.parentElement?.querySelector('.placeholder-icon');
-                            if (placeholder) {
-                              (placeholder as HTMLElement).style.display = 'flex';
-                            }
-                          }}
-                        />
-                        <div className="placeholder-icon hidden absolute inset-0 items-center justify-center bg-gray-800">
-                          <Image size={48} style={{ color: '#176641' }} className="opacity-50" />
-                        </div>
-                      </div>
-                      <div className="p-4">
-                        <h3 className="text-lg font-semibold text-white mb-2">{screenshot.title}</h3>
-                        <p className="text-gray-400 text-sm">{screenshot.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-          )}
 
           {/* Free vs Pro Comparison Table */}
           <section id="comparison" className="py-16">
@@ -785,26 +642,6 @@ export default function PluginPage() {
                     {style.badge}
                   </span>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-          {/* Compatibility Section */}
-          <section id="compatibility" className="py-16 bg-gray-800/30">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-12 text-center">
-            Universal Compatibility
-          </h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {plugin.compatibility.map((item, idx) => (
-              <div
-                key={idx}
-                className="flex items-center gap-3 bg-gray-800/50 p-4 rounded-lg border border-gray-700/50"
-              >
-                <CheckCircle2 size={20} style={{ color: '#176641' }} className="flex-shrink-0" />
-                <span className="text-gray-300">{item}</span>
               </div>
             ))}
           </div>
@@ -944,20 +781,6 @@ export default function PluginPage() {
                 </div>
               </div>
 
-              <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-4 sm:p-5">
-                <div className="flex items-start gap-3 sm:gap-4">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-700/50 text-gray-400 font-semibold text-xs sm:text-sm">
-                    5
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-base sm:text-lg font-semibold text-white mb-2">Enter License Key</h4>
-                    <p className="text-gray-400 text-sm mb-2 leading-relaxed">
-                      Go to <strong className="text-white">WooCommerce → Settings → Products → Variation Images</strong> and enter your license key to receive automatic updates and premium support.
-                    </p>
-                    <p className="text-sm text-gray-500">Your license key was sent to your email after purchase.</p>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -970,7 +793,7 @@ export default function PluginPage() {
               <div className="flex-1 min-w-0">
                 <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">Configure Settings (Both Versions)</h3>
                 <p className="text-gray-400 mb-3 text-sm sm:text-base leading-relaxed">
-                  After activation, go to <strong className="text-white">WooCommerce → Settings → Products → Variation Images</strong> to configure the plugin settings and customize how variation images are displayed.
+                  After activation, the plugin will show up in WordPress dashboard in a separate menu called <strong className="text-white">Variation Images</strong>. Under that menu, it will have <strong className="text-white">Variation images</strong> and <strong className="text-white">Settings</strong>, two submenus.
                 </p>
                 <p className="text-sm text-gray-500">You can choose display styles, enable features, and customize the appearance to match your store's design.</p>
               </div>

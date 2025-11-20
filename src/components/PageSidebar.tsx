@@ -190,8 +190,7 @@ export default function PageSidebar({
               {purchaseAction && (
                 <button
                   onClick={purchaseAction}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-white transition-all hover:scale-105"
-                  style={{ backgroundColor: categoryColor }}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-white transition-all hover:scale-105 bg-gradient-theme"
                 >
                   <ShoppingCart size={18} />
                   {purchaseLabel}
@@ -201,8 +200,7 @@ export default function PageSidebar({
                 <a
                   href={downloadUrl}
                   download
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-white transition-all hover:scale-105"
-                  style={{ backgroundColor: categoryColor }}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-white transition-all hover:scale-105 bg-gradient-theme"
                 >
                   <Download size={18} />
                   Download
@@ -213,8 +211,7 @@ export default function PageSidebar({
                 <>
                   <button
                     onClick={contactAction}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-white transition-all hover:scale-105"
-                    style={{ backgroundColor: categoryColor }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-white transition-all hover:scale-105 bg-gradient-theme"
                   >
                     <Mail size={18} />
                     Contact Us
@@ -223,7 +220,8 @@ export default function PageSidebar({
                     href="https://wa.me/8801879729252"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-white transition-colors bg-gray-700 hover:bg-gray-600 border border-gray-600"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-white transition-colors hover:bg-orange-600 border border-orange-600"
+                    style={{ backgroundColor: '#da651e' }}
                   >
                     <SiWhatsapp size={18} />
                     WhatsApp
@@ -233,7 +231,8 @@ export default function PageSidebar({
 
               <button
                 onClick={handleShare}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-gray-300 transition-colors bg-gray-800 hover:bg-gray-700 border border-gray-700"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-white transition-all hover:scale-105"
+                style={{ backgroundColor: categoryColor }}
               >
                 <Share2 size={18} />
                 Share
@@ -241,7 +240,8 @@ export default function PageSidebar({
 
               <button
                 onClick={scrollToTop}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-gray-300 transition-colors bg-gray-800 hover:bg-gray-700 border border-gray-700"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-white transition-all hover:scale-105"
+                style={{ backgroundColor: categoryColor }}
               >
                 <ChevronUp size={18} />
                 Back to Top
