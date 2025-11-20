@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 declare global {
   interface Window {
     Paddle?: {
-      Initialize: (options: { seller?: number; token?: string; environment?: 'sandbox' | 'production' }) => void;
+      Initialize: (options: { seller?: number; token?: string }) => void;
       Setup?: (options: { vendor: number }) => void; // Legacy v1 API
       Checkout: {
         open: (options: { 
@@ -193,10 +193,10 @@ export default function PluginPage() {
         try {
           // Paddle v2 uses Initialize instead of Setup
           // Vendor ID is the same as Seller ID
+          // Note: Environment is determined by the seller ID (production vs sandbox seller)
           if (window.Paddle.Initialize) {
             window.Paddle.Initialize({
               seller: plugin.paddleVendorId,
-              environment: 'production', // Use 'sandbox' for testing
             });
           } else if (window.Paddle.Setup) {
             // Fallback for v1 API
