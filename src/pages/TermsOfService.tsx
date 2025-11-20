@@ -18,6 +18,18 @@ export default function TermsOfService() {
 
         <div className="prose prose-invert max-w-none space-y-6 text-gray-300">
           <section>
+            <h2 className="text-2xl font-semibold text-white mb-4">Company Information</h2>
+            <p>
+              <strong>Company Name:</strong> ShalConnects<br />
+              <strong>Website:</strong> shalconnects.com<br />
+              <strong>Email:</strong> support@shalconnects.com
+            </p>
+            <p className="mt-4">
+              These Terms of Service ("Terms") govern your use of the website and services provided by ShalConnects ("we," "us," or "our").
+            </p>
+          </section>
+
+          <section>
             <h2 className="text-2xl font-semibold text-white mb-4">1. Agreement to Terms</h2>
             <p>
               By accessing or using shalconnects.com ("the Service"), you agree to be bound by these Terms of Service. If you disagree with any part of these terms, you may not access the Service.
