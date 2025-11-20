@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, X, Download, ExternalLink, Image, Code, Zap, Palette, CheckCircle2, Settings, Plug, Menu, X as XIcon, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, CheckCircle, X, Download, ExternalLink, Image, Code, Zap, Palette, Settings, Plug, Menu, X as XIcon, ShoppingCart } from 'lucide-react';
 import Breadcrumbs from '../components/Breadcrumbs';
 import PageSidebar from '../components/PageSidebar';
 import { useState, useEffect } from 'react';
