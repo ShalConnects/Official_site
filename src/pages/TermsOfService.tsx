@@ -20,12 +20,13 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-2xl font-semibold text-white mb-4">Company Information</h2>
             <p>
-              <strong>Company Name:</strong> ShalConnects<br />
+              <strong>Trading Name/Brand:</strong> ShalConnects<br />
               <strong>Website:</strong> shalconnects.com<br />
-              <strong>Email:</strong> support@shalconnects.com
+              <strong>Email:</strong> support@shalconnects.com<br />
+              <strong>Business Owner:</strong> [Your Legal Name], CEO
             </p>
             <p className="mt-4">
-              These Terms of Service ("Terms") govern your use of the website and services provided by ShalConnects ("we," "us," or "our").
+              These Terms of Service ("Terms") govern your use of the website and services provided by ShalConnects ("we," "us," or "our"). ShalConnects is the trading name for the digital agency operated by [Your Legal Name].
             </p>
           </section>
 

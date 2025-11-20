@@ -12,7 +12,7 @@ Thank you for reviewing my domain approval request for shalconnects.com. Please 
 
 ## 1. Brief Description of Domain, Product, or Service
 
-**ShalConnects** is a digital agency specializing in WordPress development, e-commerce solutions, and custom web development services. We also develop and sell premium WordPress plugins, including WooCommerce extensions that enhance online store functionality.
+**ShalConnects** is a digital agency (trading name) specializing in WordPress development, e-commerce solutions, and custom web development services. The agency is operated by [Your Name], CEO. We develop and sell premium WordPress plugins, including WooCommerce extensions that enhance online store functionality.
 
 **Primary Products:**
 - **WooCommerce Variation Images Pro** - A premium WordPress plugin that allows store owners to add custom images to product variations, improving the shopping experience with visual variation selectors.
@@ -94,11 +94,16 @@ All required legal pages are **clearly accessible via navigation** in the websit
 The Terms & Conditions page (https://shalconnects.com/terms) includes:
 
 ✅ **Company Information Section** at the top of the page:
-- **Company Name:** ShalConnects
+- **Trading Name/Brand:** ShalConnects
 - **Website:** shalconnects.com
 - **Email:** support@shalconnects.com
 
-✅ The company name "ShalConnects" is mentioned throughout the Terms & Conditions document in multiple sections, including:
+**Business Structure:**
+- ShalConnects is the trading name/brand for the digital agency
+- The Paddle merchant account is registered under [Your Legal Name], CEO of ShalConnects
+- ShalConnects operates as the business entity providing services and products
+
+✅ The brand name "ShalConnects" is mentioned throughout the Terms & Conditions document in multiple sections, including:
 - Company Information section
 - Intellectual Property section
 - Disclaimer section
@@ -139,9 +144,11 @@ Thank you for your time and consideration.
 
 Best regards,
 [Your Name]
-ShalConnects
+CEO, ShalConnects
 support@shalconnects.com
 https://shalconnects.com
+
+**Note:** The Paddle merchant account is registered under [Your Legal Name], and ShalConnects is the trading name/brand for the agency.
 
 ---
 
