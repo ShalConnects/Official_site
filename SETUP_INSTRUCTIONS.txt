@@ -37,16 +37,24 @@ PADDLE PAYMENT SETUP INSTRUCTIONS
 
 3. CONFIGURE FILE DELIVERY:
 
-   Option 1: Use Paddle's Built-in Delivery (Easiest)
-   - Upload ZIP file in Paddle dashboard
-   - Paddle automatically emails download links
-   - No backend needed for file delivery
-   - Update DownloadPage to show "Check your email" message
+   ⚠️ Paddle doesn't have file upload for your product type, so you need to host the ZIP file yourself.
 
-   Option 2: Your Own Server/CDN
-   - Upload plugin ZIP to your server or CDN
-   - Update PLUGIN_FILE_PATH in /api/download.js
-   - Backend serves file after verification
+   ⭐ RECOMMENDED: Cloudflare R2 (Free & Fast)
+   - Sign up at cloudflare.com (free)
+   - Create R2 bucket
+   - Upload variation-images-pro.zip
+   - Get public URL
+   - Set environment variable: PLUGIN_FILE_URL=https://pub-xxxxx.r2.dev/variation-images-pro.zip
+   - See QUICK_HOSTING_SETUP.md for detailed steps
+
+   Alternative: GitHub Releases (Easiest)
+   - Create GitHub repo
+   - Create release, upload ZIP as asset
+   - Copy download URL
+   - Set PLUGIN_FILE_URL environment variable
+   - See QUICK_HOSTING_SETUP.md for steps
+
+   See PLUGIN_HOSTING_OPTIONS.md for all options (AWS S3, etc.)
 
 4. TEST THE FLOW:
 

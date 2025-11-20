@@ -4,8 +4,27 @@
 const PADDLE_API_KEY = process.env.PADDLE_API_KEY || 'REMOVED_API_KEY';
 const PADDLE_API_URL = 'https://api.paddle.com';
 
-// Path to your plugin ZIP file (update this or use environment variable)
-const PLUGIN_FILE_PATH = process.env.PLUGIN_FILE_URL || '/path/to/variation-images-pro.zip';
+// Path to your plugin ZIP file
+// Option 1: Hosted on Vercel (in public/downloads folder) - Current setup
+// Option 2: Host on CDN (Cloudflare R2, AWS S3, etc.) and set PLUGIN_FILE_URL environment variable
+// Option 3: Use Paddle's built-in delivery (upload ZIP in Paddle dashboard)
+
+// For Vercel: Files in public/ folder are served at root
+// public/downloads/file.zip → https://yourdomain.com/downloads/file.zip
+const getPluginUrl = (req) => {
+  // If environment variable is set, use it (for CDN/external hosting)
+  if (process.env.PLUGIN_FILE_URL) {
+    return process.env.PLUGIN_FILE_URL;
+  }
+  
+  // Otherwise, use Vercel-hosted file
+  // Get the base URL from the request headers
+  const protocol = req.headers['x-forwarded-proto'] || 'https';
+  const host = req.headers['x-forwarded-host'] || req.headers.host || process.env.VERCEL_URL || 'localhost:5173';
+  const baseUrl = `${protocol}://${host}`;
+  
+  return `${baseUrl}/downloads/wc-variation-images-pro-pro-v1.0.0.zip`;
+};
 
 /**
  * Vercel Serverless Function
@@ -60,9 +79,10 @@ export default async function handler(req, res) {
     // await trackDownload(transaction);
 
     // Serve the file
-    // Option 1: If file is on CDN/S3, redirect
-    const downloadUrl = transactionData.download_url || PLUGIN_FILE_PATH;
+    // Get the download URL (use Paddle's if available, otherwise use our hosted file)
+    const downloadUrl = transactionData.download_url || getPluginUrl(req);
 
+    // Redirect to the download URL
     return res.redirect(downloadUrl);
   } catch (error) {
     console.error('Download error:', error);

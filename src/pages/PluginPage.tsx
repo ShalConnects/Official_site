@@ -311,33 +311,33 @@ export default function PluginPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
-                {plugin.name}
-              </h1>
-              <p className="text-xl sm:text-2xl text-gray-400 mb-8">
-                {plugin.tagline}
-              </p>
-              <p className="text-lg text-gray-300 mb-10 leading-relaxed">
-                {plugin.description}
-              </p>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
+              {plugin.name}
+            </h1>
+            <p className="text-xl sm:text-2xl text-gray-400 mb-8">
+              {plugin.tagline}
+            </p>
+            <p className="text-lg text-gray-300 mb-10 leading-relaxed">
+              {plugin.description}
+            </p>
               <div className="flex flex-wrap gap-4">
                 <button
                   onClick={handlePurchase}
-                  className="px-8 py-4 rounded-lg font-medium text-white text-lg transition-all hover:scale-105 flex items-center gap-2 bg-gradient-theme"
-                >
+                className="px-8 py-4 rounded-lg font-medium text-white text-lg transition-all hover:scale-105 flex items-center gap-2 bg-gradient-theme"
+              >
                   <ShoppingCart size={20} />
                   Buy Pro Version {plugin.price && `- ${plugin.price}`}
                 </button>
-                <a
-                  href="https://wordpress.org/plugins/wc-variation-images-pro"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-8 py-4 rounded-lg font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-colors flex items-center gap-2"
-                >
-                  <ExternalLink size={20} />
-                  View Free Version on WordPress.org
-                </a>
-              </div>
+              <a
+                href="https://wordpress.org/plugins/wc-variation-images-pro"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-8 py-4 rounded-lg font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-colors flex items-center gap-2"
+              >
+                <ExternalLink size={20} />
+                View Free Version on WordPress.org
+              </a>
+            </div>
             </div>
             {plugin.heroImage && (
               <div className="relative">
@@ -357,6 +357,176 @@ export default function PluginPage() {
           </div>
         </div>
       </section>
+
+          {/* Feature Showcase Section - EDD Style */}
+          <section id="feature-showcase" className="py-16 bg-gray-900/50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-center">
+                Powerful Features, Intuitive Interface
+              </h2>
+              <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto">
+                Everything you need to transform your WooCommerce product variations into beautiful, engaging experiences
+              </p>
+              
+              {/* Main Showcase Container */}
+              <div className="relative bg-gray-800/30 rounded-2xl border border-gray-700/50 p-6 sm:p-8 lg:p-12 overflow-hidden">
+                <div className="relative grid lg:grid-cols-2 gap-8 items-start">
+                  
+                  {/* Left Side - Admin Interface */}
+                  <div className="relative">
+                    {/* Callout Box 1 - Visual Variation Management */}
+                    <div className="absolute -top-4 -left-4 z-20 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-xl font-semibold text-sm sm:text-base whitespace-nowrap">
+                      Visual Variation Management
+                      <div className="absolute -bottom-2 left-8 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-blue-600"></div>
+                    </div>
+                    
+                    <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden mt-8">
+                      {/* WordPress Admin Header */}
+                      <div className="bg-gray-100 border-b border-gray-200 px-4 py-3 flex items-center gap-3">
+                        <div className="w-8 h-8 bg-blue-600 rounded"></div>
+                        <div className="flex-1">
+                          <div className="h-2 bg-gray-300 rounded w-32 mb-1"></div>
+                          <div className="h-1.5 bg-gray-200 rounded w-24"></div>
+                        </div>
+                      </div>
+                      
+                      {/* Admin Content */}
+                      <div className="p-6">
+                        <div className="mb-4">
+                          <div className="h-4 bg-gray-200 rounded w-48 mb-2"></div>
+                          <div className="h-3 bg-gray-100 rounded w-32"></div>
+                        </div>
+                        
+                        {/* Variation Images Grid */}
+                        <div className="grid grid-cols-3 gap-3 mb-4">
+                          {[1, 2, 3, 4, 5, 6].map((i) => (
+                            <div key={i} className="aspect-square bg-gradient-to-br from-blue-100 to-purple-100 rounded border-2 border-gray-300 flex items-center justify-center">
+                              <Image size={24} className="text-gray-400" />
+                            </div>
+                          ))}
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <div className="h-8 bg-blue-600 rounded text-white px-4 flex items-center text-sm font-medium">
+                            Upload Image
+                          </div>
+                          <div className="h-8 bg-gray-200 rounded px-4 flex items-center text-sm text-gray-600">
+                            Remove
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Side - Multiple Features */}
+                  <div className="space-y-6">
+                    
+                    {/* Display Styles Showcase */}
+                    <div className="relative">
+                      {/* Callout Box 2 - Multiple Display Styles */}
+                      <div className="absolute -top-4 -right-4 z-20 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-xl font-semibold text-sm sm:text-base whitespace-nowrap">
+                        Multiple Display Styles
+                        <div className="absolute -bottom-2 right-8 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-blue-600"></div>
+                      </div>
+                      
+                      <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden mt-8 p-6">
+                        <div className="grid grid-cols-2 gap-3">
+                          {/* Square Thumbnails */}
+                          <div className="space-y-2">
+                            <div className="h-3 bg-gray-200 rounded w-24 mb-2"></div>
+                            <div className="flex gap-2">
+                              {[1, 2, 3].map((i) => (
+                                <div key={i} className="w-16 h-16 bg-gradient-to-br from-green-200 to-blue-200 rounded border border-gray-300"></div>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          {/* Circular Thumbnails */}
+                          <div className="space-y-2">
+                            <div className="h-3 bg-gray-200 rounded w-24 mb-2"></div>
+                            <div className="flex gap-2">
+                              {[1, 2, 3].map((i) => (
+                                <div key={i} className="w-16 h-16 bg-gradient-to-br from-purple-200 to-pink-200 rounded-full border border-gray-300"></div>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          {/* Color Swatches */}
+                          <div className="space-y-2">
+                            <div className="h-3 bg-gray-200 rounded w-24 mb-2"></div>
+                            <div className="flex gap-2">
+                              {[1, 2, 3, 4].map((i) => (
+                                <div key={i} className="w-10 h-10 rounded-full border-2 border-gray-400" style={{ backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'][i-1] }}></div>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          {/* Button Style */}
+                          <div className="space-y-2">
+                            <div className="h-3 bg-gray-200 rounded w-24 mb-2"></div>
+                            <div className="space-y-1">
+                              {[1, 2].map((i) => (
+                                <div key={i} className="h-8 bg-gray-100 rounded border border-gray-300 flex items-center px-2">
+                                  <div className="w-6 h-6 bg-gradient-to-br from-blue-200 to-purple-200 rounded mr-2"></div>
+                                  <div className="h-2 bg-gray-300 rounded flex-1"></div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Visual Designer & Compatibility Row */}
+                    <div className="grid grid-cols-2 gap-4">
+                      
+                      {/* Visual Designer */}
+                      <div className="relative">
+                        {/* Callout Box 3 - Visual Designer */}
+                        <div className="absolute -top-3 -left-3 z-20 bg-blue-600 text-white px-3 py-1.5 rounded-lg shadow-xl font-semibold text-xs sm:text-sm whitespace-nowrap">
+                          Visual Designer
+                          <div className="absolute -bottom-1.5 left-6 w-0 h-0 border-l-6 border-r-6 border-t-6 border-transparent border-t-blue-600"></div>
+                        </div>
+                        
+                        <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden mt-6 p-4">
+                          <div className="space-y-2 mb-3">
+                            <div className="h-2 bg-gray-200 rounded w-full"></div>
+                            <div className="h-2 bg-gray-200 rounded w-3/4"></div>
+                          </div>
+                          <div className="flex gap-2 mb-3">
+                            <div className="w-8 h-8 bg-blue-100 rounded border border-blue-300"></div>
+                            <div className="w-8 h-8 bg-purple-100 rounded border border-purple-300"></div>
+                            <div className="w-8 h-8 bg-green-100 rounded border border-green-300"></div>
+                          </div>
+                          <div className="h-6 bg-gray-100 rounded border border-gray-300"></div>
+                        </div>
+                      </div>
+
+                      {/* Universal Compatibility */}
+                      <div className="relative">
+                        {/* Callout Box 4 - Universal Compatibility */}
+                        <div className="absolute -top-3 -right-3 z-20 bg-blue-600 text-white px-3 py-1.5 rounded-lg shadow-xl font-semibold text-xs sm:text-sm whitespace-nowrap">
+                          Universal Compatibility
+                          <div className="absolute -bottom-1.5 right-6 w-0 h-0 border-l-6 border-r-6 border-t-6 border-transparent border-t-blue-600"></div>
+                        </div>
+                        
+                        <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden mt-6 p-4">
+                          <div className="space-y-2">
+                            {['Elementor', 'Divi', 'Bricks', 'Gutenberg'].map((name, i) => (
+                              <div key={i} className="flex items-center gap-2">
+                                <CheckCircle2 size={14} className="text-green-500 flex-shrink-0" />
+                                <span className="text-xs text-gray-600 font-medium">{name}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
 
           {/* Screenshots Section */}
           {plugin.screenshots && plugin.screenshots.length > 0 && (
