@@ -195,11 +195,14 @@ export default function PluginPage() {
           // Vendor ID is the same as Seller ID
           // Note: Environment is determined by the seller ID (production vs sandbox seller)
           if (window.Paddle.Initialize) {
+            console.log('Initializing Paddle with seller ID:', plugin.paddleVendorId);
             window.Paddle.Initialize({
               seller: plugin.paddleVendorId,
             });
+            console.log('Paddle initialized successfully');
           } else if (window.Paddle.Setup) {
             // Fallback for v1 API
+            console.log('Using Paddle v1 API');
             if (window.Paddle.Environment) {
               window.Paddle.Environment.set('production');
             }
@@ -208,6 +211,10 @@ export default function PluginPage() {
         } catch (error) {
           console.error('Error initializing Paddle:', error);
         }
+      } else {
+        if (!plugin) console.warn('Plugin data not available');
+        if (!window.Paddle) console.warn('Paddle script not loaded');
+        if (!plugin?.paddleVendorId) console.warn('Paddle Vendor ID missing');
       }
     };
 
@@ -233,9 +240,14 @@ export default function PluginPage() {
 
   // Handle Paddle checkout
   const handlePurchase = () => {
-    if (!plugin || !window.Paddle || !plugin.paddleProductId) {
-      console.error('Paddle not initialized or product ID missing');
-      // Fallback: redirect to contact form
+    if (!plugin || !window.Paddle) {
+      console.error('Paddle not initialized');
+      scrollToContact();
+      return;
+    }
+
+    if (!plugin.paddlePriceId && !plugin.paddleProductId) {
+      console.error('Paddle Price ID or Product ID missing');
       scrollToContact();
       return;
     }
@@ -245,25 +257,46 @@ export default function PluginPage() {
       const currentUrl = window.location.origin;
       const redirectUrl = `${currentUrl}/download`;
 
-      // Use Price ID for checkout (more reliable than Product ID)
-      const checkoutProduct = plugin.paddlePriceId || plugin.paddleProductId;
+      console.log('Opening Paddle checkout with:', {
+        priceId: plugin.paddlePriceId,
+        productId: plugin.paddleProductId,
+        vendorId: plugin.paddleVendorId,
+        redirectUrl,
+      });
 
-      // Paddle Checkout v2 API
-      const checkoutOptions: any = {
-        items: [{
-          priceId: checkoutProduct,
-          quantity: 1,
-        }],
-        settings: {
-          successUrl: redirectUrl,
-          displayMode: 'overlay',
-        },
-      };
+      // Paddle Checkout v2 API - Try priceId first, fallback to productId
+      let checkoutOptions: any;
 
+      if (plugin.paddlePriceId) {
+        // Use priceId (recommended for Paddle v2)
+        checkoutOptions = {
+          items: [{
+            priceId: plugin.paddlePriceId,
+            quantity: 1,
+          }],
+          settings: {
+            successUrl: redirectUrl,
+            displayMode: 'overlay',
+          },
+        };
+      } else if (plugin.paddleProductId) {
+        // Fallback to productId
+        checkoutOptions = {
+          product: plugin.paddleProductId,
+          settings: {
+            successUrl: redirectUrl,
+            displayMode: 'overlay',
+          },
+        };
+      } else {
+        throw new Error('No valid Paddle product or price ID');
+      }
+
+      // Open checkout with error handling
       window.Paddle.Checkout.open(checkoutOptions);
     } catch (error) {
       console.error('Error opening Paddle checkout:', error);
-      // Fallback: redirect to contact form
+      alert('Unable to open checkout. Please contact support or try again later.');
       scrollToContact();
     }
   };
