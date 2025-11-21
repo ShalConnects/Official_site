@@ -35,7 +35,7 @@ Vercel should auto-detect:
 Add these variables:
 
 ```
-PADDLE_API_KEY=REMOVED_API_KEY
+PADDLE_API_KEY=your_new_paddle_api_key_here
 ```
 
 **Optional** (if using external CDN for plugin files):

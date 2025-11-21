@@ -119,7 +119,7 @@ export default function PageSidebar({
       } bg-gray-900 lg:bg-transparent border-r border-gray-800 lg:border-r-0`}>
         <div className={`sticky lg:sticky top-0 lg:top-24 p-4 lg:p-0 space-y-6 transition-opacity duration-300 ${
           isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none lg:opacity-0'
-        }`}>
+      }`}>
         {/* Table of Contents */}
         {tocItems.length > 0 && (
           <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 overflow-hidden">

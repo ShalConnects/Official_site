@@ -1,8 +1,10 @@
 // Paddle API utility functions
-// These should be called from your backend, not directly from the frontend
-// This file is for reference and type definitions
+// ⚠️ SECURITY WARNING: These functions should ONLY be called from your backend, NOT from the frontend
+// This file is for reference and type definitions only
+// API keys should NEVER be in frontend code
 
-const PADDLE_API_KEY = 'REMOVED_API_KEY';
+// NOTE: This file should not contain any API keys
+// All API calls should be made from your backend serverless functions
 const PADDLE_API_URL = 'https://api.paddle.com';
 
 export interface PaddleTransaction {
@@ -26,12 +28,21 @@ export interface PaddleTransaction {
  * @param transactionId - The transaction ID from Paddle
  * @returns Transaction data if valid, null otherwise
  */
+/**
+ * ⚠️ WARNING: This function should NOT be used in frontend code
+ * API keys must never be exposed in client-side code
+ * Use your backend API endpoint (/api/verify-transaction) instead
+ */
 export async function verifyTransaction(transactionId: string): Promise<PaddleTransaction | null> {
+  // This is a reference implementation only
+  // In production, call your backend API: /api/verify-transaction?transaction=xxx
+  console.warn('⚠️ This function should not be called from frontend. Use backend API instead.');
+  
   try {
-    const response = await fetch(`${PADDLE_API_URL}/transactions/${transactionId}`, {
+    // Call your backend API instead of Paddle directly
+    const response = await fetch(`/api/verify-transaction?transaction=${transactionId}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${PADDLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
     });

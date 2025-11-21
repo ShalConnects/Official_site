@@ -35,6 +35,10 @@ export default function Breadcrumbs() {
       // Special handling for known paths
       if (path === 'services') {
         label = 'Services';
+      } else if (path === 'tools') {
+        label = 'Tools';
+      } else if (path === 'ai-formatter') {
+        label = 'AI Text Formatter';
       } else if (path === 'wordpress') {
         label = 'WordPress';
       } else if (path === 'plugins') {
@@ -76,6 +80,11 @@ export default function Breadcrumbs() {
                     <ChevronRight size={16} className="text-gray-600 mx-2" />
                     {isLast ? (
                       <span className="text-white font-medium" aria-current="page">
+                        {crumb.label}
+                      </span>
+                    ) : crumb.path === '/services' ? (
+                      // Services is not a real page, so make it non-clickable
+                      <span className="text-gray-400">
                         {crumb.label}
                       </span>
                     ) : (

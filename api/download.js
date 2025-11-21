@@ -1,7 +1,13 @@
 // Backend API endpoint for secure file downloads
 // Vercel Serverless Function
 
-const PADDLE_API_KEY = process.env.PADDLE_API_KEY || 'REMOVED_API_KEY';
+// SECURITY: API key must be set via environment variable
+// Never hardcode API keys in source code
+const PADDLE_API_KEY = process.env.PADDLE_API_KEY;
+
+if (!PADDLE_API_KEY) {
+  console.error('PADDLE_API_KEY environment variable is not set');
+}
 const PADDLE_API_URL = 'https://api.paddle.com';
 
 // Path to your plugin ZIP file
@@ -50,6 +56,11 @@ export default async function handler(req, res) {
 
   if (!transaction || !token) {
     return res.status(400).json({ error: 'Missing transaction or token' });
+  }
+
+  if (!PADDLE_API_KEY) {
+    console.error('PADDLE_API_KEY is not configured');
+    return res.status(500).json({ error: 'Server configuration error. Please contact support.' });
   }
 
   try {

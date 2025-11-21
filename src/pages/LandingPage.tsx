@@ -64,6 +64,7 @@ export default function LandingPage() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  const moreMenuCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [formData, setFormData] = useState<FormData>({ name: '', email: '', message: '', service: '' });
   const [formErrors, setFormErrors] = useState<FormErrors>({});
@@ -207,6 +208,34 @@ export default function LandingPage() {
       navigate(location.pathname + location.search + location.hash, { replace: true, state: null });
     }
   }, [location.state, location.pathname, location.search, location.hash, navigate]);
+
+  // Calculate dropdown position for More Menu
+  useEffect(() => {
+    if (isMoreMenuOpen && moreMenuRef.current) {
+      const rect = moreMenuRef.current.getBoundingClientRect();
+      // Position dropdown above the button (since it's at bottom of screen)
+      // Estimate dropdown height: ~200px for 4 items
+      const estimatedDropdownHeight = 200;
+      // Position it closer to the button (smaller gap) to prevent mouse leave issues
+      const topPosition = rect.top - estimatedDropdownHeight - 5; // 5px gap above button
+      
+      setDropdownPosition({
+        top: Math.max(10, topPosition), // Ensure it doesn't go off top of screen
+        left: rect.left
+      });
+    } else {
+      setDropdownPosition({ top: 0, left: 0 });
+    }
+  }, [isMoreMenuOpen]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (moreMenuCloseTimeoutRef.current) {
+        clearTimeout(moreMenuCloseTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Intersection Observer for visible sections
   useEffect(() => {
@@ -664,14 +693,19 @@ export default function LandingPage() {
                 <div className="mt-4 pt-4 border-t border-gray-800">
                   <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">More</div>
                   {[
-                    { label: 'About Us', id: 'about' },
-                    { label: 'Meet the Team', id: 'team' },
-                    { label: 'Blog', id: 'blog' }
+                    { label: 'About Us', id: 'about', action: 'scroll' },
+                    { label: 'Meet the Team', id: 'team', action: 'scroll' },
+                    { label: 'Blog', id: 'blog', action: 'scroll' },
+                    { label: 'Tools', id: 'tools', action: 'navigate', route: '/tools' }
                   ].map((item) => (
                     <button
                       key={item.id}
                       onClick={() => {
-                        // Handle navigation
+                        if (item.action === 'navigate' && item.route) {
+                          navigate(item.route);
+                        } else {
+                          scrollToSection(item.id);
+                        }
                         setIsMenuOpen(false);
                       }}
                       className="w-full flex items-center gap-4 px-4 py-4 rounded-lg text-left text-gray-400 hover:text-white hover:bg-gray-800/50 active:bg-gray-800/70 transition-colors duration-150 touch-manipulation min-h-[56px]"
@@ -2142,8 +2176,19 @@ export default function LandingPage() {
                 ref={moreMenuRef}
                 className="relative"
                 style={{ overflow: 'visible' }}
-                onMouseEnter={() => setIsMoreMenuOpen(true)}
-                onMouseLeave={() => setIsMoreMenuOpen(false)}
+                onMouseEnter={() => {
+                  if (moreMenuCloseTimeoutRef.current) {
+                    clearTimeout(moreMenuCloseTimeoutRef.current);
+                    moreMenuCloseTimeoutRef.current = null;
+                  }
+                  setIsMoreMenuOpen(true);
+                }}
+                onMouseLeave={() => {
+                  // Delay closing to allow mouse to move to dropdown
+                  moreMenuCloseTimeoutRef.current = setTimeout(() => {
+                    setIsMoreMenuOpen(false);
+                  }, 150);
+                }}
               >
                 <button
                   onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
@@ -2172,6 +2217,7 @@ export default function LandingPage() {
       {/* More Menu Dropdown - Rendered outside nav to avoid clipping */}
       {isMoreMenuOpen && dropdownPosition.top > 0 && (
         <div 
+          data-dropdown-menu
           className="fixed bg-gray-900 backdrop-blur-md border-2 border-gray-500 rounded-lg shadow-2xl min-w-[140px] xs:min-w-[160px] sm:min-w-[180px] overflow-hidden z-[9999]" 
           style={{ 
             maxWidth: 'calc(100vw - 2rem)',
@@ -2182,8 +2228,19 @@ export default function LandingPage() {
             pointerEvents: 'auto',
             backgroundColor: 'rgba(17, 24, 39, 0.98)'
           }}
-          onMouseEnter={() => setIsMoreMenuOpen(true)}
-          onMouseLeave={() => setIsMoreMenuOpen(false)}
+          onMouseEnter={() => {
+            if (moreMenuCloseTimeoutRef.current) {
+              clearTimeout(moreMenuCloseTimeoutRef.current);
+              moreMenuCloseTimeoutRef.current = null;
+            }
+            setIsMoreMenuOpen(true);
+          }}
+          onMouseLeave={() => {
+            // Delay closing to allow mouse to move back to button
+            moreMenuCloseTimeoutRef.current = setTimeout(() => {
+              setIsMoreMenuOpen(false);
+            }, 150);
+          }}
         >
           <div className="py-1">
             <button
@@ -2212,6 +2269,15 @@ export default function LandingPage() {
               className="w-full text-left px-4 xs:px-5 py-2.5 xs:py-3 text-xs xs:text-sm text-gray-400 hover:text-white active:text-white hover:bg-gray-800/50 active:bg-gray-800/70 transition-colors duration-150 touch-manipulation min-h-[44px] flex items-center"
             >
               Blog
+            </button>
+            <button
+              onClick={() => {
+                navigate('/tools');
+                setIsMoreMenuOpen(false);
+              }}
+              className="w-full text-left px-4 xs:px-5 py-2.5 xs:py-3 text-xs xs:text-sm text-gray-400 hover:text-white active:text-white hover:bg-gray-800/50 active:bg-gray-800/70 transition-colors duration-150 touch-manipulation min-h-[44px] flex items-center"
+            >
+              Tools
             </button>
           </div>
         </div>

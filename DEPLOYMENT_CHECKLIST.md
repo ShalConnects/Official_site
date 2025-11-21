@@ -44,7 +44,7 @@ vercel
 In Vercel Dashboard → Your Project → Settings → Environment Variables:
 
 Add these if you want to keep API keys secure:
-- `PADDLE_API_KEY` = `REMOVED_API_KEY`
+- `PADDLE_API_KEY` = `your_new_paddle_api_key_here` (Get from Paddle dashboard → Settings → API Keys)
 - `PLUGIN_FILE_URL` = (your plugin download URL if using CDN)
 
 **Note**: After adding environment variables, redeploy the project.

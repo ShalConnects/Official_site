@@ -27,7 +27,7 @@ Your code has been pushed to: `https://github.com/ShalConnects/Official_site.git
 Before deploying, add these in **Environment Variables** section:
 
 ```
-PADDLE_API_KEY=REMOVED_API_KEY
+PADDLE_API_KEY=your_new_paddle_api_key_here
 ```
 
 **Optional** (if using external CDN for plugin files):

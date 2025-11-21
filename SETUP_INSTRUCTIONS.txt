@@ -76,7 +76,7 @@ PADDLE PAYMENT SETUP INSTRUCTIONS
 6. ENVIRONMENT VARIABLES (Production):
 
    Create .env file or set in hosting:
-   PADDLE_API_KEY=REMOVED_API_KEY
+   PADDLE_API_KEY=your_new_paddle_api_key_here
    PLUGIN_FILE_URL=https://your-cdn.com/plugin.zip
 
 7. QUICK START (If using Paddle's file delivery):
