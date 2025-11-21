@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Copy, Check, Wand2, Settings, Sparkles, Type, Eye, FileText, Minus, Plus, RotateCcw, Zap, Maximize2, Minimize2, Search, Replace, History, Undo2, Redo2, Save, Download, Upload, CaseSensitive, CaseLower, CaseUpper, AlignLeft, Trash2, X } from 'lucide-react';
+import { Copy, Check, Wand2, Settings, Sparkles, Type, Eye, FileText, Minus, Plus, RotateCcw, Zap, Maximize2, Minimize2, Search, Replace, History, Undo2, Redo2, Save, Download, Upload, CaseSensitive, CaseLower, CaseUpper, AlignLeft, Trash2, X, ChevronUp, ChevronDown, Regex } from 'lucide-react';
 
 type DisplayMode = 'plain' | 'formatted' | 'rich';
 
@@ -21,10 +21,21 @@ interface FormattingConfig {
 export default function AITextFormatter() {
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
+  const [isFormatting, setIsFormatting] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [autoFormat, setAutoFormat] = useState(true);
   const [aiDetected, setAiDetected] = useState(false);
+  const [showOriginal, setShowOriginal] = useState(false);
+  const [aiConfidence, setAiConfidence] = useState(0);
+  const [aiPatterns, setAiPatterns] = useState<string[]>([]);
+
+  // Helper function to escape HTML
+  const escapeHtml = (text: string): string => {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  };
   const [showNotification, setShowNotification] = useState(false);
+  const [notificationType, setNotificationType] = useState<'formatting' | 'success' | 'copied'>('formatting');
   
   // Formatting options
   const [displayMode, setDisplayMode] = useState<DisplayMode>('plain');
@@ -45,12 +56,20 @@ export default function AITextFormatter() {
   const [replaceText, setReplaceText] = useState('');
   const [showFindReplace, setShowFindReplace] = useState(false);
   const [caseSensitive, setCaseSensitive] = useState(false);
+  const [wholeWord, setWholeWord] = useState(false);
+  const [useRegex, setUseRegex] = useState(false);
+  const [matchIndex, setMatchIndex] = useState(-1);
+  const [totalMatches, setTotalMatches] = useState(0);
+  const [matchPositions, setMatchPositions] = useState<Array<{start: number; end: number}>>([]);
   const [savedConfigs, setSavedConfigs] = useState<Array<{name: string; config: FormattingConfig}>>([]);
   const [showTemplates, setShowTemplates] = useState(false);
   
   // Performance: Debounce refs
   const formatTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const detectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const historyIndexRef = useRef(-1);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const overlayRef = useRef<HTMLDivElement | null>(null);
 
   const detectAIText = (text: string): { detected: boolean; confidence: number; patterns: string[] } => {
     if (!text) return { detected: false, confidence: 0, patterns: [] };
@@ -331,20 +350,28 @@ export default function AITextFormatter() {
   // History management
   const addToHistory = useCallback((inputText: string, outputText: string) => {
     setHistory(prev => {
-      const newHistory = prev.slice(0, historyIndex + 1);
+      const currentIndex = historyIndexRef.current;
+      // Slice history up to current index and add new entry
+      const newHistory = prev.slice(0, currentIndex + 1);
       newHistory.push({ input: inputText, output: outputText, timestamp: Date.now() });
       // Keep only last 50 entries
-      return newHistory.slice(-50);
+      const finalHistory = newHistory.slice(-50);
+      // Update index
+      const newIndex = Math.min(finalHistory.length - 1, 49);
+      historyIndexRef.current = newIndex;
+      setHistoryIndex(newIndex);
+      return finalHistory;
     });
-    setHistoryIndex(prev => Math.min(prev + 1, 49));
-  }, [historyIndex]);
+  }, []);
 
   const undo = useCallback(() => {
     if (historyIndex > 0) {
       const prevEntry = history[historyIndex - 1];
       setInput(prevEntry.input);
       setOutput(prevEntry.output);
-      setHistoryIndex(prev => prev - 1);
+      const newIndex = historyIndex - 1;
+      historyIndexRef.current = newIndex;
+      setHistoryIndex(newIndex);
     }
   }, [history, historyIndex]);
 
@@ -353,7 +380,9 @@ export default function AITextFormatter() {
       const nextEntry = history[historyIndex + 1];
       setInput(nextEntry.input);
       setOutput(nextEntry.output);
-      setHistoryIndex(prev => prev + 1);
+      const newIndex = historyIndex + 1;
+      historyIndexRef.current = newIndex;
+      setHistoryIndex(newIndex);
     }
   }, [history, historyIndex]);
 
@@ -397,32 +426,173 @@ export default function AITextFormatter() {
     setParagraphSpacing(config.paragraphSpacing);
   }, []);
 
-  const formatText = () => {
-    let formatted = input;
+  const formatText = (textToFormat?: string) => {
+    try {
+      const text = textToFormat !== undefined ? textToFormat : input;
+      if (!text) {
+        setOutput('');
+        return;
+      }
+      let formatted = text;
 
     // Remove meta-commentary first (before markdown processing)
     formatted = removeMetaCommentary(formatted);
 
-    // Remove markdown bold (**text** or __text__)
+
+    // Handle markdown headers (# ## ###) - convert to plain text with colon
+    formatted = formatted.replace(/^#{1,6}\s+(.+)$/gm, (match, headerText) => {
+      const trimmed = headerText.trim();
+      // Add colon if header doesn't end with punctuation
+      if (trimmed && !/[.:!?]$/.test(trimmed)) {
+        return trimmed + ':';
+      }
+      return trimmed;
+    });
+
+    // Handle bold-only lines (standalone headers like **Title**) - MUST be before general bold removal
+    // First, handle lines that are entirely bold text (possibly with whitespace)
+    formatted = formatted.replace(/^\s*\*\*([^*\n]+?)\*\*\s*$/gm, (match, headerText) => {
+      const trimmed = headerText.trim();
+      // Add colon if header doesn't end with punctuation
+      if (trimmed && !/[.:!?]$/.test(trimmed)) {
+        return trimmed + ':';
+      }
+      return trimmed;
+    });
+    
+    // Also handle bold headers at the START of a line (even if followed by text on same line)
+    // Pattern: line starts, optional whitespace, **, content, **, followed by text
+    // We need to process this line by line to check the previous line
+    const linesBeforeHeaderFix = formatted.split('\n');
+    const linesAfterHeaderFix: string[] = [];
+    
+    for (let i = 0; i < linesBeforeHeaderFix.length; i++) {
+      const line = linesBeforeHeaderFix[i];
+      const prevLine = i > 0 ? linesBeforeHeaderFix[i - 1] : '';
+      const prevLineTrimmed = prevLine.trim();
+      const prevLineIsEmpty = !prevLineTrimmed;
+      
+      // Check if this line starts with a bold header followed by text
+      const headerMatch = line.match(/^(\s*)\*\*([^*\n]+?)\*\*\s+(.+)$/);
+      if (headerMatch) {
+        const [, leadingSpace, headerText, followingText] = headerMatch;
+        const trimmed = headerText.trim();
+        // Add colon if header doesn't end with punctuation
+        const headerWithColon = trimmed && !/[.:!?]$/.test(trimmed) ? trimmed + ':' : trimmed;
+        
+        // Check if the last processed line is empty - if so, we already have the break
+        const lastProcessedIsEmpty = linesAfterHeaderFix.length > 0 && !linesAfterHeaderFix[linesAfterHeaderFix.length - 1].trim();
+        
+        // Remove any trailing empty lines to avoid double spacing, but we'll add exactly one back
+        while (linesAfterHeaderFix.length > 0 && !linesAfterHeaderFix[linesAfterHeaderFix.length - 1].trim()) {
+          linesAfterHeaderFix.pop();
+        }
+        
+        // Add exactly one empty line before header if previous line had content
+        // This ensures the header is separated from the previous paragraph
+        if (!prevLineIsEmpty && !prevLineTrimmed.endsWith(':')) {
+          linesAfterHeaderFix.push(''); // Add empty line before header to separate from previous paragraph
+        }
+        
+        // Add header with colon, then empty line, then the following text
+        // This ensures the header is grouped with its following paragraph, not the previous one
+        linesAfterHeaderFix.push(headerWithColon); // Header on its own line
+        linesAfterHeaderFix.push(''); // Empty line after header
+        linesAfterHeaderFix.push(followingText.trim()); // Following text (the relevant paragraph)
+      } else {
+        linesAfterHeaderFix.push(line);
+      }
+    }
+    
+    formatted = linesAfterHeaderFix.join('\n');
+    
+    // Convert lists FIRST (before removing italic, which uses * and might interfere)
+    // Convert bullet lists: "- Item" or "* Item" -> "• Item" (preserve line breaks)
+    // IMPORTANT: Only convert lines that START with list markers, not inline * characters
+    const linesForListConversion = formatted.split('\n');
+    const convertedLines: string[] = [];
+    
+    for (const line of linesForListConversion) {
+      // Only convert lines that START with a list item marker (at beginning or after whitespace)
+      // Pattern: start of line, optional whitespace, then "* ", "- ", or "+ " followed by content
+      // This ensures we don't convert inline * characters that are part of italic formatting
+      if (/^\s*[\*\-\+]\s+(.+)$/.test(line)) {
+        // This is a list item - convert it
+        const match = line.match(/^\s*([\*\-\+]\s+)(.+)$/);
+        if (match) {
+          const leadingWhitespace = line.match(/^(\s*)/)?.[1] || '';
+          convertedLines.push(leadingWhitespace + '• ' + match[2].trim());
+        } else {
+          convertedLines.push(line);
+        }
+      } else {
+        // Check if line contains merged list items separated by * markers
+        // Pattern: looks for " * " in the line (indicating merged items)
+        const lineTrimmed = line.trim();
+        
+        // Check if line contains " * " pattern (merged items with * separator)
+        if (/\s+\*\s+/.test(lineTrimmed)) {
+          const items: string[] = [];
+          
+          // Split the entire line on " * " pattern
+          const parts = lineTrimmed.split(/\s+\*\s+/);
+          
+          parts.forEach((part, index) => {
+            const trimmedPart = part.trim();
+            if (trimmedPart) {
+              // If this is the first part and it starts with •, keep it as is
+              if (index === 0 && /^•\s+/.test(trimmedPart)) {
+                items.push(trimmedPart);
+              } else {
+                // Otherwise, add • prefix
+                items.push('• ' + trimmedPart);
+              }
+            }
+          });
+          
+          // If we successfully split into multiple items, use them
+          if (items.length > 1) {
+            items.forEach(item => {
+              convertedLines.push(item);
+            });
+          } else {
+            convertedLines.push(line);
+          }
+        } else {
+          // No merged items - keep line as is
+          convertedLines.push(line);
+        }
+      }
+    }
+    
+    formatted = convertedLines.join('\n');
+    
+    // Remove markdown bold (**text** or __text__) - general bold removal (after header processing)
     formatted = formatted.replace(/\*\*(.+?)\*\*/g, '$1');
     formatted = formatted.replace(/__(.+?)__/g, '$1');
 
-    // Remove markdown italic (*text* or _text_)
-    formatted = formatted.replace(/\*(.+?)\*/g, '$1');
-    formatted = formatted.replace(/_(.+?)_/g, '$1');
-
-    // Remove markdown headers (# ## ###)
-    formatted = formatted.replace(/^#{1,6}\s+/gm, '');
+    // Remove markdown italic (*text* or _text_) - but NOT list markers (which are now •)
+    // Match *text* but ensure it's not at the start of a line (list items start with • now)
+    // Process line by line to avoid matching list markers
+    const linesForItalic = formatted.split('\n');
+    formatted = linesForItalic.map(line => {
+      // If line starts with • (list item), don't process italic on it
+      if (/^•\s/.test(line)) {
+        return line;
+      }
+      // Otherwise, remove italic markers
+      return line.replace(/\*(.+?)\*/g, '$1').replace(/_(.+?)_/g, '$1');
+    }).join('\n');
 
     // Remove markdown links ([text](url) -> text)
     formatted = formatted.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
-
-    // Convert lists to readable format (better than just removing markers)
-    // Convert bullet lists: "- Item" or "* Item" -> "• Item"
-    formatted = formatted.replace(/^[\*\-\+]\s+(.+)$/gm, '• $1');
     // Convert numbered lists: "1. Item" -> "1. Item" (keep the number)
     // Already readable, but ensure proper spacing
     formatted = formatted.replace(/^(\d+)\.\s+(.+)$/gm, '$1. $2');
+    
+    // Ensure list items are on separate lines - don't merge them
+    // This prevents list items from running together
+    // After conversion, list items should still be on separate lines
 
     // Remove code blocks (``` or `)
     formatted = formatted.replace(/```[\s\S]*?```/g, '');
@@ -435,21 +605,138 @@ export default function AITextFormatter() {
     formatted = formatted.replace(/^[\-\*]{3,}$/gm, '');
 
     // Better paragraph handling - preserve intentional line breaks
-    // Clean up excessive line breaks (more than 2 consecutive)
+    // Clean up excessive line breaks (more than 2 consecutive) - but do this AFTER header processing
+    // We'll clean this up at the end instead
+    
+    // Preserve paragraph structure - trim lines but keep empty lines between paragraphs
+    // Split into lines, process each line while preserving structure
+    const lines = formatted.split('\n');
+    const processedLines: string[] = [];
+    
+    for (let i = 0; i < lines.length; i++) {
+      const originalLine = lines[i];
+      const trimmed = originalLine.trim();
+      const isEmpty = trimmed === '';
+      const nextLine = i < lines.length - 1 ? lines[i + 1].trim() : '';
+      const isNextEmpty = nextLine === '';
+      const prevLine = processedLines.length > 0 ? processedLines[processedLines.length - 1] : '';
+      
+      // If current line is empty, preserve it if it's between non-empty lines
+      if (isEmpty) {
+        // Check if the last processed line is already empty - if so, skip to avoid double spacing
+        const lastWasEmpty = processedLines.length > 0 && !processedLines[processedLines.length - 1].trim();
+        if (lastWasEmpty) {
+          continue; // Skip duplicate empty lines - ensure only one blank line between paragraphs
+        }
+        
+        // Check if previous or next line is a list item
+        const prevIsListItem = prevLine && /^[•\d]\.?\s/.test(prevLine);
+        const nextIsListItem = nextLine && /^[•\d]\.?\s/.test(nextLine);
+        
+        // Don't preserve empty lines between consecutive list items
+        if (prevIsListItem && nextIsListItem) {
+          // Skip this empty line - list items should be directly adjacent
+          continue;
+        }
+        
+        // Keep empty line if previous line exists and next line is not empty
+        // Also preserve if previous line is a header (ends with colon)
+        const prevIsHeader = prevLine && /:$/.test(prevLine);
+        if (prevLine && (!isNextEmpty || prevIsHeader)) {
+          // Only preserve one empty line - ensure single blank line between paragraphs
+          processedLines.push('');
+        }
+        continue;
+      }
+      
+      // If line ends with colon (header), check if we need to add a break after it
+      if (trimmed && /:$/.test(trimmed)) {
+        processedLines.push(trimmed);
+        // Check if next line in original is empty - if so, we'll preserve it next iteration
+        // If next line is not empty, check if we already have an empty line
+        const nextOriginalLine = i < lines.length - 1 ? lines[i + 1] : '';
+        const nextOriginalIsEmpty = !nextOriginalLine || !nextOriginalLine.trim();
+        const lastWasEmpty = processedLines.length > 0 && !processedLines[processedLines.length - 1].trim();
+        
+        // Only add empty line if:
+        // 1. Next line has content (not empty)
+        // 2. We don't already have an empty line
+        // 3. Next line is not a list item (list items should be directly after header)
+        const nextIsListItem = nextOriginalLine && /^[•\d]\.?\s/.test(nextOriginalLine.trim());
+        if (!nextOriginalIsEmpty && !lastWasEmpty && !nextIsListItem) {
+          // Next line has content and we don't already have an empty line, so add one
+          processedLines.push('');
+        }
+        // If next line is already empty, it will be preserved in the next iteration (but only once)
+        continue;
+      }
+      
+      // Check if this is a list item (starts with bullet or number)
+      const isListItem = /^[•\d]\.?\s/.test(trimmed);
+      const prevIsListItem = prevLine && /^[•\d]\.?\s/.test(prevLine);
+      
+      // If this is a list item, ensure it's on its own line (it already is, just preserve it)
+      if (isListItem) {
+        // Always push list items - they should be on separate lines
+        // If previous line was also a list item and there was an empty line between them in the original,
+        // we should preserve that (it would have been handled in the empty line check above)
+        processedLines.push(trimmed);
+        // List items should remain on separate lines - don't merge them
+        continue;
+      }
+      
+      processedLines.push(trimmed);
+    }
+    
+    formatted = processedLines.join('\n');
+    
+    // Cleanup: remove any double blank lines (3+ newlines) that may have been created
     formatted = formatted.replace(/\n{3,}/g, '\n\n');
     
-    // Ensure proper spacing between paragraphs
-    formatted = formatted.split('\n').map(line => line.trim()).join('\n');
+    // Remove empty lines between consecutive list items
+    // Pattern: list item, newline, empty line(s), newline, list item
+    formatted = formatted.replace(/([•\d]\.?\s[^\n]+)\n\n+([•\d]\.?\s[^\n]+)/g, '$1\n$2');
     
-    // Add spacing between list items and paragraphs
-    formatted = formatted.replace(/([^\n])\n([•\d])/g, '$1\n\n$2');
+    // Final cleanup: remove excessive line breaks (more than 1 consecutive)
+    // This ensures we don't have more than 1 blank line (2 newlines) between paragraphs
+    // Reduce any sequence of 3+ newlines to exactly 2 newlines (one blank line)
+    formatted = formatted.replace(/\n{3,}/g, '\n\n');
+    
+    // Add spacing between list items and paragraphs (but preserve list item line breaks)
+    // Only add spacing before first list item (between paragraph and list)
+    formatted = formatted.replace(/([^\n•\d])\n([•\d])/g, '$1\n\n$2');
+    // Add spacing after last list item (between list and paragraph)
     formatted = formatted.replace(/([•\d].+)\n([^\n•\d])/g, '$1\n\n$2');
+    // Don't add spacing between consecutive list items - they should stay on separate lines
+    
+    // Cleanup: remove any double blank lines created by list spacing
+    formatted = formatted.replace(/\n{3,}/g, '\n\n');
+    
+    // Final cleanup: remove empty lines between consecutive list items
+    // Pattern: list item, newline(s), empty line(s), newline(s), list item
+    formatted = formatted.replace(/([•\d]\.?\s[^\n]+)\n\n+([•\d]\.?\s[^\n]+)/g, '$1\n$2');
+
+    // Final pass: ensure only one blank line (2 newlines) between any paragraphs
+    // This reduces any sequence of 3+ newlines to exactly 2 newlines (one blank line)
+    // Run multiple times to catch all cases and ensure we never have more than 2 consecutive newlines
+    let prevFormatted = '';
+    let iterations = 0;
+    while (formatted !== prevFormatted && iterations < 10) {
+      prevFormatted = formatted;
+      // Reduce any sequence of 3+ newlines to exactly 2 newlines (one blank line)
+      formatted = formatted.replace(/\n{3,}/g, '\n\n');
+      iterations++;
+    }
 
     // Trim whitespace
     formatted = formatted.trim();
 
     setOutput(formatted);
-    addToHistory(input, formatted);
+    addToHistory(text, formatted);
+    } catch (error) {
+      console.error('Error formatting text:', error);
+      setOutput(textToFormat !== undefined ? textToFormat : input);
+    }
   };
 
   // Helper function to format text for rich preview
@@ -612,7 +899,12 @@ export default function AITextFormatter() {
   const copyToClipboard = () => {
     navigator.clipboard.writeText(output);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setNotificationType('copied');
+    setShowNotification(true);
+    setTimeout(() => {
+      setCopied(false);
+      setShowNotification(false);
+    }, 2000);
   };
 
   const clearAll = () => {
@@ -622,6 +914,8 @@ export default function AITextFormatter() {
     setAiDetected(false);
     setHistory([]);
     setHistoryIndex(-1);
+    historyIndexRef.current = -1;
+    setShowOriginal(false);
   };
 
   // Text transformation functions
@@ -632,9 +926,15 @@ export default function AITextFormatter() {
     
     switch (transformType) {
       case 'sentenceCase':
-        transformed = output.toLowerCase().replace(/(^\w{1}|\.\s*\w{1})/gi, (char) => char.toUpperCase());
+        // Convert to lowercase first, then capitalize first letter of each sentence
+        transformed = output.toLowerCase();
+        // Capitalize first letter of the text
+        transformed = transformed.charAt(0).toUpperCase() + transformed.slice(1);
+        // Capitalize first letter after sentence endings (. ! ?)
+        transformed = transformed.replace(/([.!?]\s+)([a-z])/g, (match, p1, p2) => p1 + p2.toUpperCase());
         break;
       case 'titleCase':
+        // Convert to lowercase first, then capitalize first letter of each word
         transformed = output.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
         break;
       case 'uppercase':
@@ -644,7 +944,8 @@ export default function AITextFormatter() {
         transformed = output.toLowerCase();
         break;
       case 'removeExtraSpaces':
-        transformed = output.replace(/\s+/g, ' ').trim();
+        // Remove extra spaces but preserve line breaks
+        transformed = output.split('\n').map(line => line.replace(/\s+/g, ' ').trim()).join('\n');
         break;
       case 'removeDuplicateLines':
         const lines = output.split('\n');
@@ -670,87 +971,196 @@ export default function AITextFormatter() {
     addToHistory(input, transformed);
   }, [output, input, addToHistory]);
 
-  // Find and replace
+  // Find all matches
+  const findMatches = useCallback((text: string, searchText: string) => {
+    if (!searchText || !text) {
+      setMatchPositions([]);
+      setTotalMatches(0);
+      setMatchIndex(-1);
+      return [];
+    }
+
+    let regex: RegExp;
+    try {
+      if (useRegex) {
+        const flags = caseSensitive ? 'g' : 'gi';
+        regex = new RegExp(searchText, flags);
+      } else {
+        const escaped = searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const pattern = wholeWord ? `\\b${escaped}\\b` : escaped;
+        const flags = caseSensitive ? 'g' : 'gi';
+        regex = new RegExp(pattern, flags);
+      }
+    } catch (e) {
+      setMatchPositions([]);
+      setTotalMatches(0);
+      setMatchIndex(-1);
+      // Show error notification for invalid regex
+      if (useRegex && showFindReplace) {
+        setNotificationType('formatting');
+        setNotificationMessage('Invalid regex pattern');
+        setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 3000);
+      }
+      return [];
+    }
+
+    const matches: Array<{start: number; end: number}> = [];
+    let match;
+    let lastIndex = -1;
+    const maxIterations = text.length + 1; // Safety limit
+    let iterations = 0;
+    
+    while ((match = regex.exec(text)) !== null && iterations < maxIterations) {
+      iterations++;
+      
+      // Prevent infinite loop: if match is at same position and has zero length, advance
+      if (match.index === lastIndex && match[0].length === 0) {
+        // Advance regex lastIndex to prevent infinite loop
+        if (regex.lastIndex <= match.index) {
+          regex.lastIndex = match.index + 1;
+        }
+        if (regex.lastIndex > text.length) break;
+        continue;
+      }
+      
+      lastIndex = match.index;
+      matches.push({ start: match.index, end: match.index + match[0].length });
+      
+      if (!regex.global) break;
+      
+      // Additional safety: if lastIndex didn't advance, break to prevent infinite loop
+      if (regex.lastIndex === match.index && match[0].length === 0) {
+        regex.lastIndex++;
+        if (regex.lastIndex > text.length) break;
+      }
+    }
+
+    setMatchPositions(matches);
+    setTotalMatches(matches.length);
+    if (matches.length > 0 && matchIndex === -1) {
+      setMatchIndex(0);
+    } else if (matches.length === 0) {
+      setMatchIndex(-1);
+    }
+    return matches;
+  }, [caseSensitive, wholeWord, useRegex, matchIndex, showFindReplace]);
+
+  // Navigate to next match
+  const findNext = useCallback(() => {
+    if (matchPositions.length === 0) {
+      // If no matches, try to find them first
+      const matches = findMatches(output, findText);
+      if (matches.length > 0) {
+        setMatchIndex(0);
+      }
+      return;
+    }
+    setMatchIndex(prev => (prev + 1) % matchPositions.length);
+  }, [matchPositions, findText, output, findMatches]);
+
+  // Navigate to previous match
+  const findPrevious = useCallback(() => {
+    if (matchPositions.length === 0) {
+      // If no matches, try to find them first
+      const matches = findMatches(output, findText);
+      if (matches.length > 0) {
+        setMatchIndex(matches.length - 1); // Start at last match when going previous
+      }
+      return;
+    }
+    setMatchIndex(prev => (prev - 1 + matchPositions.length) % matchPositions.length);
+  }, [matchPositions, findText, output, findMatches]);
+
+  // Replace current match
+  const replaceCurrent = useCallback(() => {
+    if (!findText || !output || matchIndex === -1 || matchPositions.length === 0) return;
+    
+    const currentMatchIndex = matchIndex;
+    const currentMatchPositions = matchPositions;
+    const match = currentMatchPositions[currentMatchIndex];
+    const before = output.substring(0, match.start);
+    const after = output.substring(match.end);
+    const replaced = before + replaceText + after;
+    
+    setOutput(replaced);
+    addToHistory(input, replaced);
+    
+    // Recalculate matches after replace using the replaced text
+    const newMatches = findMatches(replaced, findText);
+    
+    // Update match index based on new matches
+    // If we replaced a match that wasn't the last one, stay at same index
+    // If we replaced the last match, move to previous match
+    // If no matches left, set to -1
+    if (newMatches.length === 0) {
+      setMatchIndex(-1);
+    } else if (currentMatchIndex < currentMatchPositions.length - 1) {
+      // Not the last match, stay at same index (next match moves up)
+      setMatchIndex(Math.min(currentMatchIndex, newMatches.length - 1));
+    } else if (newMatches.length > 0) {
+      // Was the last match, move to new last match
+      setMatchIndex(Math.max(0, newMatches.length - 1));
+    } else {
+      setMatchIndex(-1);
+    }
+  }, [findText, replaceText, output, input, matchIndex, matchPositions, addToHistory, findMatches]);
+
+  // Replace all matches
   const performFindReplace = useCallback(() => {
     if (!findText || !output) return;
     
-    const flags = caseSensitive ? 'g' : 'gi';
-    const regex = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
+    let regex: RegExp;
+    try {
+      if (useRegex) {
+        const flags = caseSensitive ? 'g' : 'gi';
+        regex = new RegExp(findText, flags);
+      } else {
+        const escaped = findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const pattern = wholeWord ? `\\b${escaped}\\b` : escaped;
+        const flags = caseSensitive ? 'g' : 'gi';
+        regex = new RegExp(pattern, flags);
+      }
+    } catch (e) {
+      return;
+    }
+    
     const replaced = output.replace(regex, replaceText);
     
     setOutput(replaced);
     addToHistory(input, replaced);
-    setShowFindReplace(false);
-  }, [findText, replaceText, output, input, caseSensitive, addToHistory]);
+    setMatchPositions([]);
+    setTotalMatches(0);
+    setMatchIndex(-1);
+  }, [findText, replaceText, output, input, caseSensitive, wholeWord, useRegex, addToHistory]);
 
   const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const pastedText = e.clipboardData.getData('text');
-    if (pastedText && autoFormat) {
+    if (pastedText) {
       const isAIText = detectAIText(pastedText);
       if (isAIText) {
         e.preventDefault();
         const textarea = e.currentTarget;
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
-        const currentValue = input;
+        const currentValue = output || input;
         const newValue = currentValue.substring(0, start) + pastedText + currentValue.substring(end);
         
         setInput(newValue);
-        setAiDetected(true);
-        
-        // Format the new input using the same enhanced formatting logic
-        let formatted = newValue;
-        
-        // Remove meta-commentary first (before markdown processing)
-        formatted = removeMetaCommentary(formatted);
-        
-        // Remove markdown bold (**text** or __text__)
-        formatted = formatted.replace(/\*\*(.+?)\*\*/g, '$1');
-        formatted = formatted.replace(/__(.+?)__/g, '$1');
-
-        // Remove markdown italic (*text* or _text_)
-        formatted = formatted.replace(/\*(.+?)\*/g, '$1');
-        formatted = formatted.replace(/_(.+?)_/g, '$1');
-
-        // Remove markdown headers (# ## ###)
-        formatted = formatted.replace(/^#{1,6}\s+/gm, '');
-
-        // Remove markdown links ([text](url) -> text)
-        formatted = formatted.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
-
-        // Convert lists to readable format (better than just removing markers)
-        // Convert bullet lists: "- Item" or "* Item" -> "• Item"
-        formatted = formatted.replace(/^[\*\-\+]\s+(.+)$/gm, '• $1');
-        // Convert numbered lists: "1. Item" -> "1. Item" (keep the number)
-        formatted = formatted.replace(/^(\d+)\.\s+(.+)$/gm, '$1. $2');
-
-        // Remove code blocks (``` or `)
-        formatted = formatted.replace(/```[\s\S]*?```/g, '');
-        formatted = formatted.replace(/`(.+?)`/g, '$1');
-
-        // Remove blockquotes (>)
-        formatted = formatted.replace(/^>\s+/gm, '');
-
-        // Remove horizontal rules (--- or ***)
-        formatted = formatted.replace(/^[\-\*]{3,}$/gm, '');
-
-        // Better paragraph handling - preserve intentional line breaks
-        // Clean up excessive line breaks (more than 2 consecutive)
-        formatted = formatted.replace(/\n{3,}/g, '\n\n');
-        
-        // Ensure proper spacing between paragraphs
-        formatted = formatted.split('\n').map(line => line.trim()).join('\n');
-        
-        // Add spacing between list items and paragraphs
-        formatted = formatted.replace(/([^\n])\n([•\d])/g, '$1\n\n$2');
-        formatted = formatted.replace(/([•\d].+)\n([^\n•\d])/g, '$1\n\n$2');
-
-        // Trim whitespace
-        formatted = formatted.trim();
-
-        setOutput(formatted);
+        setIsFormatting(true);
+        // Show formatting notification
+        setNotificationType('formatting');
         setShowNotification(true);
-        setTimeout(() => setShowNotification(false), 3000);
+        
+        // Format the text
+        formatText(newValue);
+        
+        // After formatting completes, show success notification
+        setTimeout(() => {
+          setNotificationType('success');
+          setIsFormatting(false);
+          setTimeout(() => setShowNotification(false), 2000);
+        }, 500);
       }
     }
   };
@@ -758,11 +1168,43 @@ export default function AITextFormatter() {
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     setInput(newValue);
-    // Performance: Debounced AI detection for large texts
-    if (newValue) {
+    setIsFormatting(true);
+    // Auto-format on change (debounced)
+    if (newValue && newValue.trim().length > 0) {
       debouncedDetectAI(newValue);
+      // Show formatting notification only if we have substantial text
+      if (newValue.length > 10) {
+        setNotificationType('formatting');
+        setShowNotification(true);
+      }
+      // Debounced formatting
+      if (formatTimeoutRef.current) {
+        clearTimeout(formatTimeoutRef.current);
+      }
+      formatTimeoutRef.current = setTimeout(() => {
+        try {
+          formatText(newValue);
+          // Show success notification after formatting
+          if (newValue.length > 10) {
+            setNotificationType('success');
+            setTimeout(() => {
+              setIsFormatting(false);
+              setTimeout(() => setShowNotification(false), 2000);
+            }, 100);
+          } else {
+            setIsFormatting(false);
+            setShowNotification(false);
+          }
+        } catch (error) {
+          console.error('Error formatting text:', error);
+          setIsFormatting(false);
+          setShowNotification(false);
+        }
+      }, 500);
     } else {
       setAiDetected(false);
+      setOutput('');
+      setIsFormatting(false);
     }
   };
 
@@ -799,6 +1241,50 @@ export default function AITextFormatter() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [input, undo, redo]);
 
+  // Real-time search - find matches as user types or when search options change
+  useEffect(() => {
+    if (showFindReplace && findText && output) {
+      findMatches(output, findText);
+    } else if (!findText) {
+      setMatchPositions([]);
+      setTotalMatches(0);
+      setMatchIndex(-1);
+    }
+  }, [findText, output, showFindReplace, caseSensitive, wholeWord, useRegex, findMatches]);
+
+  // Scroll to current match and highlight it (only when navigating, not while typing)
+  const findInputRef = useRef<HTMLInputElement | null>(null);
+  const prevMatchIndexRef = useRef(-1);
+  useEffect(() => {
+    if (textareaRef.current && showFindReplace && matchIndex >= 0 && matchPositions.length > 0) {
+      // Only focus textarea if matchIndex changed due to navigation (not initial search)
+      const isNavigation = prevMatchIndexRef.current !== -1 && prevMatchIndexRef.current !== matchIndex;
+      const isFindInputFocused = document.activeElement === findInputRef.current;
+      prevMatchIndexRef.current = matchIndex;
+      
+      const textarea = textareaRef.current;
+      const match = matchPositions[matchIndex];
+      
+      // Set selection to highlight current match
+      textarea.setSelectionRange(match.start, match.end);
+      
+      // Only focus textarea if user is navigating matches AND Find input is not focused
+      if (isNavigation && !isFindInputFocused) {
+        textarea.focus();
+      }
+      
+      // Scroll to match
+      const textBeforeMatch = textarea.value.substring(0, match.start);
+      const lines = textBeforeMatch.split('\n');
+      const lineNumber = lines.length - 1;
+      const lineHeight = parseFloat(getComputedStyle(textarea).lineHeight) || fontSize * lineHeight;
+      const scrollTop = lineNumber * lineHeight - textarea.clientHeight / 2;
+      textarea.scrollTop = Math.max(0, scrollTop);
+    } else if (matchIndex === -1) {
+      prevMatchIndexRef.current = -1;
+    }
+  }, [matchIndex, matchPositions, showFindReplace, fontSize, lineHeight]);
+
   // Diff calculation helper
   const calculateDiff = useMemo(() => {
     if (!input || !output || !showDiff) return null;
@@ -825,50 +1311,105 @@ export default function AITextFormatter() {
 
   const mainContent = (
     <div className={`${isFullScreen ? 'p-4' : 'p-4 sm:p-6'}`}>
-      <div className={`${isFullScreen ? 'h-full overflow-auto' : 'max-w-6xl mx-auto'}`}>
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-            <Wand2 className="w-6 h-6 sm:w-8 sm:h-8 text-[#4a9d6f]" />
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">AI Text Formatter</h1>
-          </div>
-          <p className="text-sm sm:text-base text-gray-400 px-4">Remove markdown formatting and convert AI text to clean, human-readable format</p>
-        </div>
-
-        {/* Settings Toggle */}
-        <div className="flex justify-center mb-4 sm:mb-6 px-4">
-          <div className="bg-gray-800/50 rounded-xl shadow-md p-3 sm:p-4 border border-gray-700 flex items-center gap-2 sm:gap-3">
-            <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-            <label className="flex items-center gap-2 cursor-pointer">
-              <span className="text-xs sm:text-sm font-medium text-gray-300">Auto-format on paste</span>
-              <div className="relative">
-                <input
-                  type="checkbox"
-                  checked={autoFormat}
-                  onChange={(e) => setAutoFormat(e.target.checked)}
-                  className="sr-only"
-                />
-                <div className={`w-11 h-6 rounded-full transition-colors ${autoFormat ? 'bg-[#4a9d6f]' : 'bg-gray-600'}`}>
-                  <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${autoFormat ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
-                </div>
-              </div>
-            </label>
-          </div>
-        </div>
-
+      <div className={`${isFullScreen ? 'h-full overflow-auto' : 'mx-auto'}`} style={!isFullScreen ? { maxWidth: '65rem' } : {}}>
         {/* Notification */}
         {showNotification && (
-          <div className="fixed top-4 right-4 bg-[#4a9d6f] text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg shadow-lg flex items-center gap-2 z-50 animate-in slide-in-from-top text-sm sm:text-base">
-            <Check className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span>AI text formatted automatically!</span>
+          <div 
+            className={`fixed top-4 right-4 px-3 sm:px-4 py-2 sm:py-3 rounded-lg shadow-lg flex items-center gap-2 z-50 text-sm sm:text-base transition-all duration-300 transform ${
+              notificationType === 'formatting' 
+                ? 'bg-[#da651e] text-white animate-pulse translate-x-0' 
+                : 'bg-[#4a9d6f] text-white translate-x-0 animate-[slideIn_0.3s_ease-out]'
+            }`}
+            style={{
+              animation: notificationType === 'formatting' 
+                ? 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' 
+                : notificationType === 'success' || notificationType === 'copied'
+                ? 'slideIn 0.3s ease-out, checkmarkPop 0.5s ease-out 0.2s'
+                : undefined
+            }}
+          >
+            {notificationType === 'formatting' ? (
+              <>
+                <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Formatting your text...</span>
+              </>
+            ) : notificationType === 'copied' ? (
+              <>
+                <Check className="w-4 h-4 sm:w-5 sm:h-5" style={{ animation: 'checkmarkPop 0.5s ease-out' }} />
+                <span>Text copied to clipboard!</span>
+              </>
+            ) : (
+              <>
+                <Check className="w-4 h-4 sm:w-5 sm:h-5" style={{ animation: 'checkmarkPop 0.5s ease-out' }} />
+                <span>AI text formatted automatically!</span>
+              </>
+            )}
           </div>
         )}
+        
+        {/* Add CSS animations and scrollbar styling */}
+        <style>{`
+          @keyframes slideIn {
+            from {
+              transform: translateX(100%);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
+            }
+          }
+          @keyframes checkmarkPop {
+            0% {
+              transform: scale(0);
+            }
+            50% {
+              transform: scale(1.2);
+            }
+            100% {
+              transform: scale(1);
+            }
+          }
+          /* Custom scrollbar styling */
+          textarea::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+          }
+          textarea::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          textarea::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 4px;
+          }
+          textarea::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+          }
+          /* Firefox scrollbar */
+          textarea {
+            scrollbar-width: thin;
+            scrollbar-color: #4b5563 transparent;
+          }
+        `}</style>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 px-4 sm:px-0">
-          {/* Input Section */}
+        {/* Unified Text Field */}
+        <div className="px-4 sm:px-0">
           <div className="bg-gray-800/50 rounded-2xl shadow-lg p-4 sm:p-6 border border-gray-700">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3 sm:mb-4">
+            <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-2 sm:gap-0 mb-0" style={{ padding: '0px 0 10px' }}>
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg sm:text-xl font-semibold text-white">Input (AI Text)</h2>
+                <h2 className="text-lg sm:text-xl font-semibold text-white mb-0">
+                  {output ? 'Formatted Text' : 'AI Text Formatter'}
+                </h2>
+                {output && (
+                  <button
+                    onClick={() => setShowOriginal(!showOriginal)}
+                    className="flex items-center gap-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-xs font-medium border border-gray-600 transition-colors"
+                    title={showOriginal ? 'Show formatted text' : 'Show original text'}
+                  >
+                    <Eye className="w-3 h-3" />
+                    {showOriginal ? 'Original' : 'Formatted'}
+                  </button>
+                )}
                 {aiDetected && (
                   <span className="flex items-center gap-1 px-2 py-1 bg-[#4a9d6f]/20 text-[#4a9d6f] rounded-full text-xs font-medium border border-[#4a9d6f]/30">
                     <Sparkles className="w-3 h-3" />
@@ -876,100 +1417,360 @@ export default function AITextFormatter() {
                   </span>
                 )}
               </div>
-              <span className="text-xs sm:text-sm text-gray-400">{input.length} chars</span>
+              <div className="flex items-center gap-2">
+                {output && (
+                  <>
+                    <button
+                      onClick={copyToClipboard}
+                      className="p-1.5 text-gray-400 hover:text-[#4a9d6f] hover:bg-gray-700 rounded-lg transition-colors"
+                      title="Copy formatted text"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={clearAll}
+                      className="p-1.5 text-gray-400 hover:text-[#4a9d6f] hover:bg-gray-700 rounded-lg transition-colors"
+                      title="Clear all text"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </button>
+                  </>
+                )}
+                <span className="text-xs sm:text-sm text-gray-400">{(output || input).length} chars</span>
+              </div>
             </div>
-            <textarea
-              value={input}
-              onChange={handleInputChange}
-              onPaste={handlePaste}
-              placeholder="Paste your AI-generated text here...&#10;&#10;**Bold text**, *italic*, bullet points, etc. will be cleaned up!"
-              className="w-full h-64 sm:h-96 p-3 sm:p-4 border-2 border-gray-600 rounded-xl resize-none focus:border-[#4a9d6f] focus:outline-none transition-colors font-mono text-sm bg-gray-900 text-white placeholder-gray-500"
-            />
-          </div>
 
-          {/* Output Section */}
-          <div className="bg-gray-800/50 rounded-2xl shadow-lg p-4 sm:p-6 border border-gray-700">
-            <div className="mb-3 sm:mb-4">
-              <h2 className="text-lg sm:text-xl font-semibold text-white">Output (Clean Text)</h2>
-            </div>
+            {/* Output Display */}
+            {/* Unified Textarea - shows formatted output but is editable */}
+            {displayMode === 'plain' ? (
+              <>
+                <div className="relative">
+                  <textarea
+                    ref={textareaRef}
+                    value={isFormatting ? input : (showOriginal && output ? input : (output || input))}
+                    onChange={handleInputChange}
+                    onPaste={handlePaste}
+                    onScroll={(e) => {
+                      if (overlayRef.current) {
+                        overlayRef.current.scrollTop = e.currentTarget.scrollTop;
+                        overlayRef.current.scrollLeft = e.currentTarget.scrollLeft;
+                      }
+                    }}
+                    placeholder="Paste AI-generated text here... Markdown and formatting will be removed automatically!"
+                    className={`w-full h-96 sm:h-[600px] p-3 sm:p-4 border-2 border-gray-600 rounded-xl resize-none focus:border-[#4a9d6f] focus:outline-none transition-colors font-mono text-sm bg-gray-900 text-white placeholder-gray-500 ${
+                      showFindReplace && findText && matchPositions.length > 0 ? 'text-transparent caret-white' : ''
+                    }`}
+                    style={{
+                      fontSize: `${fontSize}px`,
+                      lineHeight: lineHeight,
+                      wordWrap: wordWrap ? 'break-word' : 'normal',
+                      whiteSpace: wordWrap ? 'pre-wrap' : 'pre',
+                    }}
+                  />
+                  {/* Highlighting overlay - only show when actively searching with matches */}
+                  {showFindReplace && findText && matchPositions.length > 0 && (
+                    <div
+                      ref={overlayRef}
+                      className="absolute inset-0 pointer-events-none overflow-auto rounded-xl p-3 sm:p-4 font-mono text-sm whitespace-pre-wrap break-words text-white"
+                      style={{
+                        fontSize: `${fontSize}px`,
+                        lineHeight: lineHeight,
+                        wordWrap: wordWrap ? 'break-word' : 'normal',
+                        whiteSpace: wordWrap ? 'pre-wrap' : 'pre',
+                        scrollbarWidth: 'none',
+                        msOverflowStyle: 'none',
+                      }}
+                      onScroll={(e) => {
+                        // Prevent circular sync - only sync if textarea scroll is different
+                        if (textareaRef.current && Math.abs(textareaRef.current.scrollTop - e.currentTarget.scrollTop) > 1) {
+                          textareaRef.current.scrollTop = e.currentTarget.scrollTop;
+                          textareaRef.current.scrollLeft = e.currentTarget.scrollLeft;
+                        }
+                      }}
+                      onWheel={(e) => {
+                        // Allow wheel events to pass through to textarea
+                        if (textareaRef.current) {
+                          textareaRef.current.scrollTop += e.deltaY;
+                          if (overlayRef.current) {
+                            overlayRef.current.scrollTop = textareaRef.current.scrollTop;
+                          }
+                        }
+                      }}
+                      dangerouslySetInnerHTML={{
+                        __html: (() => {
+                          const text = isFormatting ? input : (showOriginal && output ? input : (output || input));
+                          let highlighted = '';
+                          let lastIndex = 0;
+                          
+                          matchPositions.forEach((match, index) => {
+                            // Add text before match
+                            highlighted += escapeHtml(text.substring(lastIndex, match.start));
+                            
+                            // Add highlighted match
+                            const isCurrent = index === matchIndex;
+                            highlighted += `<mark class="${isCurrent ? 'bg-[#4a9d6f] text-white px-0.5 rounded' : 'bg-yellow-500/50 text-yellow-200 px-0.5 rounded'}">${escapeHtml(text.substring(match.start, match.end))}</mark>`;
+                            
+                            lastIndex = match.end;
+                          });
+                          
+                          // Add remaining text
+                          highlighted += escapeHtml(text.substring(lastIndex));
+                          
+                          return highlighted;
+                        })(),
+                      }}
+                    />
+                  )}
+                </div>
+                <p className="text-gray-400 mt-2 text-center" style={{ fontSize: '12px' }}>Remove markdown formatting and convert AI text to clean, human-readable format</p>
+              </>
+            ) : (
+              renderOutput()
+            )}
 
             {/* Find/Replace Panel */}
             {showFindReplace && (
-              <div className="mb-4 p-3 sm:p-4 bg-gray-700/50 rounded-xl border border-gray-600">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-xs sm:text-sm font-semibold text-white flex items-center gap-2">
-                    <Search className="w-4 h-4 text-[#4a9d6f]" />
+              <div className="mt-4 pt-4 border-t border-gray-600 p-4 sm:p-5 bg-gradient-to-br from-gray-800/80 to-gray-700/60 rounded-xl shadow-lg border border-gray-600/50">
+                <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-600/50">
+                  <h3 className="text-sm sm:text-base font-semibold text-white">
                     Find and Replace
                   </h3>
-                  <button
-                    onClick={() => setShowFindReplace(false)}
-                    className="p-1 text-gray-400 hover:text-white transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-300 mb-1">Find</label>
-                    <input
-                      type="text"
-                      value={findText}
-                      onChange={(e) => setFindText(e.target.value)}
-                      placeholder="Text to find..."
-                      className="w-full px-3 py-2 border border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4a9d6f] bg-gray-900 text-white placeholder-gray-500"
-                      onKeyDown={(e) => e.key === 'Enter' && performFindReplace()}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-300 mb-1">Replace</label>
-                    <input
-                      type="text"
-                      value={replaceText}
-                      onChange={(e) => setReplaceText(e.target.value)}
-                      placeholder="Replace with..."
-                      className="w-full px-3 py-2 border border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4a9d6f] bg-gray-900 text-white placeholder-gray-500"
-                      onKeyDown={(e) => e.key === 'Enter' && performFindReplace()}
-                    />
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setFindText('');
+                        setReplaceText('');
+                        setMatchPositions([]);
+                        setMatchIndex(-1);
+                        setTotalMatches(0);
+                      }}
+                      className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-all duration-200"
+                      title="Clear"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setShowFindReplace(false)}
+                      className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-all duration-200"
+                      title="Close"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-3">
-                  <label className="flex items-center gap-2 text-xs sm:text-sm text-gray-300">
-                    <input
-                      type="checkbox"
-                      checked={caseSensitive}
-                      onChange={(e) => setCaseSensitive(e.target.checked)}
-                      className="rounded bg-gray-900 border-gray-600"
-                    />
-                    <span className="flex items-center gap-1">
-                      <CaseSensitive className="w-3 h-3" />
-                      Case sensitive
-                    </span>
-                  </label>
-                  <button
-                    onClick={performFindReplace}
-                    disabled={!findText || !output}
-                    className="px-4 py-2 bg-[#4a9d6f] text-white rounded-lg hover:bg-[#176641] disabled:bg-gray-600 disabled:cursor-not-allowed text-xs sm:text-sm font-medium transition-colors"
-                  >
-                    Replace All
-                  </button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-gray-200 uppercase tracking-wide">Find</label>
+                    <div className="relative group">
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#4a9d6f] transition-colors">
+                        <Search className="w-4 h-4" />
+                      </div>
+                      <input
+                        ref={findInputRef}
+                        type="text"
+                        value={findText}
+                        onChange={(e) => setFindText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            findNext();
+                          } else if (e.key === 'Enter' && e.shiftKey) {
+                            e.preventDefault();
+                            findPrevious();
+                          } else if (e.key === 'Escape') {
+                            setShowFindReplace(false);
+                          }
+                        }}
+                        placeholder="Text to find..."
+                        className="w-full pl-10 pr-12 py-2.5 border-2 border-gray-600 rounded-lg text-sm focus:outline-none focus:border-[#4a9d6f] focus:ring-2 focus:ring-[#4a9d6f]/20 bg-gray-900/50 text-white placeholder-gray-500 transition-all duration-200"
+                      />
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-gray-800/50 rounded px-1">
+                        <button
+                          onClick={findPrevious}
+                          disabled={totalMatches === 0}
+                          className="p-1.5 text-gray-400 hover:text-[#4a9d6f] hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all rounded"
+                          title="Previous (Shift+Enter)"
+                        >
+                          <ChevronUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={findNext}
+                          disabled={totalMatches === 0}
+                          className="p-1.5 text-gray-400 hover:text-[#4a9d6f] hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all rounded"
+                          title="Next (Enter)"
+                        >
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-gray-200 uppercase tracking-wide">Replace</label>
+                    <div className="relative group">
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#4a9d6f] transition-colors">
+                        <Replace className="w-4 h-4" />
+                      </div>
+                      <input
+                        type="text"
+                        value={replaceText}
+                        onChange={(e) => setReplaceText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                            e.preventDefault();
+                            replaceCurrent();
+                          }
+                        }}
+                        placeholder="Replace with..."
+                        className="w-full pl-10 pr-3 py-2.5 border-2 border-gray-600 rounded-lg text-sm focus:outline-none focus:border-[#4a9d6f] focus:ring-2 focus:ring-[#4a9d6f]/20 bg-gray-900/50 text-white placeholder-gray-500 transition-all duration-200"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4 mt-4 p-3 bg-gray-800/30 rounded-lg border border-gray-700/50">
+                  <div className="flex flex-wrap items-center gap-3 md:gap-4">
+                    <label className="flex items-center gap-2 text-xs sm:text-sm text-gray-200 cursor-pointer group">
+                      <div className="relative">
+                        <input
+                          type="checkbox"
+                          checked={caseSensitive}
+                          onChange={(e) => setCaseSensitive(e.target.checked)}
+                          className="sr-only"
+                        />
+                        <div className={`w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center ${
+                          caseSensitive 
+                            ? 'bg-[#4a9d6f] border-[#4a9d6f]' 
+                            : 'bg-gray-900 border-gray-600 group-hover:border-gray-500'
+                        }`}>
+                          {caseSensitive && <Check className="w-3 h-3 text-white" />}
+                        </div>
+                      </div>
+                      <span className="flex items-center gap-1.5">
+                        <CaseSensitive className="w-3.5 h-3.5" />
+                        Case sensitive
+                      </span>
+                    </label>
+                    <label className="flex items-center gap-2 text-xs sm:text-sm text-gray-200 cursor-pointer group">
+                      <div className="relative">
+                        <input
+                          type="checkbox"
+                          checked={wholeWord}
+                          onChange={(e) => setWholeWord(e.target.checked)}
+                          className="sr-only"
+                        />
+                        <div className={`w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center ${
+                          wholeWord 
+                            ? 'bg-[#4a9d6f] border-[#4a9d6f]' 
+                            : 'bg-gray-900 border-gray-600 group-hover:border-gray-500'
+                        }`}>
+                          {wholeWord && <Check className="w-3 h-3 text-white" />}
+                        </div>
+                      </div>
+                      <span>Whole word</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-xs sm:text-sm text-gray-200 cursor-pointer group">
+                      <div className="relative">
+                        <input
+                          type="checkbox"
+                          checked={useRegex}
+                          onChange={(e) => setUseRegex(e.target.checked)}
+                          className="sr-only"
+                        />
+                        <div className={`w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center ${
+                          useRegex 
+                            ? 'bg-[#4a9d6f] border-[#4a9d6f]' 
+                            : 'bg-gray-900 border-gray-600 group-hover:border-gray-500'
+                        }`}>
+                          {useRegex && <Check className="w-3 h-3 text-white" />}
+                        </div>
+                      </div>
+                      <span className="flex items-center gap-1.5">
+                        <Regex className="w-3.5 h-3.5" />
+                        Regex
+                      </span>
+                    </label>
+                    {useRegex && findText && (
+                      <span className="text-xs text-yellow-400 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full animate-pulse"></span>
+                        Regex mode active
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 md:gap-2">
+                    {findText && (
+                      <div className="text-xs text-gray-400 flex items-center gap-2">
+                        {totalMatches > 0 ? (
+                          <span className="px-2 py-1 bg-gray-800/50 rounded border border-gray-700">
+                            {totalMatches} match{totalMatches !== 1 ? 'es' : ''} found
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 bg-gray-800/50 rounded border border-gray-700 text-gray-500">
+                            No matches found
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={replaceCurrent}
+                        disabled={!findText || !output || matchIndex === -1}
+                        className="px-3 sm:px-4 py-2 bg-[#4a9d6f] text-white rounded-lg hover:bg-[#176641] disabled:bg-gray-600 disabled:cursor-not-allowed text-xs sm:text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg disabled:shadow-none"
+                        title="Replace current (Ctrl+Enter)"
+                      >
+                        Replace
+                      </button>
+                      <button
+                        onClick={() => {
+                          replaceCurrent();
+                          setTimeout(() => findNext(), 50);
+                        }}
+                        disabled={!findText || !output || matchIndex === -1}
+                        className="px-3 sm:px-4 py-2 bg-[#4a9d6f] text-white rounded-lg hover:bg-[#176641] disabled:bg-gray-600 disabled:cursor-not-allowed text-xs sm:text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg disabled:shadow-none"
+                      >
+                        Replace & Next
+                      </button>
+                      <button
+                        onClick={performFindReplace}
+                        disabled={!findText || !output}
+                        className="px-3 sm:px-4 py-2 bg-gradient-to-r from-[#da651e] to-[#c55a1a] text-white rounded-lg hover:from-[#b8541a] hover:to-[#a04915] disabled:bg-gray-600 disabled:cursor-not-allowed text-xs sm:text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg disabled:shadow-none"
+                      >
+                        Replace All
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Templates Panel */}
             {showTemplates && (
-              <div className="mb-4 p-3 sm:p-4 bg-gray-700/50 rounded-xl border border-gray-600">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-xs sm:text-sm font-semibold text-white flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[#4a9d6f]" />
+              <div className="mt-4 pt-4 border-t border-gray-600 p-4 sm:p-5 bg-gradient-to-br from-gray-800/80 to-gray-700/60 rounded-xl shadow-lg border border-gray-600/50">
+                <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-600/50">
+                  <h3 className="text-sm sm:text-base font-semibold text-white">
                     Formatting Templates
                   </h3>
-                  <button
-                    onClick={() => setShowTemplates(false)}
-                    className="p-1 text-gray-400 hover:text-white transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setFontSize(14);
+                        setLineHeight(1.6);
+                        setParagraphSpacing(1);
+                        setWordWrap(true);
+                        setShowLineNumbers(false);
+                        setDisplayMode('plain');
+                      }}
+                      className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-all duration-200"
+                      title="Reset to defaults"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setShowTemplates(false)}
+                      className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-all duration-200"
+                      title="Close"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                   {templates.map((template) => (
@@ -1010,14 +1811,12 @@ export default function AITextFormatter() {
 
             {/* Formatting Controls Panel */}
             {showFormattingControls && (
-              <div className="mb-4 p-4 sm:p-5 bg-gray-700/50 rounded-xl border border-gray-600 shadow-sm">
-                {/* Presets and Reset */}
-                <div className="mb-4 sm:mb-6 pb-4 border-b border-gray-600">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3">
-                    <h3 className="text-xs sm:text-sm font-semibold text-white flex items-center gap-2">
-                      <Zap className="w-4 h-4 text-[#4a9d6f]" />
-                      Quick Presets
-                    </h3>
+              <div className="mt-4 pt-3 border-t border-gray-600 p-3 sm:p-4 bg-gradient-to-br from-gray-800/80 to-gray-700/60 rounded-xl shadow-lg border border-gray-600/50">
+                <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-600/50">
+                  <h3 className="text-xs sm:text-sm font-semibold text-white">
+                    Formatting Options
+                  </h3>
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => {
                         setFontSize(14);
@@ -1027,127 +1826,119 @@ export default function AITextFormatter() {
                         setShowLineNumbers(false);
                         setDisplayMode('plain');
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-300 hover:text-white bg-gray-900 border border-gray-600 rounded-lg hover:bg-gray-800 transition-colors"
+                      className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-all duration-200"
                       title="Reset to defaults"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
-                      Reset
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    <button
-                      onClick={() => {
-                        setFontSize(12);
-                        setLineHeight(1.4);
-                        setParagraphSpacing(0.8);
-                      }}
-                      className="px-2 sm:px-3 py-2 text-xs font-medium bg-gray-900 border border-gray-600 rounded-lg hover:bg-gray-800 hover:border-[#4a9d6f] hover:text-[#4a9d6f] transition-colors"
-                      title="Compact: Small font, tight spacing"
-                    >
-                      Compact
                     </button>
                     <button
-                      onClick={() => {
-                        setFontSize(14);
-                        setLineHeight(1.6);
-                        setParagraphSpacing(1);
-                      }}
-                      className="px-2 sm:px-3 py-2 text-xs font-medium bg-gray-900 border border-gray-600 rounded-lg hover:bg-gray-800 hover:border-[#4a9d6f] hover:text-[#4a9d6f] transition-colors"
-                      title="Medium: Balanced settings"
+                      onClick={() => setShowFormattingControls(false)}
+                      className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-all duration-200"
+                      title="Close"
                     >
-                      Medium
-                    </button>
-                    <button
-                      onClick={() => {
-                        setFontSize(16);
-                        setLineHeight(1.8);
-                        setParagraphSpacing(1.2);
-                      }}
-                      className="px-2 sm:px-3 py-2 text-xs font-medium bg-gray-900 border border-gray-600 rounded-lg hover:bg-gray-800 hover:border-[#4a9d6f] hover:text-[#4a9d6f] transition-colors"
-                      title="Large: Big font, spacious"
-                    >
-                      Large
-                    </button>
-                    <button
-                      onClick={() => {
-                        setFontSize(14);
-                        setLineHeight(2.2);
-                        setParagraphSpacing(1.5);
-                      }}
-                      className="px-2 sm:px-3 py-2 text-xs font-medium bg-gray-900 border border-gray-600 rounded-lg hover:bg-gray-800 hover:border-[#4a9d6f] hover:text-[#4a9d6f] transition-colors"
-                      title="Spacious: Extra line and paragraph spacing"
-                    >
-                      Spacious
+                      <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
-
-                {/* Section: Display Mode */}
-                <div className="mb-4 sm:mb-6 pb-4 border-b border-gray-600">
-                  <h3 className="text-xs sm:text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                    <Eye className="w-4 h-4 text-[#4a9d6f]" />
-                    Display Mode
-                  </h3>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <button
-                      onClick={() => setDisplayMode('plain')}
-                      className={`flex-1 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
-                        displayMode === 'plain' 
-                          ? 'bg-[#4a9d6f] text-white shadow-md' 
-                          : 'bg-gray-900 text-gray-300 hover:bg-gray-800 border border-gray-600 hover:border-[#4a9d6f]'
-                      }`}
-                      title="Plain text view (textarea)"
-                    >
-                      <FileText className="w-4 h-4 inline mr-1.5" />
-                      Plain
-                    </button>
-                    <button
-                      onClick={() => setDisplayMode('formatted')}
-                      className={`flex-1 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
-                        displayMode === 'formatted' 
-                          ? 'bg-[#4a9d6f] text-white shadow-md' 
-                          : 'bg-gray-900 text-gray-300 hover:bg-gray-800 border border-gray-600 hover:border-[#4a9d6f]'
-                      }`}
-                      title="Formatted preview with styling"
-                    >
-                      <Eye className="w-4 h-4 inline mr-1.5" />
-                      Formatted
-                    </button>
-                    <button
-                      onClick={() => setDisplayMode('rich')}
-                      className={`flex-1 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
-                        displayMode === 'rich' 
-                          ? 'bg-[#4a9d6f] text-white shadow-md' 
-                          : 'bg-gray-900 text-gray-300 hover:bg-gray-800 border border-gray-600 hover:border-[#4a9d6f]'
-                      }`}
-                      title="Rich HTML preview"
-                    >
-                      <Type className="w-4 h-4 inline mr-1.5" />
-                      Rich
-                    </button>
+                <div className="space-y-3">
+                  {/* Display Mode & Presets Row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-semibold text-gray-400 mb-1.5 uppercase tracking-wide">Display Mode</label>
+                      <div className="flex gap-1.5">
+                        <button
+                          onClick={() => setDisplayMode('plain')}
+                          className={`flex-1 px-2 py-1.5 rounded text-[11px] font-medium transition-all ${
+                            displayMode === 'plain' 
+                              ? 'bg-[#4a9d6f] text-white' 
+                              : 'bg-gray-900 text-gray-300 hover:bg-gray-800 border border-gray-600'
+                          }`}
+                        >
+                          Plain
+                        </button>
+                        <button
+                          onClick={() => setDisplayMode('formatted')}
+                          className={`flex-1 px-2 py-1.5 rounded text-[11px] font-medium transition-all ${
+                            displayMode === 'formatted' 
+                              ? 'bg-[#4a9d6f] text-white' 
+                              : 'bg-gray-900 text-gray-300 hover:bg-gray-800 border border-gray-600'
+                          }`}
+                        >
+                          Formatted
+                        </button>
+                        <button
+                          onClick={() => setDisplayMode('rich')}
+                          className={`flex-1 px-2 py-1.5 rounded text-[11px] font-medium transition-all ${
+                            displayMode === 'rich' 
+                              ? 'bg-[#4a9d6f] text-white' 
+                              : 'bg-gray-900 text-gray-300 hover:bg-gray-800 border border-gray-600'
+                          }`}
+                        >
+                          Rich
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-semibold text-gray-400 mb-1.5 uppercase tracking-wide">Presets</label>
+                      <div className="flex gap-1.5">
+                        <button
+                          onClick={() => {
+                            setFontSize(12);
+                            setLineHeight(1.4);
+                            setParagraphSpacing(0.8);
+                          }}
+                          className="flex-1 px-2 py-1.5 rounded text-[11px] font-medium transition-all bg-gray-900 text-gray-300 hover:bg-gray-800 border border-gray-600"
+                        >
+                          Compact
+                        </button>
+                        <button
+                          onClick={() => {
+                            setFontSize(14);
+                            setLineHeight(1.6);
+                            setParagraphSpacing(1);
+                          }}
+                          className="flex-1 px-2 py-1.5 rounded text-[11px] font-medium transition-all bg-gray-900 text-gray-300 hover:bg-gray-800 border border-gray-600"
+                        >
+                          Medium
+                        </button>
+                        <button
+                          onClick={() => {
+                            setFontSize(16);
+                            setLineHeight(1.8);
+                            setParagraphSpacing(1.2);
+                          }}
+                          className="flex-1 px-2 py-1.5 rounded text-[11px] font-medium transition-all bg-gray-900 text-gray-300 hover:bg-gray-800 border border-gray-600"
+                        >
+                          Large
+                        </button>
+                        <button
+                          onClick={() => {
+                            setFontSize(14);
+                            setLineHeight(2.2);
+                            setParagraphSpacing(1.5);
+                          }}
+                          className="flex-1 px-2 py-1.5 rounded text-[11px] font-medium transition-all bg-gray-900 text-gray-300 hover:bg-gray-800 border border-gray-600"
+                        >
+                          Spacious
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                  {/* Section: Typography */}
-                  <div className="space-y-3 sm:space-y-4">
-                    <h3 className="text-xs sm:text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                      <Type className="w-4 h-4 text-[#4a9d6f]" />
-                      Typography
-                    </h3>
-
+                  {/* Typography Controls - Grid Layout */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     {/* Font Size */}
-                    <div className="bg-gray-900 p-3 rounded-lg border border-gray-600">
-                      <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
-                        Font Size: <span className="text-[#4a9d6f] font-semibold">{fontSize}px</span>
-                      </label>
-                      <div className="flex items-center gap-2">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] text-gray-400">Font Size</span>
+                        <span className="text-[10px] font-semibold text-[#4a9d6f]">{fontSize}px</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => setFontSize(Math.max(10, fontSize - 1))}
-                          className="p-1.5 bg-gray-800 border border-gray-600 rounded hover:bg-gray-700 transition-colors text-gray-300"
-                          title="Decrease font size"
+                          className="p-1 bg-gray-900 border border-gray-600 rounded hover:bg-gray-800 transition-colors text-gray-300"
                         >
-                          <Minus className="w-4 h-4" />
+                          <Minus className="w-3 h-3" />
                         </button>
                         <input
                           type="range"
@@ -1155,23 +1946,23 @@ export default function AITextFormatter() {
                           max="20"
                           value={fontSize}
                           onChange={(e) => setFontSize(Number(e.target.value))}
-                          className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#4a9d6f]"
+                          className="flex-1 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#4a9d6f]"
                         />
                         <button
                           onClick={() => setFontSize(Math.min(20, fontSize + 1))}
-                          className="p-1.5 bg-gray-800 border border-gray-600 rounded hover:bg-gray-700 transition-colors text-gray-300"
-                          title="Increase font size"
+                          className="p-1 bg-gray-900 border border-gray-600 rounded hover:bg-gray-800 transition-colors text-gray-300"
                         >
-                          <Plus className="w-4 h-4" />
+                          <Plus className="w-3 h-3" />
                         </button>
                       </div>
                     </div>
 
                     {/* Line Height */}
-                    <div className="bg-gray-900 p-3 rounded-lg border border-gray-600">
-                      <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
-                        Line Height: <span className="text-[#4a9d6f] font-semibold">{lineHeight.toFixed(1)}</span>
-                      </label>
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] text-gray-400">Line Height</span>
+                        <span className="text-[10px] font-semibold text-[#4a9d6f]">{lineHeight.toFixed(1)}</span>
+                      </div>
                       <input
                         type="range"
                         min="1"
@@ -1179,16 +1970,16 @@ export default function AITextFormatter() {
                         step="0.1"
                         value={lineHeight}
                         onChange={(e) => setLineHeight(Number(e.target.value))}
-                        className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#4a9d6f]"
-                        title="Adjust line spacing"
+                        className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#4a9d6f]"
                       />
                     </div>
 
                     {/* Paragraph Spacing */}
-                    <div className="bg-gray-900 p-3 rounded-lg border border-gray-600">
-                      <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
-                        Paragraph Spacing: <span className="text-[#4a9d6f] font-semibold">{paragraphSpacing.toFixed(1)}rem</span>
-                      </label>
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] text-gray-400">Para Spacing</span>
+                        <span className="text-[10px] font-semibold text-[#4a9d6f]">{paragraphSpacing.toFixed(1)}</span>
+                      </div>
                       <input
                         type="range"
                         min="0"
@@ -1196,57 +1987,40 @@ export default function AITextFormatter() {
                         step="0.1"
                         value={paragraphSpacing}
                         onChange={(e) => setParagraphSpacing(Number(e.target.value))}
-                        className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#4a9d6f]"
-                        title="Adjust spacing between paragraphs"
+                        className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#4a9d6f]"
                       />
                     </div>
                   </div>
 
-                  {/* Section: Layout */}
-                  <div className="space-y-3 sm:space-y-4">
-                    <h3 className="text-xs sm:text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                      <Settings className="w-4 h-4 text-[#4a9d6f]" />
-                      Layout
-                    </h3>
-
-                    {/* Word Wrap Toggle */}
-                    <div className="bg-gray-900 p-3 rounded-lg border border-gray-600 flex items-center justify-between">
-                      <div>
-                        <label className="text-xs sm:text-sm font-medium text-gray-300 block">Word Wrap</label>
-                        <p className="text-xs text-gray-500 mt-0.5">Wrap long lines</p>
-                      </div>
+                  {/* Layout Options - Inline */}
+                  <div className="flex items-center gap-3 pt-1 border-t border-gray-700/50">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-gray-400">Word Wrap</span>
                       <button
                         onClick={() => setWordWrap(!wordWrap)}
-                        className={`relative w-11 h-6 rounded-full transition-colors ${
+                        className={`relative w-9 h-4.5 rounded-full transition-colors ${
                           wordWrap ? 'bg-[#4a9d6f]' : 'bg-gray-600'
                         }`}
-                        title={wordWrap ? 'Disable word wrap' : 'Enable word wrap'}
                       >
                         <div
-                          className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${
-                            wordWrap ? 'translate-x-5' : 'translate-x-0'
-                          } mt-0.5 ml-0.5`}
+                          className={`w-3.5 h-3.5 bg-white rounded-full shadow-md transform transition-transform ${
+                            wordWrap ? 'translate-x-4.5' : 'translate-x-0.5'
+                          } mt-0.5`}
                         />
                       </button>
                     </div>
-
-                    {/* Line Numbers Toggle */}
-                    <div className="bg-gray-900 p-3 rounded-lg border border-gray-600 flex items-center justify-between">
-                      <div>
-                        <label className="text-xs sm:text-sm font-medium text-gray-300 block">Line Numbers</label>
-                        <p className="text-xs text-gray-500 mt-0.5">Show line numbers</p>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-gray-400">Line Numbers</span>
                       <button
                         onClick={() => setShowLineNumbers(!showLineNumbers)}
-                        className={`relative w-11 h-6 rounded-full transition-colors ${
+                        className={`relative w-9 h-4.5 rounded-full transition-colors ${
                           showLineNumbers ? 'bg-[#4a9d6f]' : 'bg-gray-600'
                         }`}
-                        title={showLineNumbers ? 'Hide line numbers' : 'Show line numbers'}
                       >
                         <div
-                          className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${
-                            showLineNumbers ? 'translate-x-5' : 'translate-x-0'
-                          } mt-0.5 ml-0.5`}
+                          className={`w-3.5 h-3.5 bg-white rounded-full shadow-md transform transition-transform ${
+                            showLineNumbers ? 'translate-x-4.5' : 'translate-x-0.5'
+                          } mt-0.5`}
                         />
                       </button>
                     </div>
@@ -1254,9 +2028,6 @@ export default function AITextFormatter() {
                 </div>
               </div>
             )}
-
-            {/* Output Display */}
-            {renderOutput()}
 
             {/* Toolbar at Bottom */}
             <div className="flex items-center justify-center gap-1 sm:gap-2 flex-wrap mt-4 pt-4 border-t border-gray-600">
@@ -1280,63 +2051,52 @@ export default function AITextFormatter() {
                 </button>
               </div>
 
-              {/* View Controls */}
-              <div className="flex items-center gap-1 border-r border-gray-600 pr-2">
-                <button
-                  onClick={() => setShowSideBySide(!showSideBySide)}
-                  className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
-                    showSideBySide 
-                      ? 'bg-[#4a9d6f]/20 text-[#4a9d6f]' 
-                      : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                  }`}
-                  title="Side-by-side view"
-                >
-                  <AlignLeft className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setShowDiff(!showDiff)}
-                  className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
-                    showDiff 
-                      ? 'bg-[#4a9d6f]/20 text-[#4a9d6f]' 
-                      : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                  }`}
-                  title="Show diff view"
-                >
-                  <FileText className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setIsFullScreen(!isFullScreen)}
-                  className="p-1.5 sm:p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
-                  title="Full screen mode"
-                >
-                  {isFullScreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-                </button>
-              </div>
-
               {/* Action Buttons */}
               <button
-                onClick={() => setShowFindReplace(!showFindReplace)}
-                className="p-1.5 sm:p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                onClick={() => {
+                  const newState = !showFindReplace;
+                  setShowFindReplace(newState);
+                  if (newState) {
+                    setShowTemplates(false);
+                    setShowFormattingControls(false);
+                  }
+                }}
+                className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
+                  showFindReplace 
+                    ? 'bg-[#4a9d6f]/20 text-[#4a9d6f]' 
+                    : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                }`}
                 title="Find and Replace"
               >
                 <Search className="w-4 h-4" />
               </button>
               <button
-                onClick={() => setShowTemplates(!showTemplates)}
-                className="p-1.5 sm:p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                onClick={() => {
+                  const newState = !showTemplates;
+                  setShowTemplates(newState);
+                  if (newState) {
+                    setShowFindReplace(false);
+                    setShowFormattingControls(false);
+                  }
+                }}
+                className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
+                  showTemplates 
+                    ? 'bg-[#4a9d6f]/20 text-[#4a9d6f]' 
+                    : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                }`}
                 title="Templates"
               >
                 <FileText className="w-4 h-4" />
               </button>
               <button
-                onClick={saveCurrentConfig}
-                className="p-1.5 sm:p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
-                title="Save configuration"
-              >
-                <Save className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setShowFormattingControls(!showFormattingControls)}
+                onClick={() => {
+                  const newState = !showFormattingControls;
+                  setShowFormattingControls(newState);
+                  if (newState) {
+                    setShowFindReplace(false);
+                    setShowTemplates(false);
+                  }
+                }}
                 className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
                   showFormattingControls 
                     ? 'bg-[#4a9d6f]/20 text-[#4a9d6f]' 
@@ -1346,66 +2106,58 @@ export default function AITextFormatter() {
               >
                 <Type className="w-4 h-4" />
               </button>
-              <button
-                onClick={copyToClipboard}
-                disabled={!output}
-                className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-[#4a9d6f] text-white rounded-lg hover:bg-[#176641] disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm"
-              >
-                {copied ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">Copy</span>
-                  </>
-                )}
-              </button>
-            </div>
 
-            {/* Text Transformations Panel */}
-            {output && (
-              <div className="mt-4 pt-4 border-t border-gray-600">
-                <h3 className="text-xs sm:text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-[#4a9d6f]" />
-                  Text Transformations
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                  <button onClick={() => transformText('sentenceCase')} className="px-2 sm:px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg hover:bg-gray-800 hover:border-[#4a9d6f] text-xs font-medium text-gray-300 transition-colors" title="Sentence case">Sentence Case</button>
-                  <button onClick={() => transformText('titleCase')} className="px-2 sm:px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg hover:bg-gray-800 hover:border-[#4a9d6f] text-xs font-medium text-gray-300 transition-colors" title="Title case">Title Case</button>
-                  <button onClick={() => transformText('uppercase')} className="px-2 sm:px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg hover:bg-gray-800 hover:border-[#4a9d6f] text-xs font-medium text-gray-300 transition-colors" title="UPPERCASE"><CaseUpper className="w-3 h-3 inline mr-1" />UPPER</button>
-                  <button onClick={() => transformText('lowercase')} className="px-2 sm:px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg hover:bg-gray-800 hover:border-[#4a9d6f] text-xs font-medium text-gray-300 transition-colors" title="lowercase"><CaseLower className="w-3 h-3 inline mr-1" />lower</button>
-                  <button onClick={() => transformText('removeExtraSpaces')} className="px-2 sm:px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg hover:bg-gray-800 hover:border-[#4a9d6f] text-xs font-medium text-gray-300 transition-colors" title="Remove extra spaces">Trim Spaces</button>
-                  <button onClick={() => transformText('removeDuplicateLines')} className="px-2 sm:px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg hover:bg-gray-800 hover:border-[#4a9d6f] text-xs font-medium text-gray-300 transition-colors" title="Remove duplicate lines">Remove Duplicates</button>
-                  <button onClick={() => transformText('sortLines')} className="px-2 sm:px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg hover:bg-gray-800 hover:border-[#4a9d6f] text-xs font-medium text-gray-300 transition-colors" title="Sort lines alphabetically">Sort Lines</button>
-                  <button onClick={() => transformText('reverseLines')} className="px-2 sm:px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg hover:bg-gray-800 hover:border-[#4a9d6f] text-xs font-medium text-gray-300 transition-colors" title="Reverse line order">Reverse Lines</button>
-                  <button onClick={() => transformText('removeEmptyLines')} className="px-2 sm:px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg hover:bg-gray-800 hover:border-[#4a9d6f] text-xs font-medium text-gray-300 transition-colors" title="Remove empty lines">Remove Empty</button>
-                  <button onClick={() => transformText('trimLines')} className="px-2 sm:px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg hover:bg-gray-800 hover:border-[#4a9d6f] text-xs font-medium text-gray-300 transition-colors" title="Trim all lines">Trim Lines</button>
+              {/* Text Transformations - only show when output exists */}
+              {output && (
+                <div className="flex items-center gap-1 border-l border-gray-600 pl-2 ml-2">
+                  <button
+                    onClick={() => transformText('sentenceCase')}
+                    className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+                    title="Sentence Case"
+                  >
+                    <span className="text-[10px] font-medium leading-none">Aa</span>
+                  </button>
+                  <button
+                    onClick={() => transformText('titleCase')}
+                    className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+                    title="Title Case"
+                  >
+                    <span className="text-[10px] font-medium leading-none" style={{ textTransform: 'capitalize' }}>Aa</span>
+                  </button>
+                  <button
+                    onClick={() => transformText('uppercase')}
+                    className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+                    title="UPPERCASE"
+                  >
+                    <CaseUpper className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => transformText('lowercase')}
+                    className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+                    title="lowercase"
+                    >
+                    <CaseLower className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => transformText('removeExtraSpaces')}
+                    className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+                    title="Trim Spaces"
+                  >
+                    <span className="text-[10px]">Trim</span>
+                  </button>
+                  <button
+                    onClick={() => transformText('removeEmptyLines')}
+                    className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+                    title="Remove Empty Lines"
+                  >
+                    <span className="text-[10px]">Empty</span>
+                  </button>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mt-4 sm:mt-6 px-4 sm:px-0">
-          <button
-            onClick={formatText}
-            disabled={!input}
-            className="px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-[#4a9d6f] to-[#176641] text-white rounded-xl font-semibold hover:from-[#176641] hover:to-[#4a9d6f] disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm sm:text-base"
-            title="Or press Ctrl+Shift+F"
-          >
-            Format Text
-          </button>
-          <button
-            onClick={clearAll}
-            className="px-6 sm:px-8 py-2.5 sm:py-3 bg-gray-800 text-gray-300 rounded-xl font-semibold hover:bg-gray-700 border-2 border-gray-600 transition-all text-sm sm:text-base"
-          >
-            Clear All
-          </button>
-        </div>
 
         {/* Info Section */}
         <div className="mt-6 sm:mt-8 bg-gray-800/50 rounded-2xl shadow-lg p-4 sm:p-6 border border-gray-700 mx-4 sm:mx-0">
