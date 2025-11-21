@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Copy, Check, Wand2, Settings, Sparkles, Type, Eye, FileText, Minus, Plus, RotateCcw, Zap, Maximize2, Minimize2, Search, Replace, History, Undo2, Redo2, Save, Download, Upload, CaseSensitive, CaseLower, CaseUpper, AlignLeft, Trash2, X, ChevronUp, ChevronDown, Regex } from 'lucide-react';
+import { Copy, Check, Wand2, Settings, Sparkles, Type, Eye, FileText, Minus, Plus, RotateCcw, Zap, Maximize2, Minimize2, Search, Replace, History, Undo2, Redo2, Save, Download, Upload, CaseSensitive, CaseLower, CaseUpper, AlignLeft, Trash2, X, ChevronUp, ChevronDown, Regex, Bold, Italic, Underline, Strikethrough } from 'lucide-react';
 
 type DisplayMode = 'plain' | 'formatted' | 'rich';
 
@@ -971,6 +971,53 @@ export default function AITextFormatter() {
     addToHistory(input, transformed);
   }, [output, input, addToHistory]);
 
+  // Apply text formatting (bold, italic, underline, strikethrough)
+  const applyTextFormatting = useCallback((formatType: 'bold' | 'italic' | 'underline' | 'strikethrough') => {
+    if (!textareaRef.current || !output) return;
+    
+    const textarea = textareaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    
+    // If no text is selected, do nothing
+    if (start === end) return;
+    
+    const selectedText = output.substring(start, end);
+    let formattedText = '';
+    
+    // Apply markdown formatting based on type
+    switch (formatType) {
+      case 'bold':
+        formattedText = `**${selectedText}**`;
+        break;
+      case 'italic':
+        formattedText = `*${selectedText}*`;
+        break;
+      case 'underline':
+        formattedText = `__${selectedText}__`;
+        break;
+      case 'strikethrough':
+        formattedText = `~~${selectedText}~~`;
+        break;
+      default:
+        return;
+    }
+    
+    // Replace selected text with formatted text
+    const newText = output.substring(0, start) + formattedText + output.substring(end);
+    setOutput(newText);
+    addToHistory(input, newText);
+    
+    // Restore cursor position after the formatted text
+    setTimeout(() => {
+      if (textareaRef.current) {
+        const newPosition = start + formattedText.length;
+        textareaRef.current.setSelectionRange(newPosition, newPosition);
+        textareaRef.current.focus();
+      }
+    }, 0);
+  }, [output, input, addToHistory]);
+
   // Find all matches
   const findMatches = useCallback((text: string, searchText: string) => {
     if (!searchText || !text) {
@@ -1760,6 +1807,7 @@ export default function AITextFormatter() {
                       }}
                       className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-all duration-200"
                       title="Reset to defaults"
+                      aria-label="Reset formatting options to defaults"
                     >
                       <RotateCcw className="w-4 h-4" />
                     </button>
@@ -1767,42 +1815,73 @@ export default function AITextFormatter() {
                       onClick={() => setShowTemplates(false)}
                       className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-all duration-200"
                       title="Close"
+                      aria-label="Close templates panel"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                  {templates.map((template) => (
-                    <button
-                      key={template.name}
-                      onClick={() => {
-                        loadConfig(template.config as FormattingConfig);
-                        setShowTemplates(false);
-                      }}
-                      className="p-3 bg-gray-900 border border-gray-600 rounded-lg hover:bg-gray-800 hover:border-[#4a9d6f] text-left transition-colors"
-                    >
-                      <div className="font-medium text-xs sm:text-sm text-white">{template.name}</div>
-                      <div className="text-xs text-gray-400 mt-1">{template.description}</div>
-                    </button>
-                  ))}
+                  {templates.map((template) => {
+                    const isActive = 
+                      displayMode === template.config.displayMode &&
+                      fontSize === template.config.fontSize &&
+                      Math.abs(lineHeight - template.config.lineHeight) < 0.01 &&
+                      Math.abs(paragraphSpacing - template.config.paragraphSpacing) < 0.01 &&
+                      wordWrap === template.config.wordWrap &&
+                      showLineNumbers === template.config.showLineNumbers;
+                    
+                    return (
+                      <button
+                        key={template.name}
+                        onClick={() => {
+                          loadConfig(template.config as FormattingConfig);
+                          setShowTemplates(false);
+                        }}
+                        className={`p-3 rounded-lg text-left transition-colors ${
+                          isActive
+                            ? 'bg-[#4a9d6f]/20 border-2 border-[#4a9d6f]'
+                            : 'bg-gray-900 border border-gray-600 hover:bg-gray-800 hover:border-[#4a9d6f]'
+                        }`}
+                        aria-label={`Apply ${template.name} template: ${template.description}`}
+                      >
+                        <div className="font-medium text-xs sm:text-sm text-white">{template.name}</div>
+                        <div className="text-xs text-gray-400 mt-1">{template.description}</div>
+                      </button>
+                    );
+                  })}
                 </div>
                 {savedConfigs.length > 0 && (
                   <div className="mt-4 pt-4 border-t border-gray-600">
                     <h4 className="text-xs font-semibold text-gray-300 mb-2">Saved Configurations</h4>
                     <div className="flex flex-wrap gap-2">
-                      {savedConfigs.map((saved, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => {
-                            loadConfig(saved.config);
-                            setShowTemplates(false);
-                          }}
-                          className="px-3 py-1.5 bg-gray-900 border border-gray-600 rounded-lg hover:bg-gray-800 hover:border-[#4a9d6f] text-xs sm:text-sm text-gray-300 transition-colors"
-                        >
-                          {saved.name}
-                        </button>
-                      ))}
+                      {savedConfigs.map((saved, idx) => {
+                        const isActive = 
+                          displayMode === saved.config.displayMode &&
+                          fontSize === saved.config.fontSize &&
+                          Math.abs(lineHeight - saved.config.lineHeight) < 0.01 &&
+                          Math.abs(paragraphSpacing - saved.config.paragraphSpacing) < 0.01 &&
+                          wordWrap === saved.config.wordWrap &&
+                          showLineNumbers === saved.config.showLineNumbers;
+                        
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              loadConfig(saved.config);
+                              setShowTemplates(false);
+                            }}
+                            className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm transition-colors ${
+                              isActive
+                                ? 'bg-[#4a9d6f]/20 border-2 border-[#4a9d6f] text-white'
+                                : 'bg-gray-900 border border-gray-600 hover:bg-gray-800 hover:border-[#4a9d6f] text-gray-300'
+                            }`}
+                            aria-label={`Apply saved configuration: ${saved.name}`}
+                          >
+                            {saved.name}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -1811,9 +1890,9 @@ export default function AITextFormatter() {
 
             {/* Formatting Controls Panel */}
             {showFormattingControls && (
-              <div className="mt-4 pt-3 border-t border-gray-600 p-3 sm:p-4 bg-gradient-to-br from-gray-800/80 to-gray-700/60 rounded-xl shadow-lg border border-gray-600/50">
-                <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-600/50">
-                  <h3 className="text-xs sm:text-sm font-semibold text-white">
+              <div className="mt-4 pt-4 border-t border-gray-600 p-4 sm:p-5 bg-gradient-to-br from-gray-800/80 to-gray-700/60 rounded-xl shadow-lg border border-gray-600/50">
+                <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-600/50">
+                  <h3 className="text-sm sm:text-base font-semibold text-white">
                     Formatting Options
                   </h3>
                   <div className="flex items-center gap-2">
@@ -1828,15 +1907,17 @@ export default function AITextFormatter() {
                       }}
                       className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-all duration-200"
                       title="Reset to defaults"
+                      aria-label="Reset formatting options to defaults"
                     >
-                      <RotateCcw className="w-3.5 h-3.5" />
+                      <RotateCcw className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => setShowFormattingControls(false)}
                       className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-all duration-200"
                       title="Close"
+                      aria-label="Close formatting options panel"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -1887,7 +1968,11 @@ export default function AITextFormatter() {
                             setLineHeight(1.4);
                             setParagraphSpacing(0.8);
                           }}
-                          className="flex-1 px-2 py-1.5 rounded text-[11px] font-medium transition-all bg-gray-900 text-gray-300 hover:bg-gray-800 border border-gray-600"
+                          className={`flex-1 px-2 py-1.5 rounded text-[11px] font-medium transition-all ${
+                            fontSize === 12 && Math.abs(lineHeight - 1.4) < 0.01 && Math.abs(paragraphSpacing - 0.8) < 0.01
+                              ? 'bg-[#4a9d6f] text-white' 
+                              : 'bg-gray-900 text-gray-300 hover:bg-gray-800 border border-gray-600'
+                          }`}
                         >
                           Compact
                         </button>
@@ -1897,7 +1982,11 @@ export default function AITextFormatter() {
                             setLineHeight(1.6);
                             setParagraphSpacing(1);
                           }}
-                          className="flex-1 px-2 py-1.5 rounded text-[11px] font-medium transition-all bg-gray-900 text-gray-300 hover:bg-gray-800 border border-gray-600"
+                          className={`flex-1 px-2 py-1.5 rounded text-[11px] font-medium transition-all ${
+                            fontSize === 14 && Math.abs(lineHeight - 1.6) < 0.01 && Math.abs(paragraphSpacing - 1) < 0.01
+                              ? 'bg-[#4a9d6f] text-white' 
+                              : 'bg-gray-900 text-gray-300 hover:bg-gray-800 border border-gray-600'
+                          }`}
                         >
                           Medium
                         </button>
@@ -1907,7 +1996,11 @@ export default function AITextFormatter() {
                             setLineHeight(1.8);
                             setParagraphSpacing(1.2);
                           }}
-                          className="flex-1 px-2 py-1.5 rounded text-[11px] font-medium transition-all bg-gray-900 text-gray-300 hover:bg-gray-800 border border-gray-600"
+                          className={`flex-1 px-2 py-1.5 rounded text-[11px] font-medium transition-all ${
+                            fontSize === 16 && Math.abs(lineHeight - 1.8) < 0.01 && Math.abs(paragraphSpacing - 1.2) < 0.01
+                              ? 'bg-[#4a9d6f] text-white' 
+                              : 'bg-gray-900 text-gray-300 hover:bg-gray-800 border border-gray-600'
+                          }`}
                         >
                           Large
                         </button>
@@ -1917,7 +2010,11 @@ export default function AITextFormatter() {
                             setLineHeight(2.2);
                             setParagraphSpacing(1.5);
                           }}
-                          className="flex-1 px-2 py-1.5 rounded text-[11px] font-medium transition-all bg-gray-900 text-gray-300 hover:bg-gray-800 border border-gray-600"
+                          className={`flex-1 px-2 py-1.5 rounded text-[11px] font-medium transition-all ${
+                            fontSize === 14 && Math.abs(lineHeight - 2.2) < 0.01 && Math.abs(paragraphSpacing - 1.5) < 0.01
+                              ? 'bg-[#4a9d6f] text-white' 
+                              : 'bg-gray-900 text-gray-300 hover:bg-gray-800 border border-gray-600'
+                          }`}
                         >
                           Spacious
                         </button>
@@ -1926,7 +2023,7 @@ export default function AITextFormatter() {
                   </div>
 
                   {/* Typography Controls - Grid Layout */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
                     {/* Font Size */}
                     <div>
                       <div className="flex items-center justify-between mb-1">
@@ -1937,6 +2034,7 @@ export default function AITextFormatter() {
                         <button
                           onClick={() => setFontSize(Math.max(10, fontSize - 1))}
                           className="p-1 bg-gray-900 border border-gray-600 rounded hover:bg-gray-800 transition-colors text-gray-300"
+                          aria-label="Decrease font size"
                         >
                           <Minus className="w-3 h-3" />
                         </button>
@@ -1947,10 +2045,12 @@ export default function AITextFormatter() {
                           value={fontSize}
                           onChange={(e) => setFontSize(Number(e.target.value))}
                           className="flex-1 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#4a9d6f]"
+                          aria-label="Font size"
                         />
                         <button
                           onClick={() => setFontSize(Math.min(20, fontSize + 1))}
                           className="p-1 bg-gray-900 border border-gray-600 rounded hover:bg-gray-800 transition-colors text-gray-300"
+                          aria-label="Increase font size"
                         >
                           <Plus className="w-3 h-3" />
                         </button>
@@ -1971,6 +2071,7 @@ export default function AITextFormatter() {
                         value={lineHeight}
                         onChange={(e) => setLineHeight(Number(e.target.value))}
                         className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#4a9d6f]"
+                        aria-label="Line height"
                       />
                     </div>
 
@@ -1978,7 +2079,7 @@ export default function AITextFormatter() {
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-[10px] text-gray-400">Para Spacing</span>
-                        <span className="text-[10px] font-semibold text-[#4a9d6f]">{paragraphSpacing.toFixed(1)}</span>
+                        <span className="text-[10px] font-semibold text-[#4a9d6f]">{paragraphSpacing.toFixed(1)}rem</span>
                       </div>
                       <input
                         type="range"
@@ -1988,6 +2089,7 @@ export default function AITextFormatter() {
                         value={paragraphSpacing}
                         onChange={(e) => setParagraphSpacing(Number(e.target.value))}
                         className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#4a9d6f]"
+                        aria-label="Paragraph spacing"
                       />
                     </div>
                   </div>
@@ -1998,14 +2100,17 @@ export default function AITextFormatter() {
                       <span className="text-[10px] text-gray-400">Word Wrap</span>
                       <button
                         onClick={() => setWordWrap(!wordWrap)}
-                        className={`relative w-9 h-4.5 rounded-full transition-colors ${
+                        className={`relative w-11 h-6 rounded-full transition-colors ${
                           wordWrap ? 'bg-[#4a9d6f]' : 'bg-gray-600'
                         }`}
+                        role="switch"
+                        aria-checked={wordWrap}
+                        aria-label="Toggle word wrap"
                       >
                         <div
-                          className={`w-3.5 h-3.5 bg-white rounded-full shadow-md transform transition-transform ${
-                            wordWrap ? 'translate-x-4.5' : 'translate-x-0.5'
-                          } mt-0.5`}
+                          className={`absolute w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${
+                            wordWrap ? 'translate-x-[22px]' : 'translate-x-0.5'
+                          } top-0.5`}
                         />
                       </button>
                     </div>
@@ -2013,14 +2118,17 @@ export default function AITextFormatter() {
                       <span className="text-[10px] text-gray-400">Line Numbers</span>
                       <button
                         onClick={() => setShowLineNumbers(!showLineNumbers)}
-                        className={`relative w-9 h-4.5 rounded-full transition-colors ${
+                        className={`relative w-11 h-6 rounded-full transition-colors ${
                           showLineNumbers ? 'bg-[#4a9d6f]' : 'bg-gray-600'
                         }`}
+                        role="switch"
+                        aria-checked={showLineNumbers}
+                        aria-label="Toggle line numbers"
                       >
                         <div
-                          className={`w-3.5 h-3.5 bg-white rounded-full shadow-md transform transition-transform ${
-                            showLineNumbers ? 'translate-x-4.5' : 'translate-x-0.5'
-                          } mt-0.5`}
+                          className={`absolute w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${
+                            showLineNumbers ? 'translate-x-[22px]' : 'translate-x-0.5'
+                          } top-0.5`}
                         />
                       </button>
                     </div>
@@ -2107,50 +2215,84 @@ export default function AITextFormatter() {
                 <Type className="w-4 h-4" />
               </button>
 
+              {/* Text Formatting Toolbar - only show when output exists */}
+              {output && (
+                <div className="flex items-center gap-1 border-l border-gray-600 pl-2 ml-2">
+                  <button
+                    onClick={() => applyTextFormatting('bold')}
+                    className="flex items-center justify-center w-9 h-8 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors border border-gray-600 hover:border-gray-500"
+                    title="Bold"
+                  >
+                    <Bold className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => applyTextFormatting('italic')}
+                    className="flex items-center justify-center w-9 h-8 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors border border-gray-600 hover:border-gray-500"
+                    title="Italic"
+                  >
+                    <Italic className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => applyTextFormatting('underline')}
+                    className="flex items-center justify-center w-9 h-8 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors border border-gray-600 hover:border-gray-500"
+                    title="Underline"
+                  >
+                    <Underline className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => applyTextFormatting('strikethrough')}
+                    className="flex items-center justify-center w-9 h-8 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors border border-gray-600 hover:border-gray-500"
+                    title="Strikethrough"
+                  >
+                    <Strikethrough className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+
               {/* Text Transformations - only show when output exists */}
               {output && (
                 <div className="flex items-center gap-1 border-l border-gray-600 pl-2 ml-2">
                   <button
                     onClick={() => transformText('sentenceCase')}
-                    className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+                    className="flex items-center justify-center w-9 h-8 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors border border-gray-600 hover:border-gray-500"
                     title="Sentence Case"
                   >
-                    <span className="text-[10px] font-medium leading-none">Aa</span>
+                    <span className="text-[10px] font-medium" style={{ lineHeight: 0 }}>Aa</span>
                   </button>
                   <button
                     onClick={() => transformText('titleCase')}
-                    className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+                    className="flex items-center justify-center w-9 h-8 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors border border-gray-600 hover:border-gray-500"
                     title="Title Case"
                   >
-                    <span className="text-[10px] font-medium leading-none" style={{ textTransform: 'capitalize' }}>Aa</span>
+                    <span className="text-[10px] font-medium" style={{ lineHeight: 0 }}>Aa B</span>
                   </button>
                   <button
                     onClick={() => transformText('uppercase')}
-                    className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+                    className="flex items-center justify-center w-9 h-8 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors border border-gray-600 hover:border-gray-500"
                     title="UPPERCASE"
                   >
                     <CaseUpper className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => transformText('lowercase')}
-                    className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+                    className="flex items-center justify-center w-9 h-8 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors border border-gray-600 hover:border-gray-500"
                     title="lowercase"
                     >
                     <CaseLower className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => transformText('removeExtraSpaces')}
-                    className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+                    className="flex items-center justify-center w-9 h-8 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors border border-gray-600 hover:border-gray-500 px-0.5"
                     title="Trim Spaces"
                   >
-                    <span className="text-[10px]">Trim</span>
+                    <span className="text-[10px]" style={{ lineHeight: 0 }}>Trim</span>
                   </button>
                   <button
                     onClick={() => transformText('removeEmptyLines')}
-                    className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+                    className="flex items-center justify-center w-9 h-8 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors border border-gray-600 hover:border-gray-500 px-0.5"
                     title="Remove Empty Lines"
                   >
-                    <span className="text-[10px]">Empty</span>
+                    <span className="text-[10px]" style={{ lineHeight: 0 }}>Empty</span>
                   </button>
                 </div>
               )}
