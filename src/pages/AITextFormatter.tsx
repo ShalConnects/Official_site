@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Copy, Check, Wand2, Settings, Sparkles, Type, Eye, FileText, Minus, Plus, RotateCcw, Zap, Maximize2, Minimize2, Search, Replace, History, Undo2, Redo2, Save, Download, Upload, CaseSensitive, CaseLower, CaseUpper, AlignLeft, Trash2, X, ChevronUp, ChevronDown, Regex, Bold, Italic, Underline, Strikethrough } from 'lucide-react';
+import { Copy, Check, Wand2, Sparkles, Type, Eye, FileText, Minus, Plus, RotateCcw, Minimize2, Search, Replace, Undo2, Redo2, CaseSensitive, CaseLower, CaseUpper, X, ChevronUp, ChevronDown, Regex, Bold, Italic, Underline, Strikethrough } from 'lucide-react';
 
 type DisplayMode = 'plain' | 'formatted' | 'rich';
 
@@ -22,11 +22,11 @@ export default function AITextFormatter() {
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [isFormatting, setIsFormatting] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [, setCopied] = useState(false);
   const [aiDetected, setAiDetected] = useState(false);
   const [showOriginal, setShowOriginal] = useState(false);
-  const [aiConfidence, setAiConfidence] = useState(0);
-  const [aiPatterns, setAiPatterns] = useState<string[]>([]);
+  const [, setAiConfidence] = useState(0);
+  const [, setAiPatterns] = useState<string[]>([]);
 
   // Helper function to escape HTML
   const escapeHtml = (text: string): string => {
@@ -36,6 +36,7 @@ export default function AITextFormatter() {
   };
   const [showNotification, setShowNotification] = useState(false);
   const [notificationType, setNotificationType] = useState<'formatting' | 'success' | 'copied'>('formatting');
+  const [, setNotificationMessage] = useState('');
   
   // Formatting options
   const [displayMode, setDisplayMode] = useState<DisplayMode>('plain');
@@ -48,8 +49,8 @@ export default function AITextFormatter() {
 
   // New features state
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const [showSideBySide, setShowSideBySide] = useState(false);
-  const [showDiff, setShowDiff] = useState(false);
+  const [, _setShowSideBySide] = useState(false);
+  const [showDiff, _setShowDiff] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [findText, setFindText] = useState('');
@@ -65,8 +66,8 @@ export default function AITextFormatter() {
   const [showTemplates, setShowTemplates] = useState(false);
   
   // Performance: Debounce refs
-  const formatTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const detectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const formatTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const detectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const historyIndexRef = useRef(-1);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const overlayRef = useRef<HTMLDivElement | null>(null);
@@ -398,8 +399,9 @@ export default function AITextFormatter() {
     }
   }, []);
 
-  // Save current configuration
-  const saveCurrentConfig = useCallback(() => {
+  // Save current configuration (unused but kept for future use)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _saveCurrentConfig = useCallback(() => {
     const name = prompt('Enter a name for this configuration:');
     if (name) {
       const config: FormattingConfig = {
@@ -440,7 +442,7 @@ export default function AITextFormatter() {
 
 
     // Handle markdown headers (# ## ###) - convert to plain text with colon
-    formatted = formatted.replace(/^#{1,6}\s+(.+)$/gm, (match, headerText) => {
+    formatted = formatted.replace(/^#{1,6}\s+(.+)$/gm, (_match, headerText) => {
       const trimmed = headerText.trim();
       // Add colon if header doesn't end with punctuation
       if (trimmed && !/[.:!?]$/.test(trimmed)) {
@@ -451,7 +453,7 @@ export default function AITextFormatter() {
 
     // Handle bold-only lines (standalone headers like **Title**) - MUST be before general bold removal
     // First, handle lines that are entirely bold text (possibly with whitespace)
-    formatted = formatted.replace(/^\s*\*\*([^*\n]+?)\*\*\s*$/gm, (match, headerText) => {
+    formatted = formatted.replace(/^\s*\*\*([^*\n]+?)\*\*\s*$/gm, (_match, headerText) => {
       const trimmed = headerText.trim();
       // Add colon if header doesn't end with punctuation
       if (trimmed && !/[.:!?]$/.test(trimmed)) {
@@ -475,13 +477,14 @@ export default function AITextFormatter() {
       // Check if this line starts with a bold header followed by text
       const headerMatch = line.match(/^(\s*)\*\*([^*\n]+?)\*\*\s+(.+)$/);
       if (headerMatch) {
-        const [, leadingSpace, headerText, followingText] = headerMatch;
+        const [, _leadingSpace, headerText, followingText] = headerMatch;
         const trimmed = headerText.trim();
         // Add colon if header doesn't end with punctuation
         const headerWithColon = trimmed && !/[.:!?]$/.test(trimmed) ? trimmed + ':' : trimmed;
         
         // Check if the last processed line is empty - if so, we already have the break
-        const lastProcessedIsEmpty = linesAfterHeaderFix.length > 0 && !linesAfterHeaderFix[linesAfterHeaderFix.length - 1].trim();
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const _lastProcessedIsEmpty = linesAfterHeaderFix.length > 0 && !linesAfterHeaderFix[linesAfterHeaderFix.length - 1].trim();
         
         // Remove any trailing empty lines to avoid double spacing, but we'll add exactly one back
         while (linesAfterHeaderFix.length > 0 && !linesAfterHeaderFix[linesAfterHeaderFix.length - 1].trim()) {
@@ -931,7 +934,7 @@ export default function AITextFormatter() {
         // Capitalize first letter of the text
         transformed = transformed.charAt(0).toUpperCase() + transformed.slice(1);
         // Capitalize first letter after sentence endings (. ! ?)
-        transformed = transformed.replace(/([.!?]\s+)([a-z])/g, (match, p1, p2) => p1 + p2.toUpperCase());
+        transformed = transformed.replace(/([.!?]\s+)([a-z])/g, (_match, p1, p2) => p1 + p2.toUpperCase());
         break;
       case 'titleCase':
         // Convert to lowercase first, then capitalize first letter of each word
@@ -1324,16 +1327,17 @@ export default function AITextFormatter() {
       const textBeforeMatch = textarea.value.substring(0, match.start);
       const lines = textBeforeMatch.split('\n');
       const lineNumber = lines.length - 1;
-      const lineHeight = parseFloat(getComputedStyle(textarea).lineHeight) || fontSize * lineHeight;
-      const scrollTop = lineNumber * lineHeight - textarea.clientHeight / 2;
+      const computedLineHeight = parseFloat(getComputedStyle(textarea).lineHeight) || fontSize * 1.6;
+      const scrollTop = lineNumber * computedLineHeight - textarea.clientHeight / 2;
       textarea.scrollTop = Math.max(0, scrollTop);
     } else if (matchIndex === -1) {
       prevMatchIndexRef.current = -1;
     }
   }, [matchIndex, matchPositions, showFindReplace, fontSize, lineHeight]);
 
-  // Diff calculation helper
-  const calculateDiff = useMemo(() => {
+  // Diff calculation helper (unused but kept for future use)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _calculateDiff = useMemo(() => {
     if (!input || !output || !showDiff) return null;
     
     const inputLines = input.split('\n');

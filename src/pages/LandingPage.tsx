@@ -58,13 +58,13 @@ interface Stats {
 
 export default function LandingPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
+  const [, setScrollY] = useState(0);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
-  const moreMenuCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const moreMenuCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [formData, setFormData] = useState<FormData>({ name: '', email: '', message: '', service: '' });
   const [formErrors, setFormErrors] = useState<FormErrors>({});
@@ -73,7 +73,7 @@ export default function LandingPage() {
   const [isServiceDropdownOpen, setIsServiceDropdownOpen] = useState(false);
   const [hoveredServiceIndex, setHoveredServiceIndex] = useState<number | null>(null);
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
-  const [activeTab] = useState(0);
+  const [_activeTab] = useState(0);
   const [activeServiceCard, setActiveServiceCard] = useState(0);
   const [visibleServiceCards, setVisibleServiceCards] = useState<Set<string>>(new Set());
   const [selectedProcessStep, setSelectedProcessStep] = useState<number | null>(null);
@@ -91,13 +91,14 @@ export default function LandingPage() {
   const statsTarget: Stats = { projects: 150, clients: 200, years: 8, satisfaction: 98 };
 
   // Mouse position for interactive effects
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [mousePosition, _setMousePosition] = useState({ x: 0, y: 0 });
   const heroRef = useRef<HTMLDivElement | null>(null);
   
   // Interactive particles state
-  const [particles, setParticles] = useState<Particle[]>([]);
-  const particlesRef = useRef<Particle[]>([]);
-  const [particleConnections, setParticleConnections] = useState<ParticleConnection[]>([]);
+  const [particles, _setParticles] = useState<Particle[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _particlesRef = useRef<Particle[]>([]);
+  const [particleConnections, _setParticleConnections] = useState<ParticleConnection[]>([]);
 
   // Scroll progress and active section tracking
   useEffect(() => {
@@ -624,7 +625,8 @@ export default function LandingPage() {
   ];
 
   // All services (flattened from categories)
-  const allServices = serviceCategories.flatMap(category => 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _allServices = serviceCategories.flatMap(category => 
     category.services.map(service => ({
       ...service,
       category: category.name,

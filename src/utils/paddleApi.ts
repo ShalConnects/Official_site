@@ -5,7 +5,7 @@
 
 // NOTE: This file should not contain any API keys
 // All API calls should be made from your backend serverless functions
-const PADDLE_API_URL = 'https://api.paddle.com';
+// const PADDLE_API_URL = 'https://api.paddle.com'; // Unused - API calls go through backend
 
 export interface PaddleTransaction {
   id: string;

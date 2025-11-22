@@ -268,15 +268,15 @@ export default function PluginPage() {
       if (plugin.paddlePriceId) {
         // Use priceId (recommended for Paddle v2)
         checkoutOptions = {
-          items: [{
+        items: [{
             priceId: plugin.paddlePriceId,
-            quantity: 1,
-          }],
-          settings: {
-            successUrl: redirectUrl,
-            displayMode: 'overlay',
-          },
-        };
+          quantity: 1,
+        }],
+        settings: {
+          successUrl: redirectUrl,
+          displayMode: 'overlay',
+        },
+      };
       } else if (plugin.paddleProductId) {
         // Fallback to productId
         checkoutOptions = {
@@ -410,8 +410,8 @@ export default function PluginPage() {
                       <div className="absolute -top-2 -left-2 sm:-top-3 sm:-left-3 lg:-top-4 lg:-left-4 z-20 bg-blue-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 rounded-lg shadow-xl font-semibold text-xs sm:text-sm lg:text-base whitespace-nowrap">
                         Visual Designer
                         <div className="absolute -bottom-1.5 sm:-bottom-2 left-4 sm:left-6 lg:left-8 w-0 h-0 border-l-4 border-r-4 border-t-4 sm:border-l-6 sm:border-r-6 sm:border-t-6 lg:border-l-8 lg:border-r-8 lg:border-t-8 border-transparent border-t-blue-600"></div>
-                      </div>
-                      
+                    </div>
+                    
                       <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden mt-6 sm:mt-7 lg:mt-8 flex-1 flex items-center justify-center">
                         <img 
                           src="/images/screenshot-visual-designer.png" 
@@ -422,16 +422,16 @@ export default function PluginPage() {
                             target.style.display = 'none';
                           }}
                         />
+                        </div>
                       </div>
-                    </div>
-
+                      
                     {/* Visual Variation Management */}
                     <div className="relative flex flex-col">
                       <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 lg:-top-4 lg:-right-4 z-20 bg-blue-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 rounded-lg shadow-xl font-semibold text-xs sm:text-sm lg:text-base">
                         <span className="whitespace-normal sm:whitespace-nowrap">Visual Variation Management</span>
                         <div className="absolute -bottom-1.5 sm:-bottom-2 right-4 sm:right-6 lg:right-8 w-0 h-0 border-l-4 border-r-4 border-t-4 sm:border-l-6 sm:border-r-6 sm:border-t-6 lg:border-l-8 lg:border-r-8 lg:border-t-8 border-transparent border-t-blue-600"></div>
-                      </div>
-                      
+                        </div>
+                        
                       <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden mt-6 sm:mt-7 lg:mt-8 flex-1 flex items-center justify-center">
                         <img 
                           src="/images/screenshot-visual-variation-management.png" 
@@ -442,7 +442,7 @@ export default function PluginPage() {
                             target.style.display = 'none';
                           }}
                         />
-                      </div>
+                            </div>
                     </div>
                   </div>
 
@@ -502,8 +502,8 @@ export default function PluginPage() {
                         </div>
                       </div>
                     </div>
-                  </div>
-                </div>
+                        </div>
+                          </div>
               </div>
             </div>
           </section>

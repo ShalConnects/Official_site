@@ -1,5 +1,4 @@
-﻿import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+﻿import { Routes, Route } from 'react-router-dom';
 import { Zap, Target, TrendingUp, Palette, Code, Wrench, FileCode, Layout, Package, Store, List, Image, Smartphone, Globe, Share2, FileText, Layers } from 'lucide-react';
 import { SiWordpress, SiShopify, SiWix, SiEbay, SiAmazon, SiWalmart, SiAndroid } from 'react-icons/si';
 import ScrollToTop from './components/ScrollToTop';
@@ -188,20 +187,20 @@ function ShalConnectsPortfolio() {
     }
   ];
 
-  return (
+                  return (
     <>
       <ScrollToTop />
-      <Routes>
-        <Route path="/download" element={<DownloadPage />} />
+    <Routes>
+      <Route path="/download" element={<DownloadPage />} />
         <Route path="/tools" element={<ToolsPage />} />
         <Route path="/tools/ai-formatter" element={<AITextFormatter />} />
-        <Route path="/services/wordpress/plugins/:pluginSlug" element={<PluginPage />} />
-        <Route path="/services/:serviceSlug" element={<ServicePage serviceCategories={serviceCategories as any} />} />
+      <Route path="/services/wordpress/plugins/:pluginSlug" element={<PluginPage />} />
+      <Route path="/services/:serviceSlug" element={<ServicePage serviceCategories={serviceCategories as any} />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/refund" element={<RefundPolicy />} />
         <Route path="/" element={<LandingPage />} />
-      </Routes>
+    </Routes>
     </>
   );
 }
