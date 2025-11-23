@@ -791,7 +791,7 @@ export default function AITextFormatter() {
             break;
           }
         }
-        const nextIsListItem = nextNonEmptyLine && /^[•\-\*\d]\.?\s/.test(nextNonEmptyLine);
+        const nextIsListItem = !!(nextNonEmptyLine && /^[•\-\*\d]\.?\s/.test(nextNonEmptyLine));
         
         // Don't preserve empty lines between consecutive list items
         if (prevIsListItem && nextIsListItem) {
@@ -804,7 +804,7 @@ export default function AITextFormatter() {
         const prevIsHeader = prevLine && /:$/.test(prevLine);
         
         // Check if next non-empty line is a paragraph (not a header, not a list item)
-        const nextIsParagraph = nextNonEmptyLine && !/:$/.test(nextNonEmptyLine) && !/^[•\-\*\d]\.?\s/.test(nextNonEmptyLine);
+        const nextIsParagraph = !!(nextNonEmptyLine && !/:$/.test(nextNonEmptyLine) && !/^[•\-\*\d]\.?\s/.test(nextNonEmptyLine));
         
         // Skip empty line if it's between a header and a list item or paragraph (based on headerSpacing)
         if (prevIsHeader && (nextIsListItem || nextIsParagraph)) {
