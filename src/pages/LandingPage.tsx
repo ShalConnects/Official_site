@@ -536,7 +536,7 @@ export default function LandingPage() {
     {
       icon: Search,
       title: 'Discovery & Strategy',
-      timeline: '1-2 weeks',
+      timeline: '1 week',
       desc: 'We start by understanding your business, goals, and target audience.',
       subSteps: ['Initial consultation', 'Market research', 'Strategy development', 'Project planning'],
       deliverables: ['Project brief', 'Strategy document', 'Timeline', 'Budget estimate'],
@@ -545,16 +545,25 @@ export default function LandingPage() {
     {
       icon: Workflow,
       title: 'Design & Development',
-      timeline: '2-4 weeks',
+      timeline: '2 weeks',
       desc: 'We create and build your solution with attention to detail.',
       subSteps: ['Design mockups', 'Client review', 'Development', 'Testing'],
       deliverables: ['Design files', 'Working prototype', 'Test results', 'Documentation'],
       keyQuestions: ['What design style do you prefer?', 'Any specific features needed?', 'Timeline expectations?']
     },
     {
+      icon: CheckCircle,
+      title: 'Review & Refinement',
+      timeline: '3-4 days',
+      desc: 'We review, test, and refine your solution based on your feedback.',
+      subSteps: ['Quality assurance', 'Client feedback', 'Revisions', 'Final approval'],
+      deliverables: ['Test reports', 'Feedback summary', 'Revised deliverables', 'Approval sign-off'],
+      keyQuestions: ['Any changes needed?', 'Does it meet your expectations?', 'Ready for launch?']
+    },
+    {
       icon: Rocket,
       title: 'Launch & Support',
-      timeline: 'Ongoing',
+      timeline: 'Support: Ongoing',
       desc: 'We launch your project and provide ongoing support.',
       subSteps: ['Final testing', 'Launch', 'Training', 'Support'],
       deliverables: ['Live project', 'Training materials', 'Support plan', 'Maintenance schedule'],
