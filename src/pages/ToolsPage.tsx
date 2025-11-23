@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Wand2, ArrowRight } from 'lucide-react';
-import Breadcrumbs from '../components/Breadcrumbs';
+import PageLayout from '../components/PageLayout';
 
 interface Tool {
   id: string;
@@ -28,17 +28,15 @@ export default function ToolsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <Breadcrumbs />
-      
+    <PageLayout title="Fun Project">
       {/* Header Section */}
       <section className="bg-gray-800/50 py-12 sm:py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-center">
-            Tools
+            Fun Project
           </h1>
           <p className="text-center text-gray-400 mb-8 max-w-2xl mx-auto text-lg">
-            Free utilities and tools to help you work smarter
+            Free utilities and tools crafted by <Link to="/" className="text-gradient-theme font-semibold hover:opacity-80 transition-opacity cursor-pointer inline-block">ShalConnects</Link> to help you work smarter
           </p>
         </div>
       </section>
@@ -55,7 +53,7 @@ export default function ToolsPage() {
                   to={tool.route}
                   className="group bg-gray-800/50 p-6 rounded-xl border border-gray-700/50 transition-all duration-300 hover:border-gray-600/50 hover:scale-105 cursor-pointer"
                 >
-                  <div className="flex items-start gap-4 mb-4">
+                  <div className="flex items-center gap-4 mb-4">
                     <div 
                       className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6" 
                       style={{ backgroundColor: tool.color }}
@@ -95,7 +93,7 @@ export default function ToolsPage() {
           )}
         </div>
       </section>
-    </div>
+    </PageLayout>
   );
 }
 

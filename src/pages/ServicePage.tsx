@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, Zap, Shield, Clock, Users, TrendingUp, ChevronDown, ChevronUp, Star, Quote, ExternalLink, Menu, X as XIcon } from 'lucide-react';
 import { SiWhatsapp } from 'react-icons/si';
-import Breadcrumbs from '../components/Breadcrumbs';
+import PageLayout from '../components/PageLayout';
 import PageSidebar from '../components/PageSidebar';
 
 interface SubService {
@@ -50,23 +50,28 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
       break;
     }
   }
+  
+  // Compute page title
+  const pageTitle = foundService ? foundService.title : 'Service';
 
   if (!foundService || !foundCategory) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">Service Not Found</h1>
-          <p className="text-gray-400 mb-8">The service you're looking for doesn't exist.</p>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-white transition-all hover:scale-105"
-            style={{ backgroundColor: '#176641' }}
-          >
-            <ArrowLeft size={18} />
-            Back to Home
-          </Link>
+      <PageLayout title="Service Not Found">
+        <div className="flex items-center justify-center p-4 min-h-[60vh]">
+          <div className="text-center">
+            <h1 className="text-3xl sm:text-4xl font-bold mb-4">Service Not Found</h1>
+            <p className="text-gray-400 mb-8">The service you're looking for doesn't exist.</p>
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-white transition-all hover:scale-105"
+              style={{ backgroundColor: '#176641' }}
+            >
+              <ArrowLeft size={18} />
+              Back to Home
+            </Link>
+          </div>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
@@ -85,8 +90,7 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <Breadcrumbs />
+    <PageLayout title={pageTitle}>
       
       {/* Floating Toggle Button - Left Side */}
       <button
@@ -1138,7 +1142,7 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
         </section>
         </main>
       </div>
-    </div>
+    </PageLayout>
   );
 }
 

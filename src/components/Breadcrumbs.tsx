@@ -36,7 +36,7 @@ export default function Breadcrumbs() {
       if (path === 'services') {
         label = 'Services';
       } else if (path === 'tools') {
-        label = 'Tools';
+        label = 'Fun Project';
       } else if (path === 'ai-formatter') {
         label = 'AI Text Formatter';
       } else if (path === 'wordpress') {

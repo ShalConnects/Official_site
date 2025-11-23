@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Download, CheckCircle, XCircle, Loader2, ArrowLeft, AlertCircle } from 'lucide-react';
-import Breadcrumbs from '../components/Breadcrumbs';
+import PageLayout from '../components/PageLayout';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 interface TransactionData {
   id: string;
@@ -15,6 +16,8 @@ interface TransactionData {
 }
 
 export default function DownloadPage() {
+  usePageTitle('Download');
+  
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [verified, setVerified] = useState(false);
@@ -104,23 +107,21 @@ export default function DownloadPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
-        <Breadcrumbs />
+      <PageLayout title="Download">
         <div className="flex items-center justify-center min-h-[80vh]">
           <div className="text-center">
             <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4" style={{ color: '#176641' }} />
             <p className="text-gray-400">Verifying your purchase...</p>
           </div>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
-        <Breadcrumbs />
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <PageLayout title="Download">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
           <div className="bg-gray-800/50 rounded-xl border border-red-500/50 p-8 text-center">
             <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
             <h1 className="text-3xl font-bold mb-4">Verification Failed</h1>
@@ -149,15 +150,14 @@ export default function DownloadPage() {
             </div>
           </div>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   if (verified && transaction) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
-        <Breadcrumbs />
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <PageLayout title="Download">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
           <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-8">
             <div className="text-center mb-8">
               <CheckCircle className="w-16 h-16 mx-auto mb-4" style={{ color: '#176641' }} />
@@ -236,7 +236,7 @@ export default function DownloadPage() {
             </div>
           </div>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 

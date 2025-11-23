@@ -1,19 +1,10 @@
-import { Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import PageLayout from '../components/PageLayout';
 
 export default function RefundPolicy() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 text-gray-400 hover:text-green-400 mb-8 transition-colors"
-        >
-          <ArrowLeft size={18} />
-          Back to Home
-        </Link>
-
-        <h1 className="text-4xl font-bold mb-8">Refund Policy</h1>
+    <PageLayout title="Refund Policy">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 md:py-12">
+        <h1 className="text-3xl sm:text-4xl font-bold mb-4 sm:mb-6 md:mb-8">Refund Policy</h1>
         <p className="text-gray-400 mb-6">Last updated: {new Date().toLocaleDateString()}</p>
 
         <div className="prose prose-invert max-w-none space-y-6 text-gray-300">
@@ -84,7 +75,7 @@ export default function RefundPolicy() {
           </section>
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }
 

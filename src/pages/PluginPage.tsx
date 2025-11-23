@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, X, Download, ExternalLink, Image, Code, Zap, Palette, Settings, Plug, Menu, X as XIcon, ShoppingCart } from 'lucide-react';
-import Breadcrumbs from '../components/Breadcrumbs';
+import PageLayout from '../components/PageLayout';
 import PageSidebar from '../components/PageSidebar';
 import { useState, useEffect } from 'react';
 
@@ -151,12 +151,16 @@ export default function PluginPage() {
   };
 
   const plugin = pluginData[pluginSlug as keyof typeof pluginData];
+  
+  // Compute page title
+  const pageTitle = plugin ? plugin.name : 'Plugin';
 
   if (!plugin) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
+      <PageLayout title="Plugin Not Found">
+        <div className="flex items-center justify-center p-4 min-h-[60vh]">
         <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">Plugin Not Found</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold mb-4">Plugin Not Found</h1>
           <p className="text-gray-400 mb-8">The plugin you're looking for doesn't exist.</p>
           <Link
             to="/services/wordpress"
@@ -168,6 +172,7 @@ export default function PluginPage() {
           </Link>
         </div>
       </div>
+      </PageLayout>
     );
   }
 
@@ -300,8 +305,7 @@ export default function PluginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <Breadcrumbs />
+    <PageLayout title={pageTitle}>
       
       {/* Floating Toggle Button - Mobile & Desktop */}
       <button
@@ -831,7 +835,7 @@ export default function PluginPage() {
         </section>
         </main>
       </div>
-    </div>
+    </PageLayout>
   );
 }
 
