@@ -1,8 +1,7 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, X, Download, ExternalLink, Image, Code, Zap, Palette, Settings, Plug, Menu, X as XIcon, ShoppingCart } from 'lucide-react';
-import PageLayout from '../components/PageLayout';
-import PageSidebar from '../components/PageSidebar';
-import { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
+import { useEffect } from 'react';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 // Declare Paddle type
 declare global {
@@ -30,27 +29,7 @@ declare global {
 export default function PluginPage() {
   const { pluginSlug, productSlug } = useParams<{ pluginSlug?: string; productSlug?: string }>();
   const slug = pluginSlug || productSlug;
-  const navigate = useNavigate();
   const isStoreSubdomain = typeof window !== 'undefined' && window.location.hostname === 'store.shalconnects.com';
-  const [isSidebarVisible, setIsSidebarVisible] = useState<boolean>(false); // Hidden by default on mobile
-
-  // Show sidebar by default on desktop, hide on mobile
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setIsSidebarVisible(true);
-      } else {
-        setIsSidebarVisible(false);
-      }
-    };
-
-    // Set initial state
-    handleResize();
-
-    // Listen for resize events
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   // Plugin data - will be expanded based on slug
   // CONFIGURATION REQUIRED:
@@ -69,12 +48,7 @@ export default function PluginPage() {
       paddlePriceId: 'pri_01kafx042cwqdh525d9ts9fj6v', // Paddle Price ID
       paddleVendorId: 252028, // Paddle Vendor ID
       price: '$24.99', // Display price
-      features: [
-        { icon: Image, title: 'Custom Images', desc: 'Add custom images to each product variation' },
-        { icon: Zap, title: 'Multiple Styles', desc: 'Choose from various display styles and layouts' },
-        { icon: Palette, title: 'Visual Designer', desc: 'Easy customization with built-in Visual Designer' },
-        { icon: Code, title: 'Page Builders', desc: 'Works with Elementor, Divi, Bricks, and more' }
-      ],
+      features: [],
       displayStyles: [
         { name: 'Horizontal Text Boxes', description: 'Text-only buttons in a horizontal row', badge: 'Simple attributes', image: '/images/images/horizontal-text-boxes.png' },
         { name: 'Vertical Text List', description: 'Text-only buttons in a vertical list', badge: 'Simple attributes', image: '/images/images/vertical-text-list.png' },
@@ -156,40 +130,25 @@ export default function PluginPage() {
   
   // Compute page title
   const pageTitle = plugin ? plugin.name : 'Plugin';
+  usePageTitle(pageTitle);
 
   if (!plugin) {
     return (
-      <PageLayout title="Plugin Not Found">
-        <div className="flex items-center justify-center p-4 min-h-[60vh]">
-        <div className="text-center">
-            <h1 className="text-3xl sm:text-4xl font-bold mb-4">Plugin Not Found</h1>
-          <p className="text-gray-400 mb-8">The plugin you're looking for doesn't exist.</p>
+      <div style={{ background: '#f9f9f9', padding: '40px 20px', minHeight: '100vh' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', background: '#fff', padding: '40px', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)', textAlign: 'center' }}>
+          <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '1rem', color: '#333' }}>Plugin Not Found</h1>
+          <p style={{ color: '#666', marginBottom: '2rem' }}>The plugin you're looking for doesn't exist.</p>
           <Link
             to={isStoreSubdomain ? "/" : "/services/wordpress"}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-white transition-all hover:scale-105"
-            style={{ backgroundColor: '#176641' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 24px', borderRadius: '6px', backgroundColor: '#176641', color: '#fff', textDecoration: 'none', fontWeight: '600' }}
           >
             <ArrowLeft size={18} />
             {isStoreSubdomain ? "Back to Store" : "Back to WordPress Services"}
           </Link>
         </div>
       </div>
-      </PageLayout>
     );
   }
-
-  const tocItems = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'features', label: 'Key Features' },
-    { id: 'comparison', label: 'Free vs Pro' },
-    { id: 'display-styles', label: 'Display Styles' },
-    { id: 'installation', label: 'Installation Guide' },
-    { id: 'download', label: 'Download' }
-  ];
-
-  const scrollToContact = () => {
-    navigate('/#contact', { state: { prefillService: plugin.name } });
-  };
 
   // Initialize Paddle
   useEffect(() => {
@@ -247,13 +206,13 @@ export default function PluginPage() {
   const handlePurchase = () => {
     if (!plugin || !window.Paddle) {
       console.error('Paddle not initialized');
-      scrollToContact();
+      alert('Paddle checkout is not available. Please contact support at hello@shalconnects.com');
       return;
     }
 
     if (!plugin.paddlePriceId && !plugin.paddleProductId) {
       console.error('Paddle Price ID or Product ID missing');
-      scrollToContact();
+      alert('Product configuration error. Please contact support at hello@shalconnects.com');
       return;
     }
 
@@ -301,543 +260,150 @@ export default function PluginPage() {
       window.Paddle.Checkout.open(checkoutOptions);
     } catch (error) {
       console.error('Error opening Paddle checkout:', error);
-      alert('Unable to open checkout. Please contact support or try again later.');
-      scrollToContact();
+      alert('Unable to open checkout. Please contact support at hello@shalconnects.com or try again later.');
     }
   };
 
   return (
-    <PageLayout title={pageTitle}>
-      
-      {/* Floating Toggle Button - Mobile & Desktop */}
-      <button
-        onClick={() => setIsSidebarVisible(!isSidebarVisible)}
-        className={`fixed top-20 z-50 bg-gray-800/90 hover:bg-gray-700 border border-gray-700 rounded-lg p-2.5 transition-all duration-300 hover:scale-110 shadow-lg backdrop-blur-sm ${
-          isSidebarVisible 
-            ? 'left-[272px] lg:left-[272px]' 
-            : 'left-4 lg:left-4'
-        }`}
-        aria-label={isSidebarVisible ? 'Hide sidebar' : 'Show sidebar'}
-      >
-        {isSidebarVisible ? (
-          <XIcon size={20} className="text-white" />
-        ) : (
-          <Menu size={20} className="text-white" />
-        )}
-      </button>
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 py-5 sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-5">
+          <div className="flex justify-between items-center">
+            <Link to="/" className="text-2xl font-bold" style={{ color: '#2271b1', textDecoration: 'none' }}>
+              ShalConnects Store
+            </Link>
+          </div>
+        </div>
+      </header>
 
-      <div className="flex relative">
-        {/* Sidebar */}
-        <PageSidebar
-          tocItems={tocItems}
-          purchaseAction={handlePurchase}
-          contactAction={scrollToContact}
-          shareUrl={window.location.href}
-          categoryColor="#176641"
-          isVisible={isSidebarVisible}
-          onToggle={() => setIsSidebarVisible(!isSidebarVisible)}
-          purchaseLabel={plugin.price ? `Buy Pro - ${plugin.price}` : 'Buy Pro Version'}
-        />
+      {/* Hero Section */}
+      <section className="text-white py-20 text-center" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+        <div className="max-w-6xl mx-auto px-5">
+          <h1 className="text-5xl font-bold mb-5">{plugin.name}</h1>
+          <p className="text-2xl mb-5 opacity-95">{plugin.tagline}</p>
+          <p className="text-xl mb-0 opacity-95">{plugin.description}</p>
+        </div>
+      </section>
 
-        {/* Main Content */}
-        <main className={`flex-1 min-w-0 transition-all duration-300 ${
-          isSidebarVisible ? 'lg:ml-0' : ''
-        }`}>
-          {/* Hero Section */}
-          <section id="overview" className="py-16 sm:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
-              {plugin.name}
-            </h1>
-            <p className="text-xl sm:text-2xl text-gray-400 mb-8">
-              {plugin.tagline}
+      {/* Features Section */}
+      <section className="py-20" style={{ background: '#f9f9f9' }}>
+        <div className="max-w-6xl mx-auto px-5">
+          <h2 className="text-4xl font-bold text-center mb-12 text-gray-800">Powerful Features</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition-all hover:-translate-y-1">
+              <div className="text-5xl mb-4">🖼️</div>
+              <h3 className="text-xl font-semibold mb-3" style={{ color: '#2271b1' }}>Unlimited Images</h3>
+              <p className="text-gray-600">Add unlimited custom images to each product variation. No restrictions, no limits.</p>
+            </div>
+            <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition-all hover:-translate-y-1">
+              <div className="text-5xl mb-4">🎨</div>
+              <h3 className="text-xl font-semibold mb-3" style={{ color: '#2271b1' }}>Multiple Display Styles</h3>
+              <p className="text-gray-600">Circular thumbnails, grid layouts, sliders, carousels, and more. Choose what works best for your store.</p>
+            </div>
+            <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition-all hover:-translate-y-1">
+              <div className="text-5xl mb-4">📹</div>
+              <h3 className="text-xl font-semibold mb-3" style={{ color: '#2271b1' }}>Video Support</h3>
+              <p className="text-gray-600">Add YouTube, Vimeo, or self-hosted videos to product variations for an enhanced shopping experience.</p>
+            </div>
+            <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition-all hover:-translate-y-1">
+              <div className="text-5xl mb-4">🚀</div>
+              <h3 className="text-xl font-semibold mb-3" style={{ color: '#2271b1' }}>Works Everywhere</h3>
+              <p className="text-gray-600">Product pages, shop pages, cart, checkout, and archive pages. Full WooCommerce integration.</p>
+            </div>
+            <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition-all hover:-translate-y-1">
+              <div className="text-5xl mb-4">⚡</div>
+              <h3 className="text-xl font-semibold mb-3" style={{ color: '#2271b1' }}>Bulk Operations</h3>
+              <p className="text-gray-600">Upload multiple images at once, drag-and-drop sorting, and CSV import/export for efficient management.</p>
+            </div>
+            <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition-all hover:-translate-y-1">
+              <div className="text-5xl mb-4">🔧</div>
+              <h3 className="text-xl font-semibold mb-3" style={{ color: '#2271b1' }}>Page Builder Support</h3>
+              <p className="text-gray-600">Dedicated widgets for Elementor, Bricks, and Divi. Works with all major page builders.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-20 text-center bg-white">
+        <div className="max-w-6xl mx-auto px-5">
+          <h2 className="text-4xl font-bold mb-12 text-gray-800">Get Pro Version</h2>
+          <div className="bg-gray-50 border-2 rounded-xl p-12 max-w-lg mx-auto" style={{ borderColor: '#2271b1' }}>
+            <div className="text-6xl font-bold mb-3" style={{ color: '#2271b1' }}>{plugin.price}</div>
+            <div className="text-lg text-gray-600 mb-8">One-time payment • Unlimited sites</div>
+            <p className="text-gray-600 mb-8">
+              Includes lifetime updates, technical support, and all Pro features.
             </p>
-            <p className="text-lg text-gray-300 mb-10 leading-relaxed">
-              {plugin.description}
-            </p>
-              <div className="flex flex-wrap gap-4">
-                <button
-                  onClick={handlePurchase}
-                className="px-8 py-4 rounded-lg font-medium text-white text-lg transition-all hover:scale-105 flex items-center gap-2 bg-gradient-theme"
-              >
-                  <ShoppingCart size={20} />
-                  Buy Pro Version {plugin.price && `- ${plugin.price}`}
-                </button>
-              <a
-                href="https://wordpress.org/plugins/wc-variation-images-pro"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-8 py-4 rounded-lg font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-colors flex items-center gap-2"
-              >
-                <ExternalLink size={20} />
-                View Free Version on WordPress.org
-              </a>
-            </div>
-            </div>
-            {plugin.heroImage && (
-              <div className="relative">
-                <div className="rounded-2xl overflow-hidden border border-gray-700/50 shadow-2xl">
-                  <img 
-                    src={plugin.heroImage} 
-                    alt={plugin.name}
-                    className="w-full h-auto"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-          {/* Feature Showcase Section - EDD Style */}
-          <section id="feature-showcase" className="py-16 bg-gray-900/50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-center">
-                Powerful Features, Intuitive Interface
-              </h2>
-              <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto">
-                Everything you need to transform your WooCommerce product variations into beautiful, engaging experiences
-              </p>
-              
-              {/* Main Showcase Container */}
-              <div className="relative bg-gray-800/30 rounded-2xl border border-gray-700/50 p-4 sm:p-6 md:p-8 lg:p-12 overflow-hidden">
-                <div className="relative space-y-6 sm:space-y-8">
-                  
-                  {/* Top Row - Screenshots */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 items-stretch">
-                    {/* Visual Designer */}
-                    <div className="relative flex flex-col">
-                      <div className="absolute -top-2 -left-2 sm:-top-3 sm:-left-3 lg:-top-4 lg:-left-4 z-20 bg-blue-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 rounded-lg shadow-xl font-semibold text-xs sm:text-sm lg:text-base whitespace-nowrap">
-                        Visual Designer
-                        <div className="absolute -bottom-1.5 sm:-bottom-2 left-4 sm:left-6 lg:left-8 w-0 h-0 border-l-4 border-r-4 border-t-4 sm:border-l-6 sm:border-r-6 sm:border-t-6 lg:border-l-8 lg:border-r-8 lg:border-t-8 border-transparent border-t-blue-600"></div>
-                    </div>
-                    
-                      <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden mt-6 sm:mt-7 lg:mt-8 flex-1 flex items-center justify-center">
-                        <img 
-                          src="/images/screenshot-visual-designer.png" 
-                          alt="Visual Designer Interface"
-                          className="w-full h-full object-contain"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                          }}
-                        />
-                        </div>
-                      </div>
-                      
-                    {/* Visual Variation Management */}
-                    <div className="relative flex flex-col">
-                      <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 lg:-top-4 lg:-right-4 z-20 bg-blue-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 rounded-lg shadow-xl font-semibold text-xs sm:text-sm lg:text-base">
-                        <span className="whitespace-normal sm:whitespace-nowrap">Visual Variation Management</span>
-                        <div className="absolute -bottom-1.5 sm:-bottom-2 right-4 sm:right-6 lg:right-8 w-0 h-0 border-l-4 border-r-4 border-t-4 sm:border-l-6 sm:border-r-6 sm:border-t-6 lg:border-l-8 lg:border-r-8 lg:border-t-8 border-transparent border-t-blue-600"></div>
-                        </div>
-                        
-                      <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden mt-6 sm:mt-7 lg:mt-8 flex-1 flex items-center justify-center">
-                        <img 
-                          src="/images/screenshot-visual-variation-management.png" 
-                          alt="Visual Variation Management Interface"
-                          className="w-full h-full object-contain"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                          }}
-                        />
-                            </div>
-                    </div>
-                  </div>
-
-                  {/* Bottom Row - Features */}
-                  <div className="flex justify-center">
-                    {/* Multiple Display Styles */}
-                    <div className="relative max-w-2xl w-full">
-                      <div className="absolute -top-2 -left-2 sm:-top-3 sm:-left-3 lg:-top-4 lg:-left-4 z-20 bg-blue-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 rounded-lg shadow-xl font-semibold text-xs sm:text-sm lg:text-base whitespace-nowrap">
-                        Multiple Display Styles
-                        <div className="absolute -bottom-1.5 sm:-bottom-2 left-4 sm:left-6 lg:left-8 w-0 h-0 border-l-4 border-r-4 border-t-4 sm:border-l-6 sm:border-r-6 sm:border-t-6 lg:border-l-8 lg:border-r-8 lg:border-t-8 border-transparent border-t-blue-600"></div>
-                      </div>
-                      
-                      <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden mt-6 sm:mt-7 lg:mt-8 p-4 sm:p-5 lg:p-6">
-                        <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                          {/* Square Thumbnails */}
-                          <div className="space-y-1 sm:space-y-2">
-                            <div className="h-2 sm:h-3 bg-gray-200 rounded w-16 sm:w-24 mb-1 sm:mb-2"></div>
-                            <div className="flex gap-1 sm:gap-2">
-                              {[1, 2, 3].map((i) => (
-                                <div key={i} className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-green-200 to-blue-200 rounded border border-gray-300"></div>
-                              ))}
-                            </div>
-                          </div>
-                          
-                          {/* Circular Thumbnails */}
-                          <div className="space-y-1 sm:space-y-2">
-                            <div className="h-2 sm:h-3 bg-gray-200 rounded w-16 sm:w-24 mb-1 sm:mb-2"></div>
-                            <div className="flex gap-1 sm:gap-2">
-                              {[1, 2, 3].map((i) => (
-                                <div key={i} className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-purple-200 to-pink-200 rounded-full border border-gray-300"></div>
-                              ))}
-                            </div>
-                          </div>
-                          
-                          {/* Color Swatches */}
-                          <div className="space-y-1 sm:space-y-2">
-                            <div className="h-2 sm:h-3 bg-gray-200 rounded w-16 sm:w-24 mb-1 sm:mb-2"></div>
-                            <div className="flex gap-1 sm:gap-2">
-                              {[1, 2, 3, 4].map((i) => (
-                                <div key={i} className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full border-2 border-gray-400" style={{ backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'][i-1] }}></div>
-                              ))}
-                            </div>
-                          </div>
-                          
-                          {/* Button Style */}
-                          <div className="space-y-1 sm:space-y-2">
-                            <div className="h-2 sm:h-3 bg-gray-200 rounded w-16 sm:w-24 mb-1 sm:mb-2"></div>
-                            <div className="space-y-0.5 sm:space-y-1">
-                              {[1, 2].map((i) => (
-                                <div key={i} className="h-6 sm:h-7 lg:h-8 bg-gray-100 rounded border border-gray-300 flex items-center px-1.5 sm:px-2">
-                                  <div className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 bg-gradient-to-br from-blue-200 to-purple-200 rounded mr-1 sm:mr-2"></div>
-                                  <div className="h-1.5 sm:h-2 bg-gray-300 rounded flex-1"></div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                        </div>
-                          </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Features Section */}
-          <section id="features" className="py-16 bg-gray-800/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-12 text-center">
-            Key Features
-          </h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {plugin.features.map((feature, idx) => {
-              const FeatureIcon = feature.icon;
-              return (
-                <div
-                  key={idx}
-                  className="bg-gray-800/50 p-6 rounded-xl border border-gray-700/50 hover:border-gray-600/50 transition-all hover:scale-105"
-                >
-                  <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: '#17664120' }}>
-                    <FeatureIcon size={24} style={{ color: '#176641' }} />
-                  </div>
-                  <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-                  <p className="text-gray-400 text-sm">{feature.desc}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-          {/* Free vs Pro Comparison Table */}
-          <section id="comparison" className="py-16">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-center">
-            Free vs Pro Comparison
-          </h2>
-          <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto">
-            Compare the features available in the free version versus the Pro version.
-          </p>
-          <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 overflow-hidden">
-            <div className="overflow-x-auto -mx-4 sm:mx-0">
-              <div className="inline-block min-w-full align-middle">
-                <table className="w-full min-w-[600px]">
-                  <thead>
-                    <tr className="border-b border-gray-700/50">
-                      <th className="text-left px-4 sm:px-6 py-4 text-white font-semibold text-sm sm:text-base">Feature</th>
-                      <th className="text-center px-4 sm:px-6 py-4 text-white font-semibold text-sm sm:text-base">Free Version</th>
-                      <th className="text-center px-4 sm:px-6 py-4 text-white font-semibold text-sm sm:text-base" style={{ color: '#da651e' }}>Pro Version</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {plugin.freeFeatures.map((item, idx) => (
-                      <tr key={idx} className="border-b border-gray-700/30 hover:bg-gray-800/70 transition-colors">
-                        <td className="px-4 sm:px-6 py-4 text-gray-300 text-sm sm:text-base">{item.feature}</td>
-                        <td className="px-4 sm:px-6 py-4 text-center">
-                          {typeof item.free === 'boolean' ? (
-                            item.free ? (
-                              <CheckCircle size={20} className="mx-auto text-green-500" />
-                            ) : (
-                              <X size={20} className="mx-auto text-gray-600" />
-                            )
-                          ) : (
-                            <span className="text-gray-400 text-sm sm:text-base">{item.free}</span>
-                          )}
-                        </td>
-                        <td className="px-4 sm:px-6 py-4 text-center">
-                          {typeof item.pro === 'boolean' ? (
-                            item.pro ? (
-                              <CheckCircle size={20} className="mx-auto" style={{ color: '#da651e' }} />
-                          ) : (
-                            <X size={20} className="mx-auto text-gray-600" />
-                          )
-                        ) : (
-                          <span className="text-sm sm:text-base" style={{ color: '#da651e' }}>{item.pro}</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-          {/* Display Styles Section */}
-          <section id="display-styles" className="py-16 bg-gray-800/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-center">
-            See It In Action
-          </h2>
-          <p className="text-center text-gray-400 mb-4 max-w-2xl mx-auto">
-            Choose from 7 different display styles
-          </p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12 justify-items-center">
-            {plugin.displayStyles.map((style, idx) => (
-              <div
-                key={idx}
-                className="bg-gray-800/50 rounded-xl border border-gray-700/50 hover:border-gray-600/50 transition-all hover:scale-105 overflow-hidden w-full max-w-sm"
-              >
-                <div 
-                  className="h-48 flex items-center justify-center relative"
-                  style={{ 
-                    background: '#fafafa',
-                    borderBottom: '2px solid #17664130'
-                  }}
-                >
-                  <img 
-                    src={style.image} 
-                    alt={style.name}
-                    className="w-full h-full object-contain"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      const placeholder = target.parentElement?.querySelector('.placeholder-icon');
-                      if (placeholder) {
-                        (placeholder as HTMLElement).style.display = 'flex';
-                      }
-                    }}
-                  />
-                  <div className="placeholder-icon hidden absolute inset-0 items-center justify-center">
-                    <Image size={48} style={{ color: '#176641' }} className="opacity-50" />
-                  </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="text-lg font-semibold text-white mb-2">{style.name}</h3>
-                  <p className="text-gray-400 text-sm mb-3">{style.description}</p>
-                  <span 
-                    className={`inline-block text-xs px-2 py-1 rounded-full ${
-                      style.isPro 
-                        ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' 
-                        : 'bg-gray-700/50 text-gray-300 border border-gray-600/50'
-                    }`}
-                  >
-                    {style.badge}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-          {/* Installation Guide Section */}
-          <section id="installation" className="py-16">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-center">
-            How to Install the Plugin
-          </h2>
-          <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto">
-            Choose your installation method based on whether you're using the free or pro version.
-          </p>
-
-          {/* Free Version Instructions */}
-          <div className="mb-12">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#17664120' }}>
-                <Plug size={18} className="sm:w-5 sm:h-5" style={{ color: '#176641' }} />
-              </div>
-              <h3 className="text-xl sm:text-2xl font-semibold text-white">Free Version (WordPress.org)</h3>
-            </div>
-            <div className="space-y-4">
-              <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-4 sm:p-5">
-                <div className="flex items-start gap-3 sm:gap-4">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-700/50 text-gray-400 font-semibold text-xs sm:text-sm">
-                    1
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-base sm:text-lg font-semibold text-white mb-2">Access WordPress Admin</h4>
-                    <p className="text-gray-400 text-sm leading-relaxed">
-                      Log in to your WordPress admin dashboard and navigate to <strong className="text-white">Plugins → Add New</strong>.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-4 sm:p-5">
-                <div className="flex items-start gap-3 sm:gap-4">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-700/50 text-gray-400 font-semibold text-xs sm:text-sm">
-                    2
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-base sm:text-lg font-semibold text-white mb-2">Search for the Plugin</h4>
-                    <p className="text-gray-400 text-sm mb-2 leading-relaxed">
-                      In the search box, type <strong className="text-white">"Variation Images Pro"</strong> or <strong className="text-white">"WooCommerce Variation Images"</strong>.
-                    </p>
-                    <p className="text-sm text-gray-500">Look for the plugin by ShalConnects in the search results.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-4 sm:p-5">
-                <div className="flex items-start gap-3 sm:gap-4">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-700/50 text-gray-400 font-semibold text-xs sm:text-sm">
-                    3
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-base sm:text-lg font-semibold text-white mb-2">Install & Activate</h4>
-                    <p className="text-gray-400 text-sm mb-2 leading-relaxed">
-                      Click <strong className="text-white">"Install Now"</strong> on the plugin card, then click <strong className="text-white">"Activate"</strong> once installation completes.
-                    </p>
-                    <p className="text-sm text-gray-500">The free version will automatically update through WordPress.org.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Pro Version Instructions */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#da651e20' }}>
-                <Download size={18} className="sm:w-5 sm:h-5" style={{ color: '#da651e' }} />
-              </div>
-              <h3 className="text-xl sm:text-2xl font-semibold text-white">Pro Version (Manual Upload)</h3>
-            </div>
-            <div className="space-y-4">
-              <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-4 sm:p-5">
-                <div className="flex items-start gap-3 sm:gap-4">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-700/50 text-gray-400 font-semibold text-xs sm:text-sm">
-                    1
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-base sm:text-lg font-semibold text-white mb-2">Purchase & Download the Plugin</h4>
-                    <p className="text-gray-400 text-sm mb-2 leading-relaxed">
-                      Click the "Buy Pro Version" button above to purchase. After payment, you'll receive an email with the download link for the Pro plugin ZIP file.
-                    </p>
-                    <p className="text-sm text-gray-500">Keep the ZIP file ready - do not extract it.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-4 sm:p-5">
-                <div className="flex items-start gap-3 sm:gap-4">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-700/50 text-gray-400 font-semibold text-xs sm:text-sm">
-                    2
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-base sm:text-lg font-semibold text-white mb-2">Access WordPress Admin</h4>
-                    <p className="text-gray-400 text-sm leading-relaxed">
-                      Log in to your WordPress admin dashboard and navigate to <strong className="text-white">Plugins → Add New</strong>.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-4 sm:p-5">
-                <div className="flex items-start gap-3 sm:gap-4">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-700/50 text-gray-400 font-semibold text-xs sm:text-sm">
-                    3
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-base sm:text-lg font-semibold text-white mb-2">Upload the Plugin</h4>
-                    <p className="text-gray-400 text-sm mb-2 leading-relaxed">
-                      Click the <strong className="text-white">"Upload Plugin"</strong> button at the top of the page, then click <strong className="text-white">"Choose File"</strong> and select the downloaded ZIP file.
-                    </p>
-                    <p className="text-sm text-gray-500">Make sure you're uploading the ZIP file, not extracting it first.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-4 sm:p-5">
-                <div className="flex items-start gap-3 sm:gap-4">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-700/50 text-gray-400 font-semibold text-xs sm:text-sm">
-                    4
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-base sm:text-lg font-semibold text-white mb-2">Install & Activate</h4>
-                    <p className="text-gray-400 text-sm mb-2 leading-relaxed">
-                      Click <strong className="text-white">"Install Now"</strong> and wait for the installation to complete. Once done, click <strong className="text-white">"Activate Plugin"</strong>.
-                    </p>
-                    <p className="text-sm text-gray-500">The plugin will now be active and ready to use.</p>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          {/* Configuration Section (Common for both) */}
-          <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-4 sm:p-6">
-            <div className="flex items-start gap-3 sm:gap-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#17664120' }}>
-                <Settings size={20} className="sm:w-6 sm:h-6" style={{ color: '#176641' }} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">Configure Settings (Both Versions)</h3>
-                <p className="text-gray-400 mb-3 text-sm sm:text-base leading-relaxed">
-                  After activation, the plugin will show up in WordPress dashboard in a separate menu called <strong className="text-white">Variation Images</strong>. Under that menu, it will have <strong className="text-white">Variation images</strong> and <strong className="text-white">Settings</strong>, two submenus.
-                </p>
-                <p className="text-sm text-gray-500">You can choose display styles, enable features, and customize the appearance to match your store's design.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-          {/* Download Section */}
-          <section id="download" className="py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-6">Ready to Get Started?</h2>
-          <p className="text-xl text-gray-400 mb-8">
-            Download the Pro version now and unlock all premium features.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
             <button
               onClick={handlePurchase}
-              className="px-8 py-4 rounded-lg font-medium text-white text-lg transition-all hover:scale-105 flex items-center gap-2 bg-gradient-theme"
+              className="px-10 py-4 text-lg font-semibold text-white rounded-md transition-colors"
+              style={{ backgroundColor: '#2271b1' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#135e96'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2271b1'}
             >
-              <ShoppingCart size={20} />
-              Buy Pro Version {plugin.price && `- ${plugin.price}`}
+              Buy Now
             </button>
-            <a
-              href="https://wordpress.org/plugins/wc-variation-images-pro"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-8 py-4 rounded-lg font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-colors flex items-center gap-2"
-            >
-              <ExternalLink size={20} />
-              Try Free Version
-            </a>
+            <p className="text-sm text-gray-500 mt-5">
+              Secure checkout powered by Paddle
+            </p>
           </div>
+        </div>
+      </section>
+
+      {/* Screenshots Section */}
+      <section className="py-20" style={{ background: '#f9f9f9' }}>
+        <div className="max-w-6xl mx-auto px-5">
+          <h2 className="text-4xl font-bold text-center mb-12 text-gray-800">See It In Action</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-lg overflow-hidden shadow-md">
+              <div className="h-48 bg-gray-200 flex items-center justify-center text-gray-500">
+                Plugin Admin Interface
+              </div>
+            </div>
+            <div className="bg-white rounded-lg overflow-hidden shadow-md">
+              <div className="h-48 bg-gray-200 flex items-center justify-center text-gray-500">
+                Visual Designer
+              </div>
+            </div>
+            <div className="bg-white rounded-lg overflow-hidden shadow-md">
+              <div className="h-48 bg-gray-200 flex items-center justify-center text-gray-500">
+                Frontend Display
+              </div>
+            </div>
           </div>
-        </section>
-        </main>
-      </div>
-    </PageLayout>
+          <p className="text-center mt-8 text-gray-600 italic">
+            Add your actual screenshots here
+          </p>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-800 text-white py-10">
+        <div className="max-w-6xl mx-auto px-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            <div>
+              <h4 className="text-lg font-semibold mb-4">Product</h4>
+              <Link to="/" className="block text-gray-300 hover:text-white mb-2">Store Home</Link>
+              <a href="https://wordpress.org/plugins/variation-images-pro-for-woocommerce/" target="_blank" rel="noopener noreferrer" className="block text-gray-300 hover:text-white mb-2">Free Version</a>
+            </div>
+            <div>
+              <h4 className="text-lg font-semibold mb-4">Legal</h4>
+              <Link to="/terms" className="block text-gray-300 hover:text-white mb-2">Terms & Conditions</Link>
+              <Link to="/privacy" className="block text-gray-300 hover:text-white mb-2">Privacy Policy</Link>
+              <Link to="/refund" className="block text-gray-300 hover:text-white mb-2">Refund Policy</Link>
+            </div>
+            <div>
+              <h4 className="text-lg font-semibold mb-4">Support</h4>
+              <a href="mailto:hello@shalconnects.com" className="block text-gray-300 hover:text-white mb-2">Contact Support</a>
+              <a href="https://wordpress.org/plugins/variation-images-pro-for-woocommerce/" target="_blank" rel="noopener noreferrer" className="block text-gray-300 hover:text-white mb-2">Documentation</a>
+            </div>
+          </div>
+          <div className="text-center pt-8 border-t border-gray-700 text-gray-400">
+            <p>&copy; {new Date().getFullYear()} Shalauddin Kader (trading as ShalConnects). All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }
-

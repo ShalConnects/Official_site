@@ -1,81 +1,65 @@
-import PageLayout from '../components/PageLayout';
+import { Link } from 'react-router-dom';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 export default function RefundPolicy() {
+  usePageTitle('Refund Policy - Variation Images Pro');
+
   return (
-    <PageLayout title="Refund Policy">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 md:py-12">
-        <h1 className="text-3xl sm:text-4xl font-bold mb-4 sm:mb-6 md:mb-8">Refund Policy</h1>
-        <p className="text-gray-400 mb-6">Last updated: {new Date().toLocaleDateString()}</p>
-
-        <div className="prose prose-invert max-w-none space-y-6 text-gray-300">
-          <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">1. Refund Eligibility</h2>
-            <p>
-              ShalConnects offers refunds for digital products and services under the following conditions:
-            </p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li><strong>Digital Products (Plugins):</strong> Refunds are available within 30 days of purchase if the product does not work as described or is defective.</li>
-              <li><strong>Custom Development Services:</strong> Refunds are handled on a case-by-case basis depending on project stage and completion.</li>
-              <li><strong>Consultation Services:</strong> Refunds are not available for completed consultation sessions.</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">2. How to Request a Refund</h2>
-            <p>To request a refund, please:</p>
-            <ol className="list-decimal pl-6 space-y-2">
-              <li>Contact us at support@shalconnects.com</li>
-              <li>Include your order number or transaction ID</li>
-              <li>Explain the reason for your refund request</li>
-              <li>We will review your request within 5 business days</li>
-            </ol>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">3. Processing Time</h2>
-            <p>
-              Once approved, refunds will be processed within 5-10 business days. The refund will be issued to the original payment method used for the purchase.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">4. Non-Refundable Items</h2>
-            <p>The following are not eligible for refunds:</p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>Products that have been downloaded and used for more than 30 days</li>
-              <li>Custom development work that has been completed and delivered</li>
-              <li>Services that have been fully rendered</li>
-              <li>Products purchased during special promotions or sales (unless otherwise stated)</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">5. Chargebacks</h2>
-            <p>
-              If you file a chargeback or dispute with your payment provider, we reserve the right to suspend your account and access to our services until the dispute is resolved.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">6. Technical Issues</h2>
-            <p>
-              If you experience technical issues with a product, please contact our support team first. We will work with you to resolve the issue. If we cannot resolve the issue, a refund will be issued.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">7. Contact Us</h2>
-            <p>
-              For refund requests or questions about this policy, please contact us:
-            </p>
-            <p className="mt-2">
-              <strong>Email:</strong> support@shalconnects.com<br />
-              <strong>Website:</strong> shalconnects.com
-            </p>
-          </section>
+    <div style={{ background: '#f9f9f9', padding: '40px 20px', minHeight: '100vh' }}>
+      <div style={{ maxWidth: '800px', margin: '0 auto', background: '#fff', padding: '40px', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
+        <Link to="/" style={{ display: 'inline-block', marginBottom: '20px', color: '#2271b1', textDecoration: 'none' }}>
+          ← Back to Home
+        </Link>
+        <h1 style={{ color: '#2271b1', marginBottom: '30px' }}>Refund Policy</h1>
+        <p style={{ marginBottom: '15px' }}><strong>Last Updated:</strong> November 2025</p>
+        
+        <div style={{ background: '#fff3cd', padding: '15px', borderLeft: '4px solid #ffc107', margin: '20px 0' }}>
+          <strong>30-Day Money-Back Guarantee:</strong> We offer a full refund within 30 days of purchase if you're not satisfied with WooCommerce Variation Images Pro.
         </div>
+        
+        <h2 style={{ color: '#333', marginTop: '30px', marginBottom: '15px' }}>1. Refund Eligibility</h2>
+        <p style={{ marginBottom: '15px' }}>You are eligible for a refund if:</p>
+        <ul style={{ marginLeft: '20px', marginBottom: '15px' }}>
+          <li>You request a refund within 30 days of purchase</li>
+          <li>The Plugin does not work as described</li>
+          <li>You experience technical issues we cannot resolve</li>
+          <li>The Plugin is incompatible with your setup (after we've attempted to help)</li>
+        </ul>
+        
+        <h2 style={{ color: '#333', marginTop: '30px', marginBottom: '15px' }}>2. How to Request a Refund</h2>
+        <p style={{ marginBottom: '15px' }}>To request a refund:</p>
+        <ol style={{ marginLeft: '20px', marginBottom: '15px' }}>
+          <li>Email us at <strong>hello@shalconnects.com</strong></li>
+          <li>Include your order number or purchase email</li>
+          <li>Briefly explain the reason for the refund request</li>
+        </ol>
+        <p style={{ marginBottom: '15px' }}>We will process your refund within 5-7 business days.</p>
+        
+        <h2 style={{ color: '#333', marginTop: '30px', marginBottom: '15px' }}>3. Refund Processing</h2>
+        <p style={{ marginBottom: '15px' }}>Refunds will be issued to the original payment method used for purchase. Processing time depends on your payment provider (typically 5-10 business days).</p>
+        
+        <h2 style={{ color: '#333', marginTop: '30px', marginBottom: '15px' }}>4. What Happens After Refund</h2>
+        <p style={{ marginBottom: '15px' }}>After a refund is processed:</p>
+        <ul style={{ marginLeft: '20px', marginBottom: '15px' }}>
+          <li>Your license will be deactivated</li>
+          <li>You must remove the Plugin from your websites</li>
+          <li>You will no longer receive updates or support</li>
+        </ul>
+        
+        <h2 style={{ color: '#333', marginTop: '30px', marginBottom: '15px' }}>5. Non-Refundable Situations</h2>
+        <p style={{ marginBottom: '15px' }}>Refunds may not be available if:</p>
+        <ul style={{ marginLeft: '20px', marginBottom: '15px' }}>
+          <li>More than 30 days have passed since purchase</li>
+          <li>You've violated our Terms & Conditions</li>
+          <li>The issue is due to third-party conflicts (themes, other plugins) that we cannot control</li>
+        </ul>
+        
+        <h2 style={{ color: '#333', marginTop: '30px', marginBottom: '15px' }}>6. Support Before Refund</h2>
+        <p style={{ marginBottom: '15px' }}>We encourage you to contact our support team (hello@shalconnects.com) before requesting a refund. Many issues can be resolved quickly, and we're happy to help!</p>
+        
+        <h2 style={{ color: '#333', marginTop: '30px', marginBottom: '15px' }}>7. Contact</h2>
+        <p style={{ marginBottom: '15px' }}>For refund requests or questions, contact us at <strong>hello@shalconnects.com</strong></p>
       </div>
-    </PageLayout>
+    </div>
   );
 }
-
