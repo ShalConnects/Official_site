@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Mail } from 'lucide-react';
-import { SiLinkedin, SiX, SiWhatsapp } from 'react-icons/si';
+import { SiLinkedin, SiX, SiWhatsapp, SiYoutube } from 'react-icons/si';
 import { isStoreContext } from '../utils/storeUtils';
 
 export default function Footer() {
@@ -80,7 +80,9 @@ export default function Footer() {
     <footer className="bg-gray-950 py-8 sm:py-10 md:py-12 border-t border-gray-800">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
         {/* Multi-column Layout */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-6 sm:mb-8">
+        <div 
+          className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 mb-6 sm:mb-8 lg:grid-cols-[auto_auto_auto] lg:justify-items-start"
+        >
           {/* Company Info Column */}
           <div className="text-center sm:text-left">
             <div className="text-xl sm:text-2xl font-bold text-gradient-theme mb-2 sm:mb-3">
@@ -120,9 +122,9 @@ export default function Footer() {
           </div>
 
           {/* Social Media Column */}
-          <div className="text-center sm:text-left">
+          <div className="text-center sm:text-left lg:text-right lg:justify-self-end">
             <h3 className="text-white font-semibold mb-3 sm:mb-4 text-xs sm:text-sm uppercase tracking-wider">Follow Us</h3>
-            <div className="flex items-center justify-center sm:justify-start gap-3 sm:gap-4">
+            <div className="flex items-center justify-center sm:justify-start lg:justify-end gap-3 sm:gap-4">
               <a 
                 href="https://www.linkedin.com/in/shalconnects/" 
                 target="_blank" 
@@ -140,6 +142,15 @@ export default function Footer() {
                 aria-label="Twitter"
               >
                 <SiX size={16} className="sm:w-[18px] sm:h-[18px] md:w-5 md:h-5 text-gray-400 group-hover:text-green-400 transition-colors" />
+              </a>
+              <a 
+                href="https://www.youtube.com/@ShalConnects" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-all hover:scale-110 group"
+                aria-label="YouTube"
+              >
+                <SiYoutube size={16} className="sm:w-[18px] sm:h-[18px] md:w-5 md:h-5 text-gray-400 group-hover:text-green-400 transition-colors" />
               </a>
             </div>
           </div>

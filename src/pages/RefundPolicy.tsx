@@ -6,7 +6,7 @@ export default function RefundPolicy() {
   
   return (
     <PageLayout title="Refund Policy">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 md:py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 md:py-12">
         <h1 className="text-3xl sm:text-4xl font-bold mb-4 sm:mb-6 md:mb-8">Refund Policy</h1>
         <p className="text-gray-400 mb-6">Last updated: November 2025</p>
 
@@ -123,37 +123,12 @@ export default function RefundPolicy() {
                   For refund requests or questions about this policy, please contact us:
                 </p>
                 <p className="mt-2">
-                  <strong>Email:</strong> support@shalconnects.com<br />
+                  <strong>Email:</strong> hello@shalconnects.com<br />
                   <strong>Website:</strong> shalconnects.com
                 </p>
               </section>
             </>
           )}
-
-          <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">5. Chargebacks</h2>
-            <p>
-              If you file a chargeback or dispute with your payment provider, we reserve the right to suspend your account and access to our services until the dispute is resolved.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">6. Technical Issues</h2>
-            <p>
-              If you experience technical issues with a product, please contact our support team first. We will work with you to resolve the issue. If we cannot resolve the issue, a refund will be issued.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">7. Contact Us</h2>
-            <p>
-              For refund requests or questions about this policy, please contact us:
-            </p>
-            <p className="mt-2">
-              <strong>Email:</strong> support@shalconnects.com<br />
-              <strong>Website:</strong> shalconnects.com
-            </p>
-          </section>
         </div>
       </div>
     </PageLayout>
