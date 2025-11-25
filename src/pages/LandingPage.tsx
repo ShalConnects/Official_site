@@ -117,7 +117,7 @@ export default function LandingPage() {
       setScrollProgress(Math.min(100, Math.max(0, progress)));
       
       // Determine active section
-      const sections = ['home', 'services', 'process', 'work', 'testimonials', 'contact'];
+      const sections = ['home', 'services', 'process', 'work', 'testimonials', 'products', 'contact'];
       let current = 'home';
       
       for (const section of sections) {
@@ -704,6 +704,7 @@ export default function LandingPage() {
                 <div className="mt-4 pt-4 border-t border-gray-800">
                   <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">More</div>
                   {[
+                    { label: 'Store', id: 'store', action: 'external', url: 'https://store.shalconnects.com' },
                     { label: 'About Us', id: 'about', action: 'scroll' },
                     { label: 'Meet the Team', id: 'team', action: 'scroll' },
                     { label: 'Blog', id: 'blog', action: 'scroll' },
@@ -712,7 +713,9 @@ export default function LandingPage() {
                     <button
                       key={item.id}
                       onClick={() => {
-                        if (item.action === 'navigate' && item.route) {
+                        if (item.action === 'external' && item.url) {
+                          window.open(item.url, '_blank', 'noopener,noreferrer');
+                        } else if (item.action === 'navigate' && item.route) {
                           navigate(item.route);
                         } else {
                           scrollToSection(item.id);
@@ -722,6 +725,7 @@ export default function LandingPage() {
                       className="w-full flex items-center gap-4 px-4 py-4 rounded-lg text-left text-gray-400 hover:text-white hover:bg-gray-800/50 active:bg-gray-800/70 transition-colors duration-150 touch-manipulation min-h-[56px]"
                     >
                       <span className="text-lg font-medium">{item.label}</span>
+                      {item.action === 'external' && <ExternalLink size={16} className="ml-auto" />}
                     </button>
                   ))}
                 </div>
@@ -765,6 +769,20 @@ export default function LandingPage() {
                   <span className="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full" style={{ backgroundColor: '#da651e' }} />
                 )}
               </button>
+
+              {/* Store */}
+              <a
+                href="https://store.shalconnects.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative flex flex-col items-center justify-center gap-1 px-3 py-2 transition-all duration-200 touch-manipulation min-h-[44px]"
+                style={{ color: '#4a9d6f' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#da651e'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#4a9d6f'}
+                aria-label="Store"
+              >
+                <Package size={20} />
+              </a>
 
               {/* Book a Call - Prominent */}
               <a
@@ -1677,6 +1695,69 @@ export default function LandingPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Products Section */}
+      <section 
+        id="products" 
+        className="py-12 sm:py-16 md:py-20 relative"
+        style={{ 
+          background: 'linear-gradient(to bottom, transparent, rgba(21, 102, 65, 0.03))'
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 px-2">Our WordPress Products</h2>
+            <p className="text-base sm:text-lg md:text-xl text-gray-400 px-2">Premium plugins and themes to enhance your WordPress website</p>
+          </div>
+
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl sm:rounded-2xl p-6 sm:p-8 md:p-10 hover:border-gray-600/50 transition-all">
+              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                <div className="flex-shrink-0">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#2271b1' }}>
+                    <Package size={32} className="sm:w-10 sm:h-10 text-white" />
+                  </div>
+                </div>
+                <div className="flex-1 text-center sm:text-left">
+                  <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">Variation Images Pro</h3>
+                  <p className="text-gray-400 text-sm sm:text-base mb-4">Add unlimited custom images to WooCommerce product variations. Transform dropdown menus into beautiful visual swatches and galleries.</p>
+                  <div className="flex flex-wrap gap-2 justify-center sm:justify-start mb-4">
+                    <span className="px-3 py-1 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: '#2271b1' }}>WordPress Plugin</span>
+                    <span className="px-3 py-1 rounded-full text-xs font-semibold text-gray-300 bg-gray-700">WooCommerce</span>
+                  </div>
+                  <a
+                    href="https://store.shalconnects.com/store/variation-images-pro"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm sm:text-base transition-all hover:scale-105"
+                    style={{ 
+                      background: 'linear-gradient(to right, #176641, #da651e)',
+                      color: 'white'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(21, 102, 65, 0.5)'}
+                    onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
+                  >
+                    <span>Buy Now - $24.99</span>
+                    <ExternalLink size={16} />
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 text-center">
+              <a
+                href="https://store.shalconnects.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm sm:text-base"
+              >
+                <span>View All Products</span>
+                <ArrowRight size={16} />
+              </a>
+            </div>
           </div>
         </div>
       </section>

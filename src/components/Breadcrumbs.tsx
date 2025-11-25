@@ -17,8 +17,10 @@ export default function Breadcrumbs() {
 
   const generateBreadcrumbs = (): BreadcrumbItem[] => {
     const paths = pathname.split('/').filter(Boolean);
+    // Check if we're on the store subdomain
+    const isStoreSubdomain = typeof window !== 'undefined' && window.location.hostname === 'store.shalconnects.com';
     const breadcrumbs: BreadcrumbItem[] = [
-      { label: 'Home', path: '/' }
+      { label: 'Home', path: isStoreSubdomain ? '/store' : '/' }
     ];
 
     let currentPath = '';

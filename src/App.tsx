@@ -11,6 +11,7 @@ import RefundPolicy from './pages/RefundPolicy';
 import LandingPage from './pages/LandingPage';
 import AITextFormatter from './pages/AITextFormatter';
 import ToolsPage from './pages/ToolsPage';
+import StoreHome from './pages/StoreHome';
 
 function ShalConnectsPortfolio() {
   // serviceCategories is kept here for ServicePage
@@ -194,6 +195,8 @@ function ShalConnectsPortfolio() {
       <Route path="/download" element={<DownloadPage />} />
         <Route path="/tools" element={<ToolsPage />} />
         <Route path="/tools/ai-formatter" element={<AITextFormatter />} />
+      <Route path="/store" element={<StoreHome />} />
+      <Route path="/store/:productSlug" element={<PluginPage />} />
       <Route path="/services/wordpress/plugins/:pluginSlug" element={<PluginPage />} />
       <Route path="/services/:serviceSlug" element={<ServicePage serviceCategories={serviceCategories as any} />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />

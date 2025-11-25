@@ -10,6 +10,19 @@
       "destination": "/index.html"
     }
   ],
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/store",
+      "permanent": false,
+      "has": [
+        {
+          "type": "host",
+          "value": "store.shalconnects.com"
+        }
+      ]
+    }
+  ],
   "headers": [
     {
       "source": "/api/(.*)",
