@@ -1717,7 +1717,21 @@ export default function LandingPage() {
             <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl sm:rounded-2xl p-6 sm:p-8 md:p-10 hover:border-gray-600/50 transition-all">
               <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
                 <div className="flex-shrink-0">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#2271b1' }}>
+                  <img 
+                    src="/images/plugin/thumbnail.png" 
+                    alt="Variation Images Pro"
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      // Fallback to icon if image fails to load
+                      const fallback = target.parentElement?.querySelector('.fallback-icon');
+                      if (fallback) {
+                        (fallback as HTMLElement).style.display = 'flex';
+                      }
+                    }}
+                  />
+                  <div className="fallback-icon hidden w-16 h-16 sm:w-20 sm:h-20 rounded-lg items-center justify-center" style={{ backgroundColor: '#2271b1' }}>
                     <Package size={32} className="sm:w-10 sm:h-10 text-white" />
                   </div>
                 </div>

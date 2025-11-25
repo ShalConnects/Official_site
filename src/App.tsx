@@ -1,4 +1,4 @@
-﻿import { Routes, Route } from 'react-router-dom';
+﻿import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Zap, Target, TrendingUp, Palette, Code, Wrench, FileCode, Layout, Package, Store, List, Image, Smartphone, Globe, Share2, FileText, Layers } from 'lucide-react';
 import { SiWordpress, SiShopify, SiWix, SiEbay, SiAmazon, SiWalmart, SiAndroid } from 'react-icons/si';
 import ScrollToTop from './components/ScrollToTop';
@@ -14,6 +14,8 @@ import ToolsPage from './pages/ToolsPage';
 import StoreHome from './pages/StoreHome';
 
 function ShalConnectsPortfolio() {
+  // Check if we're on the store subdomain
+  const isStoreSubdomain = typeof window !== 'undefined' && window.location.hostname === 'store.shalconnects.com';
   // serviceCategories is kept here for ServicePage
   // LandingPage has its own copy of serviceCategories
   const serviceCategories = [
@@ -195,14 +197,14 @@ function ShalConnectsPortfolio() {
       <Route path="/download" element={<DownloadPage />} />
         <Route path="/tools" element={<ToolsPage />} />
         <Route path="/tools/ai-formatter" element={<AITextFormatter />} />
-      <Route path="/store" element={<StoreHome />} />
+      <Route path="/store" element={isStoreSubdomain ? <Navigate to="/" replace /> : <StoreHome />} />
       <Route path="/store/:productSlug" element={<PluginPage />} />
-      <Route path="/services/wordpress/plugins/:pluginSlug" element={<PluginPage />} />
       <Route path="/services/:serviceSlug" element={<ServicePage serviceCategories={serviceCategories as any} />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/refund" element={<RefundPolicy />} />
-        <Route path="/" element={<LandingPage />} />
+        {isStoreSubdomain && <Route path="/:productSlug" element={<PluginPage />} />}
+        <Route path="/" element={isStoreSubdomain ? <StoreHome /> : <LandingPage />} />
     </Routes>
     </>
   );

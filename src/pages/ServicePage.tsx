@@ -83,6 +83,7 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
     { id: 'overview', label: 'Overview' },
     { id: 'features', label: 'Why Choose Us' },
     { id: 'portfolio', label: 'Portfolio' },
+    { id: 'products', label: 'Our Products' },
     { id: 'pricing', label: 'Pricing' },
     { id: 'testimonials', label: 'Testimonials' },
     { id: 'faq', label: 'FAQ' },
@@ -196,12 +197,12 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
             <section id="portfolio" className="py-16 bg-gray-800/30">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:pr-8">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-center">
-              Our WordPress Portfolio
+              Our WordPress Services
             </h2>
             <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto">
-              Explore some of our successful WordPress projects and see how we've helped businesses grow online.
+              Explore some of our WordPress services and see how we've helped businesses grow online.
             </p>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 {
                   title: 'E-Commerce Store',
@@ -209,7 +210,8 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
                   description: 'Complete e-commerce solution with custom product pages, payment integration, and inventory management.',
                   results: '300% increase in online sales',
                   features: ['Custom Theme', 'WooCommerce Setup', 'Payment Gateway', 'SEO Optimization'],
-                  isPlugin: false
+                  isPlugin: false,
+                  pluginSlug: undefined
                 },
                 {
                   title: 'Corporate Website',
@@ -217,7 +219,8 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
                   description: 'Professional corporate website with custom design, blog integration, and multilingual support.',
                   results: '150% increase in lead generation',
                   features: ['Custom Design', 'Blog System', 'Contact Forms', 'Multilingual'],
-                  isPlugin: false
+                  isPlugin: false,
+                  pluginSlug: undefined
                 },
                 {
                   title: 'News Portal',
@@ -225,16 +228,8 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
                   description: 'High-traffic news website with custom content management, user registration, and subscription system.',
                   results: '500K+ monthly visitors',
                   features: ['Custom CMS', 'User Dashboard', 'Subscription System', 'Fast Loading'],
-                  isPlugin: false
-                },
-                {
-                  title: 'Variation Images Pro',
-                  category: 'WooCommerce Plugin',
-                  description: 'Transform product variation selection with beautiful visual swatches, galleries, and interactive selectors.',
-                  results: '250% increase in conversion rate',
-                  features: ['Visual Swatches', 'Image Galleries', 'Video Support', 'Bulk Operations'],
-                  isPlugin: true,
-                  pluginSlug: 'variation-images-pro'
+                  isPlugin: false,
+                  pluginSlug: undefined
                 }
               ].map((project, idx) => (
                 <div
@@ -279,7 +274,7 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
                         </span>
                       ))}
                     </div>
-                    {project.isPlugin ? (
+                    {project.isPlugin && project.pluginSlug ? (
                       <button
                         onClick={() => navigate(`/services/wordpress/plugins/${project.pluginSlug}`)}
                         className="w-full mt-4 px-4 py-2 rounded-lg font-medium text-white transition-all hover:scale-105 flex items-center justify-center gap-2"
@@ -288,6 +283,121 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
                         View Plugin Details
                         <ExternalLink size={16} />
                       </button>
+                    ) : (
+                      <button
+                        onClick={scrollToContact}
+                        className="w-full mt-4 px-4 py-2 rounded-lg font-medium text-white transition-all hover:scale-105 flex items-center justify-center gap-2"
+                        style={{ backgroundColor: foundCategory.color }}
+                      >
+                        Get Similar Results
+                        <ExternalLink size={16} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+          {/* Our Products & Plugins Section */}
+          {foundService.title === 'WordPress' && (
+            <section id="products" className="py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:pr-8">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-center">
+              Our Products & Plugins
+            </h2>
+            <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto">
+              Discover the WordPress plugins and themes we've created to help businesses enhance their websites.
+            </p>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                {
+                  title: 'Variation Images Pro',
+                  category: 'WooCommerce Plugin',
+                  description: 'Transform product variation selection with beautiful visual swatches, galleries, and interactive selectors.',
+                  results: '250% increase in conversion rate',
+                  features: ['Visual Swatches', 'Image Galleries', 'Video Support', 'Bulk Operations'],
+                  isPlugin: true,
+                  pluginSlug: 'variation-images-pro',
+                  price: '$24.99'
+                }
+              ].map((product, idx) => (
+                <div
+                  key={idx}
+                  className="bg-gray-800/50 rounded-xl border border-gray-700/50 hover:border-gray-600/50 transition-all hover:scale-105 overflow-hidden"
+                >
+                  <div 
+                    className="h-48 bg-gradient-to-br flex items-center justify-center overflow-hidden relative"
+                    style={{ 
+                      background: `linear-gradient(135deg, ${foundCategory.color}40, ${foundCategory.color}20)`,
+                      borderBottom: `2px solid ${foundCategory.color}30`
+                    }}
+                  >
+                    <img 
+                      src="/images/plugin/preview.png" 
+                      alt={product.title}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        // Fallback to icon if image fails to load
+                        const fallback = target.parentElement?.querySelector('.fallback-icon');
+                        if (fallback) {
+                          (fallback as HTMLElement).style.display = 'flex';
+                        }
+                      }}
+                    />
+                    <div className="fallback-icon hidden absolute inset-0 items-center justify-center text-center">
+                      <div>
+                        <div className="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: foundCategory.color }}>
+                          <foundService.icon size={32} className="text-white" />
+                        </div>
+                        <p className="text-sm font-medium text-gray-300">{product.category}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-xl font-semibold text-white mb-2">{product.title}</h3>
+                    <p className="text-gray-400 text-sm mb-4 leading-relaxed">{product.description}</p>
+                    <div className="mb-4">
+                      <p className="text-sm font-semibold mb-2" style={{ color: foundCategory.color }}>
+                        Results:
+                      </p>
+                      <p className="text-gray-300 text-sm">{product.results}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {product.features.map((feature, featureIdx) => (
+                        <span
+                          key={featureIdx}
+                          className="text-xs px-2 py-1 rounded-full"
+                          style={{ 
+                            backgroundColor: foundCategory.color + '20',
+                            color: foundCategory.color,
+                            border: `1px solid ${foundCategory.color}30`
+                          }}
+                        >
+                          {feature}
+                        </span>
+                      ))}
+                    </div>
+                    {product.price && (
+                      <div className="mb-4">
+                        <p className="text-2xl font-bold text-white">{product.price}</p>
+                      </div>
+                    )}
+                    {product.isPlugin ? (
+                      <a
+                        href={`https://store.shalconnects.com/store/${product.pluginSlug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full mt-4 px-4 py-2 rounded-lg font-medium text-white transition-all hover:scale-105 flex items-center justify-center gap-2"
+                        style={{ backgroundColor: foundCategory.color }}
+                      >
+                        View Plugin Details
+                        <ExternalLink size={16} />
+                      </a>
                     ) : (
                       <button
                         onClick={scrollToContact}

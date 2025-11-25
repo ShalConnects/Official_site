@@ -20,7 +20,7 @@ export default function Breadcrumbs() {
     // Check if we're on the store subdomain
     const isStoreSubdomain = typeof window !== 'undefined' && window.location.hostname === 'store.shalconnects.com';
     const breadcrumbs: BreadcrumbItem[] = [
-      { label: 'Home', path: isStoreSubdomain ? '/store' : '/' }
+      { label: 'Home', path: '/' }
     ];
 
     let currentPath = '';

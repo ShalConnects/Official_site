@@ -28,8 +28,10 @@ declare global {
 }
 
 export default function PluginPage() {
-  const { pluginSlug } = useParams<{ pluginSlug: string }>();
+  const { pluginSlug, productSlug } = useParams<{ pluginSlug?: string; productSlug?: string }>();
+  const slug = pluginSlug || productSlug;
   const navigate = useNavigate();
+  const isStoreSubdomain = typeof window !== 'undefined' && window.location.hostname === 'store.shalconnects.com';
   const [isSidebarVisible, setIsSidebarVisible] = useState<boolean>(false); // Hidden by default on mobile
 
   // Show sidebar by default on desktop, hide on mobile
@@ -50,7 +52,7 @@ export default function PluginPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Plugin data - will be expanded based on pluginSlug
+  // Plugin data - will be expanded based on slug
   // CONFIGURATION REQUIRED:
   // 1. Sign up at https://paddle.com
   // 2. Create a product in Paddle dashboard
@@ -150,7 +152,7 @@ export default function PluginPage() {
     }
   };
 
-  const plugin = pluginData[pluginSlug as keyof typeof pluginData];
+  const plugin = pluginData[slug as keyof typeof pluginData];
   
   // Compute page title
   const pageTitle = plugin ? plugin.name : 'Plugin';
@@ -163,12 +165,12 @@ export default function PluginPage() {
             <h1 className="text-3xl sm:text-4xl font-bold mb-4">Plugin Not Found</h1>
           <p className="text-gray-400 mb-8">The plugin you're looking for doesn't exist.</p>
           <Link
-            to="/services/wordpress"
+            to={isStoreSubdomain ? "/" : "/services/wordpress"}
             className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-white transition-all hover:scale-105"
             style={{ backgroundColor: '#176641' }}
           >
             <ArrowLeft size={18} />
-            Back to WordPress Services
+            {isStoreSubdomain ? "Back to Store" : "Back to WordPress Services"}
           </Link>
         </div>
       </div>

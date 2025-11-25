@@ -2,6 +2,9 @@ import { Link } from 'react-router-dom';
 import { Package, Image, Code, Palette, Zap, CheckCircle } from 'lucide-react';
 import PageLayout from '../components/PageLayout';
 
+// Check if we're on the store subdomain
+const isStoreSubdomain = typeof window !== 'undefined' && window.location.hostname === 'store.shalconnects.com';
+
 interface Product {
   id: string;
   name: string;
@@ -84,7 +87,7 @@ export default function StoreHome() {
                 return (
                   <Link
                     key={product.id}
-                    to={`/store/${product.slug}`}
+                    to={isStoreSubdomain ? `/${product.slug}` : `/store/${product.slug}`}
                     className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 group"
                   >
                     {/* Product Image/Icon */}
