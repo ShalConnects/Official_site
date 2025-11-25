@@ -12,10 +12,11 @@ import LandingPage from './pages/LandingPage';
 import AITextFormatter from './pages/AITextFormatter';
 import ToolsPage from './pages/ToolsPage';
 import StoreHome from './pages/StoreHome';
+import { isStoreContext } from './utils/storeUtils';
 
 function ShalConnectsPortfolio() {
-  // Check if we're on the store subdomain
-  const isStoreSubdomain = typeof window !== 'undefined' && window.location.hostname === 'store.shalconnects.com';
+  // Check if we're on the store subdomain or store routes
+  const isStoreSubdomain = isStoreContext();
   // serviceCategories is kept here for ServicePage
   // LandingPage has its own copy of serviceCategories
   const serviceCategories = [

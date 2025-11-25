@@ -1,10 +1,81 @@
 import { Link } from 'react-router-dom';
 import { Mail } from 'lucide-react';
 import { SiLinkedin, SiX, SiWhatsapp } from 'react-icons/si';
+import { isStoreContext } from '../utils/storeUtils';
 
 export default function Footer() {
   const yearsInBusiness = 8;
+  const isStoreSubdomain = isStoreContext();
   
+  // Store subdomain footer - simpler, product-focused
+  if (isStoreSubdomain) {
+    return (
+      <footer className="bg-gray-800 py-8 sm:py-10 border-t border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 mb-6 sm:mb-8">
+            {/* Products Column */}
+            <div className="text-center sm:text-left">
+              <h3 className="text-white font-semibold mb-3 sm:mb-4 text-sm uppercase tracking-wider">Products</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/store/variation-images-pro" className="text-gray-400 hover:text-white text-sm transition-colors">
+                    Variation Images Pro
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Legal Column */}
+            <div className="text-center sm:text-left">
+              <h3 className="text-white font-semibold mb-3 sm:mb-4 text-sm uppercase tracking-wider">Legal</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/terms" className="text-gray-400 hover:text-white text-sm transition-colors">
+                    Terms & Conditions
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/privacy" className="text-gray-400 hover:text-white text-sm transition-colors">
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/refund" className="text-gray-400 hover:text-white text-sm transition-colors">
+                    Refund Policy
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Support Column */}
+            <div className="text-center sm:text-left">
+              <h3 className="text-white font-semibold mb-3 sm:mb-4 text-sm uppercase tracking-wider">Support</h3>
+              <ul className="space-y-2">
+                <li>
+                  <a 
+                    href="mailto:hello@shalconnects.com" 
+                    className="text-gray-400 hover:text-white text-sm transition-colors flex items-center justify-center sm:justify-start gap-2"
+                  >
+                    <Mail size={14} />
+                    <span>Contact Support</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom Section: Copyright */}
+          <div className="border-t border-gray-700 pt-6 mt-6 text-center">
+            <p className="text-gray-500 text-xs sm:text-sm">
+              © {new Date().getFullYear()} Shalauddin Kader (trading as ShalConnects). All rights reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
+    );
+  }
+  
+  // Main site footer - original design
   return (
     <footer className="bg-gray-950 py-8 sm:py-10 md:py-12 border-t border-gray-800">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">

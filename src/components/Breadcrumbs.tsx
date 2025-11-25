@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronRight, Home } from 'lucide-react';
+import { isStoreContext } from '../utils/storeUtils';
 
 interface BreadcrumbItem {
   label: string;
@@ -17,8 +18,8 @@ export default function Breadcrumbs() {
 
   const generateBreadcrumbs = (): BreadcrumbItem[] => {
     const paths = pathname.split('/').filter(Boolean);
-    // Check if we're on the store subdomain
-    const isStoreSubdomain = typeof window !== 'undefined' && window.location.hostname === 'store.shalconnects.com';
+    // Check if we're on the store subdomain or store routes
+    const isStoreSubdomain = isStoreContext();
     const breadcrumbs: BreadcrumbItem[] = [
       { label: 'Home', path: '/' }
     ];
