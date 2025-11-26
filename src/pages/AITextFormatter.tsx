@@ -1787,7 +1787,7 @@ export default function AITextFormatter() {
 
   const mainContent = (
     <div className={`${isFullScreen ? 'p-2 sm:p-4' : 'p-3 sm:p-4 md:p-6'}`}>
-      <div className={`${isFullScreen ? 'h-full overflow-auto' : 'mx-auto'}`} style={!isFullScreen ? { maxWidth: '65rem' } : {}}>
+      <div className={`${isFullScreen ? 'h-full overflow-auto' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'}`}>
         {/* Notification */}
         {showNotification && (
           <div 

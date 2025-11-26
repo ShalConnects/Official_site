@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { X, Zap, Target, TrendingUp, Clock, CheckCircle, Star, Quote, ExternalLink, XCircle, ChevronDown, Palette, Code, Wrench, FileCode, Layout, Package, Store, List, Image, Smartphone, Globe, Share2, FileText, Layers, Home, Briefcase, MoreHorizontal, ArrowUp, ArrowRight, Mail, Search, Workflow, Rocket } from 'lucide-react';
-import { SiWordpress, SiShopify, SiWix, SiEbay, SiAmazon, SiWalmart, SiAndroid, SiLinkedin, SiX, SiWhatsapp } from 'react-icons/si';
+import { X, Zap, Target, TrendingUp, Clock, CheckCircle, Star, Quote, ExternalLink, XCircle, ChevronDown, Palette, Code, Wrench, FileCode, Layout, Package, Store, List, Image, Smartphone, Globe, Share2, FileText, Layers, Home, Briefcase, MoreHorizontal, ArrowUp, ArrowRight, Mail, Search, Workflow, Rocket, Wand2, Activity, Key } from 'lucide-react';
+import { SiWordpress, SiShopify, SiWix, SiEbay, SiAmazon, SiWalmart, SiAndroid, SiLinkedin, SiX, SiWhatsapp, SiYoutube } from 'react-icons/si';
 import Logo from '../components/Logo';
 
 // Type definitions
@@ -100,6 +100,46 @@ export default function LandingPage() {
   const _particlesRef = useRef<Particle[]>([]);
   const [particleConnections, _setParticleConnections] = useState<ParticleConnection[]>([]);
 
+  // Tools data
+  interface Tool {
+    id: string;
+    name: string;
+    description: string;
+    icon: React.ElementType;
+    route: string;
+    color: string;
+    isNew?: boolean;
+  }
+  const tools: Tool[] = [
+    {
+      id: 'ai-text-formatter',
+      name: 'AI Text Formatter',
+      description: 'Remove markdown formatting and convert AI-generated text to clean, human-readable format. Automatically detects and removes AI meta-commentary.',
+      icon: Wand2,
+      route: '/tools/ai-formatter',
+      color: '#6366f1',
+      isNew: true
+    },
+    {
+      id: 'fitquest',
+      name: 'FitQuest',
+      description: 'Gamify your fitness journey with points, levels, streaks, and achievements. Track workouts and level up your fitness game.',
+      icon: Activity,
+      route: '/tools/fitquest',
+      color: '#10b981',
+      isNew: true
+    },
+    {
+      id: 'password-generator',
+      name: 'Password Generator',
+      description: 'Generate strong, secure passwords with customizable options. Control length, character types, and security settings.',
+      icon: Key,
+      route: '/tools/password-generator',
+      color: '#6366f1',
+      isNew: true
+    }
+  ];
+
   // Scroll progress and active section tracking
   useEffect(() => {
     const handleScroll = () => {
@@ -117,7 +157,7 @@ export default function LandingPage() {
       setScrollProgress(Math.min(100, Math.max(0, progress)));
       
       // Determine active section
-      const sections = ['home', 'services', 'process', 'work', 'testimonials', 'products', 'contact'];
+      const sections = ['home', 'services', 'process', 'work', 'testimonials', 'products', 'tools', 'contact'];
       let current = 'home';
       
       for (const section of sections) {
@@ -215,10 +255,13 @@ export default function LandingPage() {
     if (isMoreMenuOpen && moreMenuRef.current) {
       const rect = moreMenuRef.current.getBoundingClientRect();
       // Position dropdown above the button (since it's at bottom of screen)
-      // Estimate dropdown height: ~200px for 4 items
-      const estimatedDropdownHeight = 200;
-      // Position it closer to the button (smaller gap) to prevent mouse leave issues
-      const topPosition = rect.top - estimatedDropdownHeight - 5; // 5px gap above button
+      // Estimate dropdown height: ~220px for 5 items
+      const estimatedDropdownHeight = 220;
+      // Position it well above the button to avoid overlapping with bottom nav
+      // Bottom nav is typically ~60-70px tall, so we need extra space
+      const bottomNavHeight = 70;
+      const gap = 10; // Gap between dropdown and button
+      const topPosition = rect.top - estimatedDropdownHeight - gap;
       
       setDropdownPosition({
         top: Math.max(10, topPosition), // Ensure it doesn't go off top of screen
@@ -257,7 +300,7 @@ export default function LandingPage() {
     const observer = new IntersectionObserver(observerCallback, observerOptions);
 
     // Observe all sections
-    const sections = ['home', 'services', 'process', 'work', 'testimonials', 'contact'];
+    const sections = ['home', 'services', 'process', 'work', 'testimonials', 'tools', 'contact'];
     sections.forEach(section => {
       const element = document.getElementById(section);
       if (element) {
@@ -770,12 +813,12 @@ export default function LandingPage() {
                 )}
               </button>
 
-              {/* Store */}
+              {/* Store - Hidden on mobile since it's in More menu */}
               <a
                 href="https://store.shalconnects.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="relative flex flex-col items-center justify-center gap-1 px-3 py-2 transition-all duration-200 touch-manipulation min-h-[44px]"
+                className="hidden relative flex flex-col items-center justify-center gap-1 px-3 py-2 transition-all duration-200 touch-manipulation min-h-[44px]"
                 style={{ color: '#4a9d6f' }}
                 onMouseEnter={(e) => e.currentTarget.style.color = '#da651e'}
                 onMouseLeave={(e) => e.currentTarget.style.color = '#4a9d6f'}
@@ -1776,6 +1819,94 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Tools Section */}
+      <section 
+        id="tools" 
+        ref={(el) => (sectionRefs.current.tools = el)}
+        className="py-12 sm:py-16 md:py-20 relative"
+        style={{ 
+          background: 'linear-gradient(to bottom, transparent, rgba(21, 102, 65, 0.03))'
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 px-2">Our Free Tools</h2>
+            <p className="text-base sm:text-lg md:text-xl text-gray-400 px-2">Free utilities and tools to help you work smarter</p>
+          </div>
+
+          <div className="max-w-7xl mx-auto">
+            {/* Horizontal Scrollable Container */}
+            <div className="relative">
+              {/* Left fade gradient */}
+              <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-24 bg-gradient-to-r from-gray-900 to-transparent pointer-events-none z-10"></div>
+              
+              {/* Right fade gradient */}
+              <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-24 bg-gradient-to-l from-gray-900 to-transparent pointer-events-none z-10"></div>
+              
+              {/* Scrollable tools container */}
+              <div 
+                className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
+                style={{
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none',
+                  WebkitOverflowScrolling: 'touch'
+                }}
+              >
+                {tools.map((tool) => {
+                  const Icon = tool.icon;
+                  return (
+                    <Link
+                      key={tool.id}
+                      to={tool.route}
+                      className="group bg-gray-800/50 p-6 rounded-xl border border-gray-700/50 transition-all duration-300 hover:border-gray-600/50 hover:scale-105 cursor-pointer flex-shrink-0 w-full sm:w-80 md:w-96 snap-center"
+                    >
+                      <div className="flex items-center gap-4 mb-4">
+                        <div 
+                          className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6" 
+                          style={{ backgroundColor: tool.color }}
+                        >
+                          <Icon size={24} className="text-white transition-transform duration-300 group-hover:scale-110" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-xl font-bold text-white">
+                              {tool.name}
+                            </h3>
+                            {tool.isNew && (
+                              <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-medium rounded-full border border-green-500/30">
+                                New
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-300 mb-4 line-clamp-3">
+                        {tool.description}
+                      </p>
+                      <div className="flex items-center text-sm font-medium group-hover:gap-2 transition-all duration-300" style={{ color: tool.color }}>
+                        <span>Use Tool</span>
+                        <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* View All Tools Link */}
+            <div className="mt-8 text-center">
+              <Link
+                to="/tools"
+                className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm sm:text-base"
+              >
+                <span>View All Tools</span>
+                <ArrowRight size={16} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Contact Section */}
       <section 
         id="contact" 
@@ -2118,31 +2249,33 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-950 py-12 pb-[100px] border-t border-gray-800">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
+      <footer className="bg-gray-950 py-8 sm:py-10 md:py-12 border-t border-gray-800">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           {/* Multi-column Layout */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-6 lg:gap-8 mb-8">
+          <div 
+            className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 mb-6 sm:mb-8 lg:grid-cols-[auto_auto_auto] lg:justify-items-start"
+          >
             {/* Company Info Column */}
             <div className="text-center sm:text-left">
-              <div className="text-2xl font-bold text-gradient-theme mb-3">
+              <div className="text-xl sm:text-2xl font-bold text-gradient-theme mb-2 sm:mb-3">
                 ShalConnects
               </div>
-              <p className="text-gray-400 text-sm mb-4 leading-relaxed">
+              <p className="text-gray-400 text-xs sm:text-sm mb-3 sm:mb-4 leading-relaxed">
                 <span className="text-white font-medium">Connecting brands</span> with their audience through innovative digital solutions
               </p>
-              <p className="text-gray-500 text-xs">Since {new Date().getFullYear() - statsTarget.years}</p>
+              <p className="text-gray-500 text-[10px] sm:text-xs">Since {new Date().getFullYear() - statsTarget.years}</p>
             </div>
 
             {/* Contact Info Column */}
             <div className="text-center sm:text-left">
-              <h3 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Contact</h3>
+              <h3 className="text-white font-semibold mb-3 sm:mb-4 text-xs sm:text-sm uppercase tracking-wider">Contact</h3>
               <ul className="space-y-2">
                 <li>
                   <a 
                     href="mailto:hello@shalconnects.com" 
-                    className="text-gray-400 hover:text-green-400 text-sm transition-colors flex items-center justify-center sm:justify-start gap-2"
+                    className="text-gray-400 hover:text-green-400 text-xs sm:text-sm transition-colors flex items-center justify-center sm:justify-start gap-2"
                   >
-                    <Mail size={16} />
+                    <Mail size={14} className="sm:w-4 sm:h-4" />
                     <span>hello@shalconnects.com</span>
                   </a>
                 </li>
@@ -2151,9 +2284,9 @@ export default function LandingPage() {
                     href="https://wa.me/8801879729252" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-gray-400 hover:text-green-400 text-sm transition-colors flex items-center justify-center sm:justify-start gap-2"
+                    className="text-gray-400 hover:text-green-400 text-xs sm:text-sm transition-colors flex items-center justify-center sm:justify-start gap-2"
                   >
-                    <SiWhatsapp size={16} />
+                    <SiWhatsapp size={14} className="sm:w-4 sm:h-4" />
                     <span>+880 1879-729252</span>
                   </a>
                 </li>
@@ -2161,37 +2294,45 @@ export default function LandingPage() {
             </div>
 
             {/* Social Media Column */}
-            <div className="text-center sm:text-left">
+            <div className="text-center sm:text-left lg:text-right lg:justify-self-end">
               <h3 className="text-white font-semibold mb-3 sm:mb-4 text-xs sm:text-sm uppercase tracking-wider">Follow Us</h3>
-              <div className="flex items-center justify-center sm:justify-start gap-3 sm:gap-4">
+              <div className="flex items-center justify-center sm:justify-start lg:justify-end gap-3 sm:gap-4">
                 <a 
                   href="https://www.linkedin.com/in/shalconnects/" 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-all hover:scale-110 group"
+                  className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-all hover:scale-110 group"
                   aria-label="LinkedIn"
                 >
-                  <SiLinkedin size={18} className="sm:w-5 sm:h-5 text-gray-400 group-hover:text-green-400 transition-colors" />
+                  <SiLinkedin size={16} className="sm:w-[18px] sm:h-[18px] md:w-5 md:h-5 text-gray-400 group-hover:text-green-400 transition-colors" />
                 </a>
                 <a 
                   href="https://x.com/ShalConnects" 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-all hover:scale-110 group"
+                  className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-all hover:scale-110 group"
                   aria-label="Twitter"
                 >
-                  <SiX size={18} className="sm:w-5 sm:h-5 text-gray-400 group-hover:text-green-400 transition-colors" />
+                  <SiX size={16} className="sm:w-[18px] sm:h-[18px] md:w-5 md:h-5 text-gray-400 group-hover:text-green-400 transition-colors" />
+                </a>
+                <a 
+                  href="https://www.youtube.com/@ShalConnects" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-all hover:scale-110 group"
+                  aria-label="YouTube"
+                >
+                  <SiYoutube size={16} className="sm:w-[18px] sm:h-[18px] md:w-5 md:h-5 text-gray-400 group-hover:text-green-400 transition-colors" />
                 </a>
               </div>
             </div>
-
           </div>
 
           {/* Bottom Section: Copyright & Legal Links */}
-          <div className="border-t border-gray-800 pt-6 sm:pt-8 mt-6 sm:mt-8">
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 text-center sm:text-left">
-              <p className="text-gray-500 text-xs sm:text-sm">Â© 2025 ShalConnects. All rights reserved.</p>
-              <div className="flex justify-center flex-wrap gap-3 sm:gap-4 md:gap-6 text-gray-500 text-xs sm:text-sm">
+          <div className="border-t border-gray-800 pt-4 sm:pt-6 md:pt-8 mt-4 sm:mt-6 md:mt-8">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-3 md:gap-4 text-center sm:text-left">
+              <p className="text-gray-500 text-[10px] sm:text-xs md:text-sm">© {new Date().getFullYear()} ShalConnects. All rights reserved.</p>
+              <div className="flex justify-center flex-wrap gap-2 sm:gap-3 md:gap-4 lg:gap-6 text-gray-500 text-[10px] sm:text-xs md:text-sm">
                 <Link to="/privacy" className="hover:text-green-400 transition-colors">Privacy</Link>
                 <Link to="/terms" className="hover:text-green-400 transition-colors">Terms</Link>
                 <Link to="/refund" className="hover:text-green-400 transition-colors">Refund Policy</Link>
@@ -2324,10 +2465,10 @@ export default function LandingPage() {
       {isMoreMenuOpen && dropdownPosition.top > 0 && (
         <div 
           data-dropdown-menu
-          className="fixed bg-gray-900 backdrop-blur-md border-2 border-gray-500 rounded-lg shadow-2xl min-w-[140px] xs:min-w-[160px] sm:min-w-[180px] overflow-hidden z-[9999]" 
+          className="fixed bg-gray-900 backdrop-blur-md border-2 border-gray-500 rounded-lg shadow-2xl min-w-[140px] xs:min-w-[160px] sm:min-w-[180px] overflow-hidden z-[9999] animate-dropdown-enter"
           style={{ 
             maxWidth: 'calc(100vw - 2rem)',
-            top: `${dropdownPosition.top}px`,
+            bottom: '75px',
             left: `${dropdownPosition.left}px`,
             position: 'fixed',
             display: 'block',
@@ -2349,12 +2490,24 @@ export default function LandingPage() {
           }}
         >
           <div className="py-1">
+            <a
+              href="https://store.shalconnects.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setIsMoreMenuOpen(false)}
+              className="w-full text-left px-4 xs:px-5 py-2.5 xs:py-3 text-xs xs:text-sm text-gray-400 hover:text-white active:text-white hover:bg-gray-800/50 active:bg-gray-800/70 transition-all duration-200 touch-manipulation min-h-[44px] flex items-center justify-between animate-item-stagger"
+              style={{ animationDelay: '0.05s' }}
+            >
+              <span>Store</span>
+              <ExternalLink size={14} className="opacity-60" />
+            </a>
             <button
               onClick={() => {
                 scrollToSection('about');
                 setIsMoreMenuOpen(false);
               }}
-              className="w-full text-left px-4 xs:px-5 py-2.5 xs:py-3 text-xs xs:text-sm text-gray-400 hover:text-white active:text-white hover:bg-gray-800/50 active:bg-gray-800/70 transition-colors duration-150 touch-manipulation min-h-[44px] flex items-center"
+              className="w-full text-left px-4 xs:px-5 py-2.5 xs:py-3 text-xs xs:text-sm text-gray-400 hover:text-white active:text-white hover:bg-gray-800/50 active:bg-gray-800/70 transition-all duration-200 touch-manipulation min-h-[44px] flex items-center animate-item-stagger hover:scale-[1.02]"
+              style={{ animationDelay: '0.1s' }}
             >
               About Us
             </button>
@@ -2363,7 +2516,8 @@ export default function LandingPage() {
                 scrollToSection('team');
                 setIsMoreMenuOpen(false);
               }}
-              className="w-full text-left px-4 xs:px-5 py-2.5 xs:py-3 text-xs xs:text-sm text-gray-400 hover:text-white active:text-white hover:bg-gray-800/50 active:bg-gray-800/70 transition-colors duration-150 touch-manipulation min-h-[44px] flex items-center"
+              className="w-full text-left px-4 xs:px-5 py-2.5 xs:py-3 text-xs xs:text-sm text-gray-400 hover:text-white active:text-white hover:bg-gray-800/50 active:bg-gray-800/70 transition-all duration-200 touch-manipulation min-h-[44px] flex items-center animate-item-stagger hover:scale-[1.02]"
+              style={{ animationDelay: '0.15s' }}
             >
               Meet the Team
             </button>
@@ -2372,7 +2526,8 @@ export default function LandingPage() {
                 scrollToSection('blog');
                 setIsMoreMenuOpen(false);
               }}
-              className="w-full text-left px-4 xs:px-5 py-2.5 xs:py-3 text-xs xs:text-sm text-gray-400 hover:text-white active:text-white hover:bg-gray-800/50 active:bg-gray-800/70 transition-colors duration-150 touch-manipulation min-h-[44px] flex items-center"
+              className="w-full text-left px-4 xs:px-5 py-2.5 xs:py-3 text-xs xs:text-sm text-gray-400 hover:text-white active:text-white hover:bg-gray-800/50 active:bg-gray-800/70 transition-all duration-200 touch-manipulation min-h-[44px] flex items-center animate-item-stagger hover:scale-[1.02]"
+              style={{ animationDelay: '0.2s' }}
             >
               Blog
             </button>
@@ -2381,7 +2536,8 @@ export default function LandingPage() {
                 navigate('/tools');
                 setIsMoreMenuOpen(false);
               }}
-              className="w-full text-left px-4 xs:px-5 py-2.5 xs:py-3 text-xs xs:text-sm text-gray-400 hover:text-white active:text-white hover:bg-gray-800/50 active:bg-gray-800/70 transition-colors duration-150 touch-manipulation min-h-[44px] flex items-center"
+              className="w-full text-left px-4 xs:px-5 py-2.5 xs:py-3 text-xs xs:text-sm text-gray-400 hover:text-white active:text-white hover:bg-gray-800/50 active:bg-gray-800/70 transition-all duration-200 touch-manipulation min-h-[44px] flex items-center animate-item-stagger hover:scale-[1.02]"
+              style={{ animationDelay: '0.25s' }}
             >
               Tools
             </button>

@@ -1,5 +1,7 @@
 ﻿import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import { Zap, Target, TrendingUp, Palette, Code, Wrench, FileCode, Layout, Package, Store, List, Image, Smartphone, Globe, Share2, FileText, Layers } from 'lucide-react';
+import { trackPageView } from './utils/analytics';
 import { SiWordpress, SiShopify, SiWix, SiEbay, SiAmazon, SiWalmart, SiAndroid } from 'react-icons/si';
 import ScrollToTop from './components/ScrollToTop';
 import ServicePage from './pages/ServicePage';
@@ -9,12 +11,22 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import RefundPolicy from './pages/RefundPolicy';
 import LandingPage from './pages/LandingPage';
+import { lazy, Suspense } from 'react';
 import AITextFormatter from './pages/AITextFormatter';
+const FitQuest = lazy(() => import('./pages/FitQuest'));
+const PasswordGenerator = lazy(() => import('./pages/PasswordGenerator'));
 import ToolsPage from './pages/ToolsPage';
 import StoreHome from './pages/StoreHome';
 import { isStoreContext } from './utils/storeUtils';
 
 function ShalConnectsPortfolio() {
+  const location = useLocation();
+  
+  // Track page views
+  useEffect(() => {
+    trackPageView(location.pathname);
+  }, [location]);
+  
   // Check if we're on the store subdomain or store routes
   const isStoreSubdomain = isStoreContext();
   // serviceCategories is kept here for ServicePage
@@ -198,6 +210,16 @@ function ShalConnectsPortfolio() {
       <Route path="/download" element={<DownloadPage />} />
         <Route path="/tools" element={<ToolsPage />} />
         <Route path="/tools/ai-formatter" element={<AITextFormatter />} />
+        <Route path="/tools/fitquest" element={
+          <Suspense fallback={<div className="min-h-screen bg-gray-900 flex items-center justify-center"><div className="text-white">Loading...</div></div>}>
+            <FitQuest />
+          </Suspense>
+        } />
+        <Route path="/tools/password-generator" element={
+          <Suspense fallback={<div className="min-h-screen bg-gray-900 flex items-center justify-center"><div className="text-white">Loading...</div></div>}>
+            <PasswordGenerator />
+          </Suspense>
+        } />
       <Route path="/store" element={isStoreSubdomain ? <Navigate to="/" replace /> : <StoreHome />} />
       <Route path="/store/:productSlug" element={<PluginPage />} />
       <Route path="/services/:serviceSlug" element={<ServicePage serviceCategories={serviceCategories as any} />} />

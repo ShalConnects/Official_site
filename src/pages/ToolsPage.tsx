@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Wand2, ArrowRight } from 'lucide-react';
+import { Wand2, ArrowRight, Activity, Key } from 'lucide-react';
 import PageLayout from '../components/PageLayout';
+import { useMetaTags } from '../hooks/useMetaTags';
 
 interface Tool {
   id: string;
@@ -14,6 +15,18 @@ interface Tool {
 }
 
 export default function ToolsPage() {
+  useMetaTags({
+    title: 'Free Tools & Utilities | ShalConnects',
+    description: 'Free utilities and tools crafted by ShalConnects to help you work smarter. AI Text Formatter, FitQuest fitness tracker, and more.',
+    keywords: 'free tools, utilities, AI formatter, fitness tracker, productivity tools, online tools',
+    ogTitle: 'Free Tools & Utilities - ShalConnects',
+    ogDescription: 'Free utilities and tools to help you work smarter. AI Text Formatter, FitQuest, and more.',
+    ogImage: '/logo.png',
+    twitterTitle: 'Free Tools & Utilities - ShalConnects',
+    twitterDescription: 'Free utilities and tools to help you work smarter.',
+    twitterImage: '/logo.png'
+  });
+
   const tools: Tool[] = [
     {
       id: 'ai-text-formatter',
@@ -21,6 +34,24 @@ export default function ToolsPage() {
       description: 'Remove markdown formatting and convert AI-generated text to clean, human-readable format. Automatically detects and removes AI meta-commentary.',
       icon: Wand2,
       route: '/tools/ai-formatter',
+      color: '#6366f1', // Indigo
+      isNew: true
+    },
+    {
+      id: 'fitquest',
+      name: 'FitQuest',
+      description: 'Gamify your fitness journey with points, levels, streaks, and achievements. Track workouts and level up your fitness game.',
+      icon: Activity,
+      route: '/tools/fitquest',
+      color: '#10b981', // Green
+      isNew: true
+    },
+    {
+      id: 'password-generator',
+      name: 'Password Generator',
+      description: 'Generate strong, secure passwords with customizable options. Control length, character types, and security settings.',
+      icon: Key,
+      route: '/tools/password-generator',
       color: '#6366f1', // Indigo
       isNew: true
     }

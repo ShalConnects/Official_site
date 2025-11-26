@@ -313,17 +313,17 @@ export default function PluginPage() {
       {/* Floating Toggle Button - Mobile & Desktop */}
       <button
         onClick={() => setIsSidebarVisible(!isSidebarVisible)}
-        className={`fixed top-20 z-50 bg-gray-800/90 hover:bg-gray-700 border border-gray-700 rounded-lg p-2.5 transition-all duration-300 hover:scale-110 shadow-lg backdrop-blur-sm ${
+        className={`fixed top-16 sm:top-20 z-50 bg-gray-800/90 hover:bg-gray-700 border border-gray-700 rounded-lg p-2 sm:p-2.5 transition-all duration-300 hover:scale-110 shadow-lg backdrop-blur-sm ${
           isSidebarVisible 
             ? 'left-[272px] lg:left-[272px]' 
-            : 'left-4 lg:left-4'
+            : 'left-2 sm:left-4 lg:left-4'
         }`}
         aria-label={isSidebarVisible ? 'Hide sidebar' : 'Show sidebar'}
       >
         {isSidebarVisible ? (
-          <XIcon size={20} className="text-white" />
+          <XIcon size={18} className="sm:w-5 sm:h-5 text-white" />
         ) : (
-          <Menu size={20} className="text-white" />
+          <Menu size={18} className="sm:w-5 sm:h-5 text-white" />
         )}
       </button>
 
@@ -345,34 +345,34 @@ export default function PluginPage() {
           isSidebarVisible ? 'lg:ml-0' : ''
         }`}>
           {/* Hero Section */}
-          <section id="overview" className="py-16 sm:py-24">
+          <section id="overview" className="py-8 sm:py-12 md:py-16 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 md:gap-10 lg:gap-12 items-center">
             <div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-5 md:mb-6">
               {plugin.name}
             </h1>
-            <p className="text-xl sm:text-2xl text-gray-400 mb-8">
+            <p className="text-lg sm:text-xl md:text-2xl text-gray-400 mb-4 sm:mb-6 md:mb-8">
               {plugin.tagline}
             </p>
-            <p className="text-lg text-gray-300 mb-10 leading-relaxed">
+            <p className="text-base sm:text-lg text-gray-300 mb-6 sm:mb-8 md:mb-10 leading-relaxed">
               {plugin.description}
             </p>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
                 <button
                   onClick={handlePurchase}
-                className="px-8 py-4 rounded-lg font-medium text-white text-lg transition-all hover:scale-105 flex items-center gap-2 bg-gradient-theme"
+                className="px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-medium text-white text-base sm:text-lg transition-all hover:scale-105 flex items-center justify-center gap-2 bg-gradient-theme"
               >
-                  <ShoppingCart size={20} />
+                  <ShoppingCart size={18} className="sm:w-5 sm:h-5" />
                   Buy Pro Version {plugin.price && `- ${plugin.price}`}
                 </button>
               <a
                 href="https://wordpress.org/plugins/wc-variation-images-pro"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-8 py-4 rounded-lg font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-colors flex items-center gap-2"
+                className="px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
               >
-                <ExternalLink size={20} />
+                <ExternalLink size={18} className="sm:w-5 sm:h-5" />
                 View Free Version on WordPress.org
               </a>
             </div>
@@ -397,12 +397,12 @@ export default function PluginPage() {
       </section>
 
           {/* Feature Showcase Section - EDD Style */}
-          <section id="feature-showcase" className="py-16 bg-gray-900/50">
+          <section id="feature-showcase" className="py-8 sm:py-12 md:py-16 bg-gray-900/50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-center">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-center px-2">
                 Powerful Features, Intuitive Interface
               </h2>
-              <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto">
+              <p className="text-sm sm:text-base text-center text-gray-400 mb-8 sm:mb-10 md:mb-12 max-w-2xl mx-auto px-2">
                 Everything you need to transform your WooCommerce product variations into beautiful, engaging experiences
               </p>
               
@@ -516,24 +516,24 @@ export default function PluginPage() {
           </section>
 
           {/* Features Section */}
-          <section id="features" className="py-16 bg-gray-800/30">
+          <section id="features" className="py-8 sm:py-12 md:py-16 bg-gray-800/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-12 text-center">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-8 sm:mb-10 md:mb-12 text-center px-2">
             Key Features
           </h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {plugin.features.map((feature, idx) => {
               const FeatureIcon = feature.icon;
               return (
                 <div
                   key={idx}
-                  className="bg-gray-800/50 p-6 rounded-xl border border-gray-700/50 hover:border-gray-600/50 transition-all hover:scale-105"
+                  className="bg-gray-800/50 p-4 sm:p-5 md:p-6 rounded-xl border border-gray-700/50 hover:border-gray-600/50 transition-all hover:scale-105"
                 >
-                  <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: '#17664120' }}>
-                    <FeatureIcon size={24} style={{ color: '#176641' }} />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center mb-3 sm:mb-4" style={{ backgroundColor: '#17664120' }}>
+                    <FeatureIcon size={20} className="sm:w-6 sm:h-6" style={{ color: '#176641' }} />
                   </div>
-                  <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-                  <p className="text-gray-400 text-sm">{feature.desc}</p>
+                  <h3 className="text-base sm:text-lg font-semibold text-white mb-1.5 sm:mb-2">{feature.title}</h3>
+                  <p className="text-gray-400 text-xs sm:text-sm">{feature.desc}</p>
                 </div>
               );
             })}
@@ -542,12 +542,12 @@ export default function PluginPage() {
       </section>
 
           {/* Free vs Pro Comparison Table */}
-          <section id="comparison" className="py-16">
+          <section id="comparison" className="py-8 sm:py-12 md:py-16">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-center">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-center px-2">
             Free vs Pro Comparison
           </h2>
-          <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base text-center text-gray-400 mb-8 sm:mb-10 md:mb-12 max-w-2xl mx-auto px-2">
             Compare the features available in the free version versus the Pro version.
           </p>
           <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 overflow-hidden">
@@ -598,22 +598,22 @@ export default function PluginPage() {
       </section>
 
           {/* Display Styles Section */}
-          <section id="display-styles" className="py-16 bg-gray-800/30">
+          <section id="display-styles" className="py-8 sm:py-12 md:py-16 bg-gray-800/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-center">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-center px-2">
             See It In Action
           </h2>
-          <p className="text-center text-gray-400 mb-4 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base text-center text-gray-400 mb-6 sm:mb-8 md:mb-12 max-w-2xl mx-auto px-2">
             Choose from 7 different display styles
           </p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12 justify-items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-10 md:mb-12 justify-items-center">
             {plugin.displayStyles.map((style, idx) => (
               <div
                 key={idx}
                 className="bg-gray-800/50 rounded-xl border border-gray-700/50 hover:border-gray-600/50 transition-all hover:scale-105 overflow-hidden w-full max-w-sm"
               >
                 <div 
-                  className="h-48 flex items-center justify-center relative"
+                  className="h-40 sm:h-48 flex items-center justify-center relative"
                   style={{ 
                     background: '#fafafa',
                     borderBottom: '2px solid #17664130'
@@ -633,14 +633,14 @@ export default function PluginPage() {
                     }}
                   />
                   <div className="placeholder-icon hidden absolute inset-0 items-center justify-center">
-                    <Image size={48} style={{ color: '#176641' }} className="opacity-50" />
+                    <Image size={40} className="sm:w-12 sm:h-12 opacity-50" style={{ color: '#176641' }} />
                   </div>
                 </div>
-                <div className="p-4">
-                  <h3 className="text-lg font-semibold text-white mb-2">{style.name}</h3>
-                  <p className="text-gray-400 text-sm mb-3">{style.description}</p>
+                <div className="p-3 sm:p-4">
+                  <h3 className="text-base sm:text-lg font-semibold text-white mb-1.5 sm:mb-2">{style.name}</h3>
+                  <p className="text-gray-400 text-xs sm:text-sm mb-2 sm:mb-3">{style.description}</p>
                   <span 
-                    className={`inline-block text-xs px-2 py-1 rounded-full ${
+                    className={`inline-block text-[10px] sm:text-xs px-2 py-0.5 sm:py-1 rounded-full ${
                       style.isPro 
                         ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' 
                         : 'bg-gray-700/50 text-gray-300 border border-gray-600/50'
@@ -656,12 +656,12 @@ export default function PluginPage() {
       </section>
 
           {/* Installation Guide Section */}
-          <section id="installation" className="py-16">
+          <section id="installation" className="py-8 sm:py-12 md:py-16">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-center">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-center px-2">
             How to Install the Plugin
           </h2>
-          <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base text-center text-gray-400 mb-8 sm:mb-10 md:mb-12 max-w-2xl mx-auto px-2">
             Choose your installation method based on whether you're using the free or pro version.
           </p>
 
@@ -810,27 +810,27 @@ export default function PluginPage() {
       </section>
 
           {/* Download Section */}
-          <section id="download" className="py-16">
+          <section id="download" className="py-8 sm:py-12 md:py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-6">Ready to Get Started?</h2>
-          <p className="text-xl text-gray-400 mb-8">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-5 md:mb-6 px-2">Ready to Get Started?</h2>
+          <p className="text-base sm:text-lg md:text-xl text-gray-400 mb-6 sm:mb-7 md:mb-8 px-2">
             Download the Pro version now and unlock all premium features.
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4">
             <button
               onClick={handlePurchase}
-              className="px-8 py-4 rounded-lg font-medium text-white text-lg transition-all hover:scale-105 flex items-center gap-2 bg-gradient-theme"
+              className="px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-medium text-white text-base sm:text-lg transition-all hover:scale-105 flex items-center justify-center gap-2 bg-gradient-theme"
             >
-              <ShoppingCart size={20} />
+              <ShoppingCart size={18} className="sm:w-5 sm:h-5" />
               Buy Pro Version {plugin.price && `- ${plugin.price}`}
             </button>
             <a
               href="https://wordpress.org/plugins/wc-variation-images-pro"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-8 py-4 rounded-lg font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-colors flex items-center gap-2"
+              className="px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
             >
-              <ExternalLink size={20} />
+              <ExternalLink size={18} className="sm:w-5 sm:h-5" />
               Try Free Version
             </a>
           </div>

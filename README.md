@@ -32,6 +32,9 @@ A modern, interactive portfolio and e-commerce website for ShalConnects digital 
 - Efficient React state management
 - Optimized for fast loading
 - Vite build system for fast development
+- Lazy loading for route components
+- Memoized calculations for better performance
+- Code splitting for reduced bundle size
 
 ### 💫 Interactive Elements
 - Scroll-triggered animations
@@ -41,6 +44,11 @@ A modern, interactive portfolio and e-commerce website for ShalConnects digital 
 - Active navigation highlighting
 - Breadcrumb navigation
 - Sidebar navigation for plugin pages
+
+### 🛠️ Free Tools & Utilities
+- **AI Text Formatter** - Remove markdown formatting and convert AI-generated text to clean, human-readable format
+- **FitQuest** - Gamified fitness tracker with points, levels, streaks, and achievements
+- More tools coming soon!
 
 ## 🏗️ Project Structure
 
@@ -61,10 +69,19 @@ A modern, interactive portfolio and e-commerce website for ShalConnects digital 
 │   │   ├── PluginPage.tsx      # Plugin product pages
 │   │   ├── ServicePage.tsx     # Service detail pages
 │   │   ├── DownloadPage.tsx    # Post-purchase download
+│   │   ├── ToolsPage.tsx       # Tools listing page
+│   │   ├── AITextFormatter.tsx # AI Text Formatter tool
+│   │   ├── FitQuest.tsx        # Gamified fitness tracker
 │   │   ├── PrivacyPolicy.tsx
 │   │   ├── TermsOfService.tsx
 │   │   └── RefundPolicy.tsx
+│   ├── hooks/            # Custom React hooks
+│   │   ├── usePageTitle.ts     # Dynamic page titles
+│   │   └── useMetaTags.ts      # Dynamic SEO meta tags
 │   ├── utils/           # Utility functions
+│   │   ├── analytics.ts        # Analytics integration
+│   │   ├── paddleApi.ts         # Paddle API utilities
+│   │   └── storeUtils.ts       # Store utilities
 │   └── App.tsx           # Main application
 └── vercel.json           # Vercel configuration
 ```
@@ -114,7 +131,15 @@ For production deployment, set these in Vercel (or your hosting platform):
 ```env
 PADDLE_API_KEY=your_paddle_api_key
 PLUGIN_FILE_URL=https://your-cdn-url.com/plugin.zip  # Optional
+VITE_GA_MEASUREMENT_ID=your_google_analytics_id  # Optional, for analytics
 ```
+
+### Analytics Setup
+
+1. Get your Google Analytics Measurement ID
+2. Add it to environment variables as `VITE_GA_MEASUREMENT_ID`
+3. Analytics will automatically track page views and events
+4. Use `trackEvent()` from `src/utils/analytics.ts` for custom events
 
 ### Paddle Setup
 
@@ -131,11 +156,14 @@ See `PADDLE_TROUBLESHOOTING.md` for detailed setup instructions.
 - **React 18** - UI framework
 - **TypeScript** - Type safety
 - **Vite** - Build tool and dev server
+- **React 18** - UI framework with lazy loading
+- **TypeScript** - Type safety
 - **React Router** - Client-side routing
 - **Framer Motion** - Animations
 - **Lucide React** - Icons
 - **Tailwind CSS** - Styling (via CDN)
 - **Paddle** - Payment processing
+- **Google Analytics** - Analytics integration (optional)
 - **Vercel** - Hosting and serverless functions
 
 ## 📄 Pages & Routes
@@ -143,6 +171,9 @@ See `PADDLE_TROUBLESHOOTING.md` for detailed setup instructions.
 - `/` - Homepage with services and portfolio
 - `/services/:serviceSlug` - Service detail pages
 - `/services/wordpress/plugins/:pluginSlug` - Plugin product pages
+- `/tools` - Free tools and utilities page
+- `/tools/ai-formatter` - AI Text Formatter tool
+- `/tools/fitquest` - FitQuest gamified fitness tracker
 - `/download` - Post-purchase download page
 - `/privacy` - Privacy Policy
 - `/terms` - Terms of Service
@@ -179,6 +210,98 @@ See `VERCEL_DEPLOY_INSTRUCTIONS.md` for detailed steps.
 1. Build the project: `npm run build`
 2. Upload `dist` folder contents to your web server
 3. Configure server to serve `index.html` for all routes
+
+## 🎮 FitQuest - Gamified Fitness Tracker
+
+FitQuest is a free fitness tracking tool that gamifies your workout routine with points, levels, streaks, and achievements.
+
+### Features
+
+- **Workout Logging** - Track workouts with type, duration, and intensity
+- **Points System** - Earn points based on workout intensity and duration
+- **Leveling System** - Level up every 100 points
+- **Streak Tracking** - Track consecutive workout days
+- **Achievements** - Unlock 10 different achievements
+- **Workout History** - View all workouts with filtering options
+- **Statistics** - Weekly and monthly summaries with charts
+- **Workout Templates** - Quick-add common workout types
+- **Data Export** - Export your data as JSON or CSV
+- **Local Storage** - All data stored locally in your browser
+
+### Usage
+
+1. Navigate to `/tools/fitquest`
+2. Click "Add Workout" or use a quick template
+3. Select workout type, duration, and intensity
+4. Track your progress with points, levels, and streaks
+5. View statistics and history to see your fitness journey
+6. Export your data anytime for backup
+
+### Points System
+
+- **Low Intensity**: 10 base points + duration bonus
+- **Medium Intensity**: 20 base points + duration bonus
+- **High Intensity**: 30 base points + duration bonus
+- **Duration Bonus**: +1 point per 10 minutes
+
+### Achievements
+
+- First Steps - Complete your first workout
+- On Fire - 3-day workout streak
+- Week Warrior - 7-day workout streak
+- Month Master - 30-day workout streak
+- Getting Started - Complete 10 workouts
+- Dedicated - Complete 50 workouts
+- Centurion - Complete 100 workouts
+- Rising Star - Reach Level 5
+- Elite - Reach Level 10
+- Point Collector - Earn 1000 points
+
+## 🛠️ Tools Page Structure
+
+The tools page (`/tools`) is designed to showcase free utilities and tools. To add a new tool:
+
+1. **Create the tool component** in `src/pages/YourTool.tsx`
+2. **Add to tools array** in `src/pages/ToolsPage.tsx`:
+   ```typescript
+   {
+     id: 'your-tool-id',
+     name: 'Your Tool Name',
+     description: 'Tool description',
+     icon: YourIcon, // from lucide-react
+     route: '/tools/your-tool',
+     color: '#hexcolor',
+     isNew: true // optional
+   }
+   ```
+3. **Add route** in `src/App.tsx`:
+   ```typescript
+   <Route path="/tools/your-tool" element={<YourTool />} />
+   ```
+4. **Add SEO** (optional) - Use `useMetaTags` hook for dynamic meta tags
+
+### Tool Component Structure
+
+```typescript
+import PageLayout from '../components/PageLayout';
+import { usePageTitle } from '../hooks/usePageTitle';
+import { useMetaTags } from '../hooks/useMetaTags';
+
+export default function YourTool() {
+  usePageTitle('Your Tool Name');
+  useMetaTags({
+    title: 'Your Tool Name | ShalConnects',
+    description: 'Tool description for SEO',
+    // ... other meta tags
+  });
+
+  return (
+    <PageLayout title="Your Tool Name">
+      {/* Your tool content */}
+    </PageLayout>
+  );
+}
+```
 
 ## 📚 Documentation
 
