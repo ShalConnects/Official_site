@@ -15,6 +15,9 @@ import { lazy, Suspense } from 'react';
 import AITextFormatter from './pages/AITextFormatter';
 const FitQuest = lazy(() => import('./pages/FitQuest'));
 const PasswordGenerator = lazy(() => import('./pages/PasswordGenerator'));
+const URLEncoderDecoder = lazy(() => import('./pages/URLEncoderDecoder'));
+const LoremIpsumGenerator = lazy(() => import('./pages/LoremIpsumGenerator'));
+const QRCodeGenerator = lazy(() => import('./pages/QRCodeGenerator'));
 import ToolsPage from './pages/ToolsPage';
 import StoreHome from './pages/StoreHome';
 import { isStoreContext } from './utils/storeUtils';
@@ -218,6 +221,21 @@ function ShalConnectsPortfolio() {
         <Route path="/tools/password-generator" element={
           <Suspense fallback={<div className="min-h-screen bg-gray-900 flex items-center justify-center"><div className="text-white">Loading...</div></div>}>
             <PasswordGenerator />
+          </Suspense>
+        } />
+        <Route path="/tools/url-encoder-decoder" element={
+          <Suspense fallback={<div className="min-h-screen bg-gray-900 flex items-center justify-center"><div className="text-white">Loading...</div></div>}>
+            <URLEncoderDecoder />
+          </Suspense>
+        } />
+        <Route path="/tools/lorem-ipsum" element={
+          <Suspense fallback={<div className="min-h-screen bg-gray-900 flex items-center justify-center"><div className="text-white">Loading...</div></div>}>
+            <LoremIpsumGenerator />
+          </Suspense>
+        } />
+        <Route path="/tools/qr-code-generator" element={
+          <Suspense fallback={<div className="min-h-screen bg-gray-900 flex items-center justify-center"><div className="text-white">Loading...</div></div>}>
+            <QRCodeGenerator />
           </Suspense>
         } />
       <Route path="/store" element={isStoreSubdomain ? <Navigate to="/" replace /> : <StoreHome />} />

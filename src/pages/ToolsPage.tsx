@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Wand2, ArrowRight, Activity, Key } from 'lucide-react';
+import { Wand2, ArrowRight, Activity, Key, Link2, FileText, QrCode } from 'lucide-react';
 import PageLayout from '../components/PageLayout';
 import { useMetaTags } from '../hooks/useMetaTags';
 
@@ -52,7 +52,34 @@ export default function ToolsPage() {
       description: 'Generate strong, secure passwords with customizable options. Control length, character types, and security settings.',
       icon: Key,
       route: '/tools/password-generator',
-      color: '#6366f1', // Indigo
+      color: '#8b5cf6', // Purple
+      isNew: true
+    },
+    {
+      id: 'url-encoder-decoder',
+      name: 'URL Encoder/Decoder',
+      description: 'Encode URLs to percent-encoded format or decode them back to readable text. Perfect for handling special characters in URLs.',
+      icon: Link2,
+      route: '/tools/url-encoder-decoder',
+      color: '#06b6d4', // Cyan
+      isNew: true
+    },
+    {
+      id: 'lorem-ipsum',
+      name: 'Lorem Ipsum Generator',
+      description: 'Generate placeholder text for your designs and layouts. Customize paragraphs, words, and sentences.',
+      icon: FileText,
+      route: '/tools/lorem-ipsum',
+      color: '#ec4899', // Pink
+      isNew: true
+    },
+    {
+      id: 'qr-code-generator',
+      name: 'QR Code Generator',
+      description: 'Generate QR codes from text or URLs. Download as PNG or SVG. Perfect for sharing links and information.',
+      icon: QrCode,
+      route: '/tools/qr-code-generator',
+      color: '#14b8a6', // Teal
       isNew: true
     }
     // Add more tools here as they are created
@@ -86,8 +113,20 @@ export default function ToolsPage() {
                 >
                   <div className="flex items-center gap-4 mb-4">
                     <div 
-                      className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6" 
-                      style={{ backgroundColor: tool.color }}
+                      className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 ${
+                        tool.color === '#6366f1' 
+                          ? 'bg-gradient-to-r from-indigo-500 to-purple-500'
+                          : tool.color === '#8b5cf6'
+                          ? 'bg-gradient-to-r from-purple-500 to-pink-500'
+                          : tool.color === '#06b6d4'
+                          ? 'bg-gradient-to-r from-cyan-500 to-blue-500'
+                          : tool.color === '#ec4899'
+                          ? 'bg-gradient-to-r from-pink-500 to-rose-500'
+                          : tool.color === '#14b8a6'
+                          ? 'bg-gradient-to-r from-teal-500 to-cyan-500'
+                          : ''
+                      }`}
+                      style={!['#6366f1', '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6'].includes(tool.color) ? { backgroundColor: tool.color } : undefined}
                     >
                       <Icon size={24} className="text-white transition-transform duration-300 group-hover:scale-110" />
                     </div>

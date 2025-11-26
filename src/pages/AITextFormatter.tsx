@@ -158,22 +158,25 @@ export default function AITextFormatter() {
 
     const lines = text.split('\n');
     const paragraphs: string[] = [];
-    let currentParagraph = '';
+    let currentParagraph: string[] = [];
 
-    // Group lines into paragraphs
+    // Group lines into paragraphs, preserving line breaks
     for (const line of lines) {
       if (line.trim() === '') {
-        if (currentParagraph.trim()) {
-          paragraphs.push(currentParagraph.trim());
-          currentParagraph = '';
+        if (currentParagraph.length > 0) {
+          // Join current paragraph lines with newlines to preserve structure
+          paragraphs.push(currentParagraph.join('\n'));
+          currentParagraph = [];
         }
         paragraphs.push('');
       } else {
-        currentParagraph += (currentParagraph ? ' ' : '') + line.trim();
+        // Preserve each line separately to maintain line breaks
+        currentParagraph.push(line.trim());
       }
     }
-    if (currentParagraph.trim()) {
-      paragraphs.push(currentParagraph.trim());
+    if (currentParagraph.length > 0) {
+      // Join remaining paragraph lines with newlines
+      paragraphs.push(currentParagraph.join('\n'));
     }
 
     if (paragraphs.length === 0) return text;
@@ -203,24 +206,51 @@ export default function AITextFormatter() {
       /shorter.*?punchier.*?version/i,
       /professional\s+corporate\s+energy/i,
       /more\s+details.*?or\s+anything\s+else/i,
+      /i\s+can\s+(also\s+)?make\s+it\s+more/i,
+      /can\s+(also\s+)?make\s+it\s+more/i,
+      /make\s+it\s+more\s+(casual|formal|concise|punchy|professional)/i,
+      /if\s+you\s+want.*?(casual|formal|concise|punchy|professional)/i,
+      /i\s+can\s+(also\s+)?(make|change|reformat|adjust)/i,
+      /if\s+you\s+want.*?i\s+can\s+also\s+make\s+it/i,
+      /if\s+you\s+want.*?make\s+it\s+more/i,
     ];
 
     // Keywords that suggest meta-commentary
     const metaKeywords = [
       'version', 'draft', 'tightened', 'punchier', 'corporate', 'energy',
-      'vibes', 'saga', 'digest', 'smoother', 'craft', 'compress'
+      'vibes', 'saga', 'digest', 'smoother', 'craft', 'compress',
+      'casual', 'formal', 'concise', 'punchy', 'professional', 'reformat', 'adjust'
     ];
 
     // Check if a paragraph is likely meta-commentary
     const isMetaCommentary = (para: string, isIntro: boolean): boolean => {
       if (!para || para.length < 10) return false;
 
-      const lowerPara = para.toLowerCase();
+      // If paragraph contains newlines, check only the first line for meta-commentary
+      // This prevents false positives when actual content follows meta-commentary
+      const firstLine = para.split('\n')[0];
+      const lowerPara = firstLine.toLowerCase();
 
-      // Check patterns
+      // Check patterns on first line only
       const patterns = isIntro ? introPatterns : closingPatterns;
-      if (patterns.some(pattern => pattern.test(para))) {
+      if (patterns.some(pattern => pattern.test(firstLine))) {
         return true;
+      }
+
+      // Direct check for the specific closing phrase pattern
+      if (!isIntro) {
+        // Check for "If you want, I can also make it more [casual/formal/concise]"
+        if (/if\s+you\s+want.*?i\s+can\s+also\s+make\s+it\s+more/i.test(firstLine)) {
+          return true;
+        }
+        // Check for variations with "more" followed by style words
+        if (/if\s+you\s+want.*?make\s+it\s+more\s+(casual|formal|concise|punchy|professional)/i.test(firstLine)) {
+          return true;
+        }
+        // Check for "can also make it more"
+        if (/can\s+also\s+make\s+it\s+more/i.test(firstLine)) {
+          return true;
+        }
       }
 
       // Check for meta keywords combined with certain phrases
@@ -228,6 +258,13 @@ export default function AITextFormatter() {
       if (hasMetaKeywords) {
         // Additional heuristics
         if (lowerPara.includes('here') || lowerPara.includes('if you') || lowerPara.includes('can also')) {
+          return true;
+        }
+        // Check for closing phrases offering to reformat
+        if (lowerPara.includes('if you want') && (lowerPara.includes('can') || lowerPara.includes('make'))) {
+          return true;
+        }
+        if (lowerPara.includes('make it more') || lowerPara.includes('can make it')) {
           return true;
         }
         // Check if it's describing content rather than being content
@@ -261,7 +298,8 @@ export default function AITextFormatter() {
 
     // Find actual content start
     for (let i = 0; i < Math.min(5, paragraphs.length); i++) {
-      if (contentStartMarkers.some(marker => marker.test(paragraphs[i]))) {
+      const firstLine = paragraphs[i].split('\n')[0];
+      if (contentStartMarkers.some(marker => marker.test(firstLine))) {
         contentStartIndex = i;
         break;
       }
@@ -269,7 +307,8 @@ export default function AITextFormatter() {
 
     // Find actual content end
     for (let i = paragraphs.length - 1; i >= Math.max(paragraphs.length - 5, 0); i--) {
-      if (contentEndMarkers.some(marker => marker.test(paragraphs[i]))) {
+      const firstLine = paragraphs[i].split('\n')[0];
+      if (contentEndMarkers.some(marker => marker.test(firstLine))) {
         contentEndIndex = i;
         break;
       }
@@ -311,14 +350,15 @@ export default function AITextFormatter() {
           continue;
         }
 
-        // Check if this looks like actual content
-        if (contentStartMarkers.some(marker => marker.test(para))) {
+        // Check if this looks like actual content (check first line only)
+        const firstLine = para.split('\n')[0];
+        if (contentStartMarkers.some(marker => marker.test(firstLine))) {
           inContent = true;
         }
 
         if (inContent) {
           result.push(para);
-          if (contentEndMarkers.some(marker => marker.test(para))) {
+          if (contentEndMarkers.some(marker => marker.test(firstLine))) {
             // Stop after signature/closing
             break;
           }
@@ -336,7 +376,49 @@ export default function AITextFormatter() {
         result.pop();
       }
 
-      return result.join('\n').trim();
+      let finalText = result.join('\n').trim();
+      
+      // Final pass: Remove any remaining closing meta-commentary at the end
+      // This catches cases where closing phrases appear after signatures
+      const lines = finalText.split('\n');
+      const cleanedLines: string[] = [];
+      let removingClosing = true;
+      
+      // Process from the end backwards to find and remove closing meta-commentary
+      for (let i = lines.length - 1; i >= 0; i--) {
+        const line = lines[i];
+        const trimmed = line.trim();
+        
+        if (!trimmed) {
+          // Empty line - only preserve if we're not in removal mode
+          if (!removingClosing) {
+            cleanedLines.unshift(line);
+          }
+          continue;
+        }
+        
+        // Check if this line is closing meta-commentary
+        // Also check if line contains the phrase even if it doesn't match exact patterns
+        const isClosingPhrase = isMetaCommentary(trimmed, false) || 
+          /if\s+you\s+want.*?(can\s+also\s+)?make\s+it\s+more/i.test(trimmed) ||
+          /if\s+you\s+want.*?(casual|formal|concise)/i.test(trimmed) ||
+          /i\s+can\s+also\s+make\s+it\s+more\s+(casual|formal|concise)/i.test(trimmed) ||
+          /make\s+it\s+more\s+(casual|formal|concise|punchy|professional)/i.test(trimmed);
+        
+        if (removingClosing && isClosingPhrase) {
+          continue; // Skip this closing meta-commentary line
+        }
+        
+        // If we hit non-empty content that's NOT closing meta-commentary, stop removing
+        if (removingClosing && !isClosingPhrase) {
+          removingClosing = false;
+        }
+        
+        // Preserve the line
+        cleanedLines.unshift(line);
+      }
+      
+      return cleanedLines.join('\n').trim();
     }
   };
 
@@ -489,25 +571,110 @@ export default function AITextFormatter() {
 
 
     // Handle markdown headers (# ## ###) - convert to plain text with colon
-    formatted = formatted.replace(/^#{1,6}\s+(.+)$/gm, (_match, headerText) => {
-      const trimmed = headerText.trim();
-      // Add colon if header doesn't end with punctuation
-      if (trimmed && !/[.:!?]$/.test(trimmed)) {
-        return trimmed + ':';
+    // Process line by line to detect signature sections
+    const linesForHeader = formatted.split('\n');
+    const headerProcessedLines: string[] = [];
+    let inSignatureSection = false;
+    
+    for (let i = 0; i < linesForHeader.length; i++) {
+      const line = linesForHeader[i];
+      const trimmed = line.trim();
+      
+      // Check if this line is a signature closing (Best regards, Sincerely, etc.)
+      if (/^(best\s+)?regards?[,:]?$/i.test(trimmed) || /^(sincerely|yours?)[,:]?$/i.test(trimmed)) {
+        inSignatureSection = true;
+        headerProcessedLines.push(line.replace(/^#{1,6}\s+(.+)$/, '$1')); // Remove markdown header markers if present
+        continue;
       }
-      return trimmed;
-    });
+      
+      // Check if we're past the signature section (empty line after signature usually means we're done)
+      if (inSignatureSection && trimmed === '') {
+        inSignatureSection = false;
+        headerProcessedLines.push(line);
+        continue;
+      }
+      
+      // Process markdown headers
+      const headerMatch = line.match(/^#{1,6}\s+(.+)$/);
+      if (headerMatch) {
+        const headerText = headerMatch[1].trim();
+        // Don't add colon to signature lines or lines in signature section
+        if (headerText && !/[.:!?]$/.test(headerText) && !inSignatureSection) {
+          headerProcessedLines.push(headerText + ':');
+        } else {
+          headerProcessedLines.push(headerText);
+        }
+      } else {
+        // Regular line - if in signature section, don't add colon even if it looks like a header
+        if (inSignatureSection && trimmed && !/[.:!?]$/.test(trimmed)) {
+          // Keep as is - don't add colon to signature names
+          headerProcessedLines.push(line);
+        } else {
+          headerProcessedLines.push(line);
+        }
+      }
+    }
+    
+    formatted = headerProcessedLines.join('\n');
 
     // Handle bold-only lines (standalone headers like **Title**) - MUST be before general bold removal
-    // First, handle lines that are entirely bold text (possibly with whitespace)
-    formatted = formatted.replace(/^\s*\*\*([^*\n]+?)\*\*\s*$/gm, (_match, headerText) => {
-      const trimmed = headerText.trim();
-      // Add colon if header doesn't end with punctuation
-      if (trimmed && !/[.:!?]$/.test(trimmed)) {
-        return trimmed + ':';
+    // Process line by line to detect signature sections
+    const linesForBoldHeader = formatted.split('\n');
+    const boldHeaderProcessedLines: string[] = [];
+    let inSignatureSectionBold = false;
+    
+    for (let i = 0; i < linesForBoldHeader.length; i++) {
+      const line = linesForBoldHeader[i];
+      const trimmed = line.trim();
+      
+      // Check if this line is a signature closing
+      if (/^(best\s+)?regards?[,:]?$/i.test(trimmed) || /^(sincerely|yours?)[,:]?$/i.test(trimmed)) {
+        inSignatureSectionBold = true;
+        // Remove bold markers if present
+        const boldMatch = line.match(/^\s*\*\*([^*\n]+?)\*\*\s*$/);
+        if (boldMatch) {
+          boldHeaderProcessedLines.push(boldMatch[1].trim());
+        } else {
+          boldHeaderProcessedLines.push(line);
+        }
+        continue;
       }
-      return trimmed;
-    });
+      
+      // Check if we're past the signature section
+      if (inSignatureSectionBold && trimmed === '') {
+        inSignatureSectionBold = false;
+        boldHeaderProcessedLines.push(line);
+        continue;
+      }
+      
+      // Process bold headers
+      const boldMatch = line.match(/^\s*\*\*([^*\n]+?)\*\*\s*$/);
+      if (boldMatch) {
+        const headerText = boldMatch[1].trim();
+        // Check if this is likely a header (short, ends with colon context, or followed by content)
+        // Don't treat as header if it's long (likely content) or contains parentheses (likely a value/name)
+        const isLikelyHeader = headerText.length < 60 && 
+                               !headerText.includes('(') && 
+                               !headerText.includes(')') &&
+                               !headerText.includes('trading as');
+        
+        // Don't add colon to signature lines or content that's not a header
+        if (headerText && !/[.:!?]$/.test(headerText) && !inSignatureSectionBold && isLikelyHeader) {
+          boldHeaderProcessedLines.push(headerText + ':');
+        } else {
+          boldHeaderProcessedLines.push(headerText);
+        }
+      } else {
+        // Regular line - if in signature section, don't add colon
+        if (inSignatureSectionBold && trimmed && !/[.:!?]$/.test(trimmed) && !trimmed.includes('**')) {
+          boldHeaderProcessedLines.push(line);
+        } else {
+          boldHeaderProcessedLines.push(line);
+        }
+      }
+    }
+    
+    formatted = boldHeaderProcessedLines.join('\n');
     
     // Also handle bold headers at the START of a line (even if followed by text on same line)
     // Pattern: line starts, optional whitespace, **, content, **, followed by text
@@ -772,8 +939,15 @@ export default function AITextFormatter() {
       const isNextEmpty = nextLine === '';
       const prevLine = processedLines.length > 0 ? processedLines[processedLines.length - 1] : '';
       
+      // Check if previous line is a signature closing (Best regards, etc.)
+      const prevIsSignatureClosing = prevLine && /^(best\s+)?regards?[,:]?$/i.test(prevLine) || /^(sincerely|yours?)[,:]?$/i.test(prevLine);
+      
       // If current line is empty, preserve it if it's between non-empty lines
       if (isEmpty) {
+        // Don't preserve empty line between signature closing and name
+        if (prevIsSignatureClosing && nextLine && !/^[•\-\*\d]\.?\s/.test(nextLine)) {
+          continue; // Skip empty line to keep signature closing and name together
+        }
         // Check if the last processed line is already empty - if so, skip to avoid double spacing
         const lastWasEmpty = processedLines.length > 0 && !processedLines[processedLines.length - 1].trim();
         if (lastWasEmpty) {
@@ -835,14 +1009,19 @@ export default function AITextFormatter() {
       
       // If line ends with colon (header), check if we need to add a break before and after it
       if (trimmed && /:$/.test(trimmed)) {
-        // Add blank line before header if previous line exists and is not empty and not already a header
-        const prevIsHeader = prevLine && /:$/.test(prevLine);
-        const prevIsEmpty = !prevLine || !prevLine.trim();
-        if (!prevIsEmpty && !prevIsHeader && processedLines.length > 0) {
-          // Check if last processed line is already empty
-          const lastWasEmpty = processedLines.length > 0 && !processedLines[processedLines.length - 1].trim();
-          if (!lastWasEmpty) {
-            processedLines.push(''); // Add blank line before header
+        // Check if this is a signature closing - don't treat it as a regular header
+        const isSignatureClosing = /^(best\s+)?regards?[,:]?$/i.test(trimmed) || /^(sincerely|yours?)[,:]?$/i.test(trimmed);
+        
+        if (!isSignatureClosing) {
+          // Add blank line before header if previous line exists and is not empty and not already a header
+          const prevIsHeader = prevLine && /:$/.test(prevLine);
+          const prevIsEmpty = !prevLine || !prevLine.trim();
+          if (!prevIsEmpty && !prevIsHeader && processedLines.length > 0) {
+            // Check if last processed line is already empty
+            const lastWasEmpty = processedLines.length > 0 && !processedLines[processedLines.length - 1].trim();
+            if (!lastWasEmpty) {
+              processedLines.push(''); // Add blank line before header
+            }
           }
         }
         processedLines.push(trimmed);
@@ -904,6 +1083,13 @@ export default function AITextFormatter() {
         // we should preserve that (it would have been handled in the empty line check above)
         processedLines.push(trimmed);
         // List items should remain on separate lines - don't merge them
+        continue;
+      }
+      
+      // If this line follows a signature closing, it's likely a name - don't modify it
+      if (prevIsSignatureClosing && trimmed && !/[.:!?]$/.test(trimmed) && !isListItem) {
+        // This is likely a signature name - keep it as is, don't add colon
+        processedLines.push(trimmed);
         continue;
       }
       
@@ -1159,6 +1345,49 @@ export default function AITextFormatter() {
 
     // Trim whitespace
     formatted = formatted.trim();
+    
+    // Final cleanup: Remove any remaining closing meta-commentary at the very end
+    const finalCleanupLines = formatted.split('\n');
+    const finalCleanedLines: string[] = [];
+    let removingClosing = true;
+    
+    // Process from the end backwards to remove closing meta-commentary
+    for (let i = finalCleanupLines.length - 1; i >= 0; i--) {
+      const line = finalCleanupLines[i];
+      const trimmed = line.trim();
+      
+      if (!trimmed) {
+        // If we're removing closing meta-commentary, skip empty lines
+        if (removingClosing) {
+          continue;
+        }
+        finalCleanedLines.unshift(line);
+        continue;
+      }
+      
+      // Check if this is closing meta-commentary - use comprehensive pattern matching
+      const isClosing = 
+        /if\s+you\s+want.*?i\s+can\s+also\s+make\s+it\s+more/i.test(trimmed) ||
+        /if\s+you\s+want.*?make\s+it\s+more/i.test(trimmed) ||
+        /i\s+can\s+also\s+make\s+it\s+more/i.test(trimmed) ||
+        /make\s+it\s+more\s+(casual|formal|concise)/i.test(trimmed) ||
+        /if\s+you\s+want.*?(casual|formal|concise)/i.test(trimmed) ||
+        /can\s+also\s+make\s+it\s+more/i.test(trimmed);
+      
+      // If we're removing and this is closing meta-commentary, skip it
+      if (removingClosing && isClosing) {
+        continue; // Skip this closing meta-commentary line
+      }
+      
+      // If we hit non-closing content, stop removing
+      if (removingClosing && !isClosing) {
+        removingClosing = false;
+      }
+      
+      finalCleanedLines.unshift(line);
+    }
+    
+    formatted = finalCleanedLines.join('\n').trim();
 
     setOutput(formatted);
     addToHistory(text, formatted);

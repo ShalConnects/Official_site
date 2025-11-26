@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { X, Zap, Target, TrendingUp, Clock, CheckCircle, Star, Quote, ExternalLink, XCircle, ChevronDown, Palette, Code, Wrench, FileCode, Layout, Package, Store, List, Image, Smartphone, Globe, Share2, FileText, Layers, Home, Briefcase, MoreHorizontal, ArrowUp, ArrowRight, Mail, Search, Workflow, Rocket, Wand2, Activity, Key } from 'lucide-react';
+import { X, Zap, Target, TrendingUp, Clock, CheckCircle, Star, Quote, ExternalLink, XCircle, ChevronDown, Palette, Code, Wrench, FileCode, Layout, Package, Store, List, Image, Smartphone, Globe, Share2, FileText, Layers, Home, Briefcase, MoreHorizontal, ArrowUp, ArrowRight, Mail, Search, Workflow, Rocket, Wand2, Activity, Key, Link2, QrCode } from 'lucide-react';
 import { SiWordpress, SiShopify, SiWix, SiEbay, SiAmazon, SiWalmart, SiAndroid, SiLinkedin, SiX, SiWhatsapp, SiYoutube } from 'react-icons/si';
 import Logo from '../components/Logo';
 
@@ -53,7 +53,7 @@ interface Project {
   imageUrl?: string;
 }
 
-interface SaaSProduct {
+interface Product {
   id: number;
   title: string;
   category: string;
@@ -62,9 +62,17 @@ interface SaaSProduct {
   results: string;
   services: string[];
   techStack: string[];
-  liveUrl: string;
+  liveUrl?: string;
   githubUrl?: string;
   imageUrl?: string;
+  playStoreLink?: string;
+  appVersion?: string;
+  screenshots?: string[];
+  platform?: string;
+  technologies?: string[];
+  status?: 'live' | 'new' | 'popular';
+  platformIcon?: 'web' | 'android' | 'ios' | 'windows';
+  quickStats?: string;
 }
 
 interface Stats {
@@ -80,7 +88,7 @@ export default function LandingPage() {
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [selectedSaaSProduct, setSelectedSaaSProduct] = useState<SaaSProduct | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const moreMenuCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -102,6 +110,12 @@ export default function LandingPage() {
   const serviceCardRefs = useRef<Record<string, HTMLElement | null>>({});
   const serviceDropdownRef = useRef<HTMLDivElement>(null);
   const hasScrolledToContactRef = useRef(false);
+  const toolsScrollRef = useRef<HTMLDivElement>(null);
+  const autoSlideIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [isToolsHovered, setIsToolsHovered] = useState(false);
+  const productsScrollRef = useRef<HTMLDivElement>(null);
+  const productsAutoSlideIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [isProductsHovered, setIsProductsHovered] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -136,7 +150,7 @@ export default function LandingPage() {
       description: 'Remove markdown formatting and convert AI-generated text to clean, human-readable format. Automatically detects and removes AI meta-commentary.',
       icon: Wand2,
       route: '/tools/ai-formatter',
-      color: '#6366f1',
+      color: '#6366f1', // Indigo
       isNew: true
     },
     {
@@ -145,7 +159,7 @@ export default function LandingPage() {
       description: 'Gamify your fitness journey with points, levels, streaks, and achievements. Track workouts and level up your fitness game.',
       icon: Activity,
       route: '/tools/fitquest',
-      color: '#10b981',
+      color: '#10b981', // Green
       isNew: true
     },
     {
@@ -154,7 +168,34 @@ export default function LandingPage() {
       description: 'Generate strong, secure passwords with customizable options. Control length, character types, and security settings.',
       icon: Key,
       route: '/tools/password-generator',
-      color: '#6366f1',
+      color: '#8b5cf6', // Purple
+      isNew: true
+    },
+    {
+      id: 'url-encoder-decoder',
+      name: 'URL Encoder/Decoder',
+      description: 'Encode URLs to percent-encoded format or decode them back to readable text. Perfect for handling special characters in URLs.',
+      icon: Link2,
+      route: '/tools/url-encoder-decoder',
+      color: '#06b6d4', // Cyan
+      isNew: true
+    },
+    {
+      id: 'lorem-ipsum',
+      name: 'Lorem Ipsum Generator',
+      description: 'Generate placeholder text for your designs and layouts. Customize paragraphs, words, and sentences.',
+      icon: FileText,
+      route: '/tools/lorem-ipsum',
+      color: '#ec4899', // Pink
+      isNew: true
+    },
+    {
+      id: 'qr-code-generator',
+      name: 'QR Code Generator',
+      description: 'Generate QR codes from text or URLs. Download as PNG or SVG. Perfect for sharing links and information.',
+      icon: QrCode,
+      route: '/tools/qr-code-generator',
+      color: '#14b8a6', // Teal
       isNew: true
     }
   ];
@@ -197,6 +238,41 @@ export default function LandingPage() {
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
+
+  // Auto-slide tools carousel
+  useEffect(() => {
+    if (!toolsScrollRef.current || isToolsHovered) return;
+
+    const scrollContainer = toolsScrollRef.current;
+    const scrollWidth = scrollContainer.scrollWidth;
+    const clientWidth = scrollContainer.clientWidth;
+    
+    // Only auto-slide if content overflows
+    if (scrollWidth <= clientWidth) return;
+
+    autoSlideIntervalRef.current = setInterval(() => {
+      const currentScroll = scrollContainer.scrollLeft;
+      const maxScroll = scrollWidth - clientWidth;
+      const cardWidth = scrollContainer.querySelector('a')?.offsetWidth || 0;
+      const gap = 24; // gap-6 = 24px
+      const scrollAmount = cardWidth + gap;
+
+      if (currentScroll + scrollAmount >= maxScroll) {
+        // Reset to beginning
+        scrollContainer.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        // Scroll to next card
+        scrollContainer.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      }
+    }, 3000); // Auto-slide every 3 seconds
+
+    return () => {
+      if (autoSlideIntervalRef.current) {
+        clearInterval(autoSlideIntervalRef.current);
+      }
+    };
+  }, [isToolsHovered, tools]);
+
 
   // Stats counter animation
   useEffect(() => {
@@ -673,8 +749,8 @@ export default function LandingPage() {
     }
   ];
 
-  // SaaS Products data
-  const saasProducts: SaaSProduct[] = [
+  // Products data
+  const products: Product[] = [
     {
       id: 1,
       title: 'Balanze',
@@ -686,9 +762,65 @@ export default function LandingPage() {
       techStack: ['React 18', 'TypeScript', 'Zustand', 'Tailwind CSS', 'Supabase', 'PostgreSQL', 'Capacitor', 'Paddle', 'Vercel'],
       liveUrl: 'https://balanze.cash/',
       githubUrl: 'https://github.com/ShalConnects/fin-tech',
-      imageUrl: '/images/balanze-icon.png'
+      imageUrl: '/images/balanze-icon.png',
+      status: 'live',
+      platformIcon: 'web',
+      quickStats: 'Multi-currency • Real-time • SaaS'
+    },
+    {
+      id: 2,
+      title: 'Screen Time Tracker',
+      category: 'Android App',
+      color: 'from-blue-500 to-cyan-500',
+      description: 'Monitor and manage your digital habits with beautiful real-time overlays and comprehensive analytics. Track your screen time, app usage, and productivity insights with a privacy-first approach. All data is stored locally on your device and never shared.',
+      results: 'Android productivity app with real-time overlay, detailed analytics, goal setting, and privacy-first local data storage',
+      services: ['Real-Time Overlay', 'Detailed Analytics', 'App Usage Tracking', 'Productivity Insights', 'Goal Setting', 'Export Data', 'Privacy-First'],
+      techStack: ['Android', 'Kotlin'],
+      technologies: ['Android', 'Kotlin', 'Windows', 'WinUI 3', '.NET 8'],
+      platform: 'Android (Windows in development)',
+      appVersion: '10.0.5+',
+      playStoreLink: 'https://play.google.com/store/apps/details?id=com.screentime.overlay',
+      imageUrl: '/images/screen-time-icon.png',
+      screenshots: ['/images/screen-time-screenshot.png'],
+      status: 'live',
+      platformIcon: 'android',
+      quickStats: '10.0.5+ • Privacy-first • Analytics'
     }
   ];
+
+  // Auto-slide products carousel
+  useEffect(() => {
+    if (!productsScrollRef.current || isProductsHovered) return;
+
+    const scrollContainer = productsScrollRef.current;
+    const scrollWidth = scrollContainer.scrollWidth;
+    const clientWidth = scrollContainer.clientWidth;
+    
+    // Only auto-slide if content overflows
+    if (scrollWidth <= clientWidth) return;
+
+    productsAutoSlideIntervalRef.current = setInterval(() => {
+      const currentScroll = scrollContainer.scrollLeft;
+      const maxScroll = scrollWidth - clientWidth;
+      const cardWidth = scrollContainer.querySelector('div')?.offsetWidth || 0;
+      const gap = 32; // gap-8 = 32px
+      const scrollAmount = cardWidth + gap;
+
+      if (currentScroll + scrollAmount >= maxScroll) {
+        // Reset to beginning
+        scrollContainer.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        // Scroll to next card
+        scrollContainer.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      }
+    }, 4000); // Auto-slide every 4 seconds
+
+    return () => {
+      if (productsAutoSlideIntervalRef.current) {
+        clearInterval(productsAutoSlideIntervalRef.current);
+      }
+    };
+  }, [isProductsHovered]);
 
   // Testimonials data
   const testimonials = [
@@ -1665,12 +1797,22 @@ export default function LandingPage() {
             <p className="text-base sm:text-lg md:text-xl text-gray-400 px-2">Things we've built and launched</p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
-            {saasProducts.map((product, idx) => (
+          <div 
+            ref={productsScrollRef}
+            onMouseEnter={() => setIsProductsHovered(true)}
+            onMouseLeave={() => setIsProductsHovered(false)}
+            className="flex gap-6 md:gap-8 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch'
+            }}
+          >
+            {products.map((product, idx) => (
               <div
                 key={product.id}
-                onClick={() => setSelectedSaaSProduct(product)}
-                className={`group relative h-64 sm:h-72 md:h-80 rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer transition-all duration-1000 ${
+                onClick={() => setSelectedProduct(product)}
+                className={`group relative h-64 sm:h-72 md:h-80 w-80 sm:w-96 md:w-[28rem] flex-shrink-0 rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer transition-all duration-1000 snap-start ${
                   visibleSections.has('saas-products') 
                     ? 'opacity-100 translate-y-0' 
                     : 'opacity-0 translate-y-10'
@@ -1687,9 +1829,49 @@ export default function LandingPage() {
                   <div className={`absolute inset-0 bg-gradient-to-br ${product.color} opacity-80 group-hover:opacity-90 transition-opacity`}></div>
                 )}
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                
+                {/* Status and Platform Badges */}
+                <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-col gap-2 z-10">
+                  {product.status && (
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold backdrop-blur-sm ${
+                      product.status === 'live' ? 'bg-green-500/80 text-white' :
+                      product.status === 'new' ? 'bg-blue-500/80 text-white' :
+                      'bg-purple-500/80 text-white'
+                    }`}>
+                      {product.status === 'live' ? 'Live' : product.status === 'new' ? 'New' : 'Popular'}
+                    </span>
+                  )}
+                  {product.platformIcon && (
+                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center backdrop-blur-sm ${
+                      product.platformIcon === 'web' ? 'bg-gradient-to-r from-indigo-500 to-purple-500' :
+                      product.platformIcon === 'android' ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+                      product.platformIcon === 'ios' ? 'bg-gradient-to-r from-gray-600 to-gray-800' :
+                      'bg-gradient-to-r from-blue-500 to-cyan-500'
+                    }`}>
+                      {product.platformIcon === 'web' ? (
+                        <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                      ) : product.platformIcon === 'android' ? (
+                        <SiAndroid className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                      ) : product.platformIcon === 'ios' ? (
+                        <Smartphone className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                      ) : (
+                        <Smartphone className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-6 md:p-8 transform group-hover:translate-y-0 translate-y-4 transition-transform">
                   <p className="text-xs sm:text-sm text-gray-300 mb-1 sm:mb-2">{product.category}</p>
                   <h3 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2">{product.title}</h3>
+                  
+                  {/* Quick Stats on Hover */}
+                  {product.quickStats && (
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity mb-2">
+                      <p className="text-xs sm:text-sm text-gray-400">{product.quickStats}</p>
+                    </div>
+                  )}
+                  
                   <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <span className="text-xs sm:text-sm">View Details</span>
                     <ArrowRight className="ml-2 w-3 h-3 sm:w-4 sm:h-4" size={16} />
@@ -1815,11 +1997,11 @@ export default function LandingPage() {
         </div>
       )}
 
-      {/* SaaS Product Modal */}
-      {selectedSaaSProduct && (
+      {/* Product Modal */}
+      {selectedProduct && (
         <div 
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-          onClick={() => setSelectedSaaSProduct(null)}
+          onClick={() => setSelectedProduct(null)}
         >
           <div 
             className="bg-gray-900 rounded-2xl max-w-3xl w-full max-h-[calc(100vh-100px)] overflow-y-auto border"
@@ -1827,42 +2009,51 @@ export default function LandingPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative h-64 p-8 overflow-hidden">
-              {selectedSaaSProduct.imageUrl ? (
+              {selectedProduct.imageUrl ? (
                 <img 
-                  src={selectedSaaSProduct.imageUrl} 
-                  alt={selectedSaaSProduct.title}
+                  src={selectedProduct.imageUrl} 
+                  alt={selectedProduct.title}
                   className="absolute inset-0 w-full h-full object-cover opacity-90"
                 />
               ) : (
-                <div className={`absolute inset-0 bg-gradient-to-br ${selectedSaaSProduct.color}`}></div>
+                <div className={`absolute inset-0 bg-gradient-to-br ${selectedProduct.color}`}></div>
               )}
               <div className="absolute inset-0 bg-black/50"></div>
               <button
-                onClick={() => setSelectedSaaSProduct(null)}
+                onClick={() => setSelectedProduct(null)}
                 className="absolute top-4 right-4 z-10 w-10 h-10 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-black/50 transition-colors"
               >
                 <X size={20} className="text-white" />
               </button>
               <div className="relative z-10 mt-12">
-                <p className="text-sm text-white/80 mb-2">{selectedSaaSProduct.category}</p>
-                <h2 className="text-4xl font-bold text-white">{selectedSaaSProduct.title}</h2>
+                <p className="text-sm text-white/80 mb-2">{selectedProduct.category}</p>
+                <h2 className="text-4xl font-bold text-white">{selectedProduct.title}</h2>
               </div>
             </div>
             <div className="p-8">
               <h3 className="text-2xl font-bold mb-4">Product Overview</h3>
-              <p className="text-gray-400 mb-6">{selectedSaaSProduct.description}</p>
+              <p className="text-gray-400 mb-6">{selectedProduct.description}</p>
+              
+              {selectedProduct.appVersion && (
+                <div className="mb-4">
+                  <p className="text-sm text-gray-400">Version: <span className="text-gray-300 font-semibold">{selectedProduct.appVersion}</span></p>
+                  {selectedProduct.platform && (
+                    <p className="text-sm text-gray-400">Platform: <span className="text-gray-300 font-semibold">{selectedProduct.platform}</span></p>
+                  )}
+                </div>
+              )}
               
               <div className="mb-6">
                 <h4 className="text-lg font-semibold mb-3">Key Features</h4>
                 <div className="rounded-xl p-4" style={{ backgroundColor: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
-                  <p className="font-semibold" style={{ color: '#a78bfa' }}>{selectedSaaSProduct.results}</p>
+                  <p className="font-semibold" style={{ color: '#a78bfa' }}>{selectedProduct.results}</p>
                 </div>
               </div>
 
               <div className="mb-6">
                 <h4 className="text-lg font-semibold mb-3">Features</h4>
                 <div className="flex flex-wrap gap-2">
-                  {selectedSaaSProduct.services.map((service, idx) => (
+                  {selectedProduct.services.map((service, idx) => (
                     <span
                       key={idx}
                       className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-full text-sm"
@@ -1873,11 +2064,11 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {selectedSaaSProduct.techStack && selectedSaaSProduct.techStack.length > 0 && (
+              {selectedProduct.techStack && selectedProduct.techStack.length > 0 && (
                 <div className="mb-6">
                   <h4 className="text-lg font-semibold mb-3">Tech Stack</h4>
                   <div className="flex flex-wrap gap-2">
-                    {selectedSaaSProduct.techStack.map((tech, idx) => (
+                    {selectedProduct.techStack.map((tech, idx) => (
                       <span
                         key={idx}
                         className="px-4 py-2 rounded-full text-sm"
@@ -1894,10 +2085,55 @@ export default function LandingPage() {
                 </div>
               )}
 
+              {selectedProduct.technologies && selectedProduct.technologies.length > 0 && (
+                <div className="mb-6">
+                  <h4 className="text-lg font-semibold mb-3">Technologies</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedProduct.technologies.map((tech, idx) => (
+                      <span
+                        key={idx}
+                        className="px-4 py-2 rounded-full text-sm bg-gray-800 border border-gray-700"
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedProduct.screenshots && selectedProduct.screenshots.length > 0 && (
+                <div className="mb-6">
+                  <h4 className="text-lg font-semibold mb-3">Screenshots</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {selectedProduct.screenshots.map((screenshot, idx) => (
+                      <img
+                        key={idx}
+                        src={screenshot}
+                        alt={`${selectedProduct.title} screenshot ${idx + 1}`}
+                        className="rounded-lg w-full h-auto cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => window.open(screenshot, '_blank')}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-800">
-                {selectedSaaSProduct.liveUrl && (
+                {selectedProduct.playStoreLink && (
                   <a
-                    href={selectedSaaSProduct.liveUrl}
+                    href={selectedProduct.playStoreLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 px-6 py-3 rounded-lg font-medium text-white transition-all hover:scale-105 flex items-center justify-center gap-2"
+                    style={{ backgroundColor: '#34a853' }}
+                  >
+                    <ExternalLink size={18} />
+                    View on Google Play
+                  </a>
+                )}
+                {selectedProduct.liveUrl && (
+                  <a
+                    href={selectedProduct.liveUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 px-6 py-3 rounded-lg font-medium text-white transition-all hover:scale-105 flex items-center justify-center gap-2"
@@ -1907,9 +2143,9 @@ export default function LandingPage() {
                     View Product
                   </a>
                 )}
-                {selectedSaaSProduct.githubUrl && (
+                {selectedProduct.githubUrl && (
                   <a
-                    href={selectedSaaSProduct.githubUrl}
+                    href={selectedProduct.githubUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 px-6 py-3 rounded-lg font-medium text-white transition-all hover:scale-105 flex items-center justify-center gap-2 bg-gray-800 border border-gray-700 hover:bg-gray-700"
@@ -2119,6 +2355,9 @@ export default function LandingPage() {
               
               {/* Scrollable tools container */}
               <div 
+                ref={toolsScrollRef}
+                onMouseEnter={() => setIsToolsHovered(true)}
+                onMouseLeave={() => setIsToolsHovered(false)}
                 className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
                 style={{
                   scrollbarWidth: 'none',
@@ -2136,8 +2375,20 @@ export default function LandingPage() {
                     >
                       <div className="flex items-center gap-4 mb-4">
                         <div 
-                          className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6" 
-                          style={{ backgroundColor: tool.color }}
+                          className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 ${
+                            tool.color === '#6366f1' 
+                              ? 'bg-gradient-to-r from-indigo-500 to-purple-500'
+                              : tool.color === '#8b5cf6'
+                              ? 'bg-gradient-to-r from-purple-500 to-pink-500'
+                              : tool.color === '#06b6d4'
+                              ? 'bg-gradient-to-r from-cyan-500 to-blue-500'
+                              : tool.color === '#ec4899'
+                              ? 'bg-gradient-to-r from-pink-500 to-rose-500'
+                              : tool.color === '#14b8a6'
+                              ? 'bg-gradient-to-r from-teal-500 to-cyan-500'
+                              : ''
+                          }`}
+                          style={!['#6366f1', '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6'].includes(tool.color) ? { backgroundColor: tool.color } : undefined}
                         >
                           <Icon size={24} className="text-white transition-transform duration-300 group-hover:scale-110" />
                         </div>
