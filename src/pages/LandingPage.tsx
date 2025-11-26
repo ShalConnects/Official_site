@@ -47,6 +47,24 @@ interface Project {
   description: string;
   results: string;
   services: string[];
+  techStack?: string[];
+  liveUrl?: string;
+  githubUrl?: string;
+  imageUrl?: string;
+}
+
+interface SaaSProduct {
+  id: number;
+  title: string;
+  category: string;
+  color: string;
+  description: string;
+  results: string;
+  services: string[];
+  techStack: string[];
+  liveUrl: string;
+  githubUrl?: string;
+  imageUrl?: string;
 }
 
 interface Stats {
@@ -62,6 +80,7 @@ export default function LandingPage() {
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedSaaSProduct, setSelectedSaaSProduct] = useState<SaaSProduct | null>(null);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const moreMenuCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -157,7 +176,7 @@ export default function LandingPage() {
       setScrollProgress(Math.min(100, Math.max(0, progress)));
       
       // Determine active section
-      const sections = ['home', 'services', 'process', 'work', 'testimonials', 'products', 'tools', 'contact'];
+      const sections = ['home', 'services', 'process', 'work', 'saas-products', 'testimonials', 'products', 'tools', 'contact'];
       let current = 'home';
       
       for (const section of sections) {
@@ -300,7 +319,7 @@ export default function LandingPage() {
     const observer = new IntersectionObserver(observerCallback, observerOptions);
 
     // Observe all sections
-    const sections = ['home', 'services', 'process', 'work', 'testimonials', 'tools', 'contact'];
+    const sections = ['home', 'services', 'process', 'work', 'saas-products', 'testimonials', 'tools', 'contact'];
     sections.forEach(section => {
       const element = document.getElementById(section);
       if (element) {
@@ -651,6 +670,23 @@ export default function LandingPage() {
       description: 'Custom Shopify store with unique design.',
       results: '200% conversion rate increase',
       services: ['Shopify', 'Custom Theme', 'Site Design']
+    }
+  ];
+
+  // SaaS Products data
+  const saasProducts: SaaSProduct[] = [
+    {
+      id: 1,
+      title: 'Balanze',
+      category: 'Full-Stack SaaS',
+      color: 'from-indigo-500 to-purple-500',
+      description: 'A modern, multi-user personal finance management SaaS platform that helps users track accounts, transactions, savings, donations, and financial goals across multiple currencies. Built with React, TypeScript, and Supabase, featuring real-time analytics, dynamic dashboards, and a native Android mobile app.',
+      results: 'Full-stack SaaS platform with multi-currency support, real-time analytics, subscription management, and cross-platform mobile app',
+      services: ['Multi-User Authentication', 'Multi-Currency Support', 'Real-Time Analytics', 'Recurring Transactions', 'Mobile App', 'Subscription Management'],
+      techStack: ['React 18', 'TypeScript', 'Zustand', 'Tailwind CSS', 'Supabase', 'PostgreSQL', 'Capacitor', 'Paddle', 'Vercel'],
+      liveUrl: 'https://balanze.cash/',
+      githubUrl: 'https://github.com/ShalConnects/fin-tech',
+      imageUrl: '/images/balanze-icon.png'
     }
   ];
 
@@ -1579,11 +1615,81 @@ export default function LandingPage() {
                 }`}
                 style={{ transitionDelay: `${idx * 150}ms` }}
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${project.color} opacity-80 group-hover:opacity-90 transition-opacity`}></div>
+                {project.imageUrl ? (
+                  <img 
+                    src={project.imageUrl} 
+                    alt={project.title}
+                    className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-90 transition-opacity"
+                  />
+                ) : (
+                  <div className={`absolute inset-0 bg-gradient-to-br ${project.color} opacity-80 group-hover:opacity-90 transition-opacity`}></div>
+                )}
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
                 <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-6 md:p-8 transform group-hover:translate-y-0 translate-y-4 transition-transform">
                   <p className="text-xs sm:text-sm text-gray-300 mb-1 sm:mb-2">{project.category}</p>
                   <h3 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2">{project.title}</h3>
+                  <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-xs sm:text-sm">View Details</span>
+                    <ArrowRight className="ml-2 w-3 h-3 sm:w-4 sm:h-4" size={16} />
+                  </div>
+                </div>
+                <div className="absolute top-3 right-3 sm:top-4 sm:right-4 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all transform group-hover:rotate-12">
+                  <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5" size={20} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Our SaaS Products Section */}
+      <section 
+        id="saas-products" 
+        ref={(el) => (sectionRefs.current['saas-products'] = el)}
+        className="py-12 sm:py-16 md:py-20 relative"
+        style={{ 
+          background: 'linear-gradient(to bottom, rgba(99, 102, 241, 0.03), transparent)'
+        }}
+      >
+        {/* Subtle Top Border */}
+        <div className="absolute top-0 left-0 right-0 h-px opacity-20" style={{ 
+          background: 'linear-gradient(to right, transparent, rgba(99, 102, 241, 0.5), rgba(139, 92, 246, 0.5), transparent)'
+        }}></div>
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
+          <div className={`text-center mb-8 sm:mb-12 md:mb-16 transition-all duration-1000 ${
+            visibleSections.has('saas-products') 
+              ? 'opacity-100 translate-y-0' 
+              : 'opacity-0 translate-y-10'
+          }`}>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 px-2">Our Products</h2>
+            <p className="text-base sm:text-lg md:text-xl text-gray-400 px-2">Things we've built and launched</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
+            {saasProducts.map((product, idx) => (
+              <div
+                key={product.id}
+                onClick={() => setSelectedSaaSProduct(product)}
+                className={`group relative h-64 sm:h-72 md:h-80 rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer transition-all duration-1000 ${
+                  visibleSections.has('saas-products') 
+                    ? 'opacity-100 translate-y-0' 
+                    : 'opacity-0 translate-y-10'
+                }`}
+                style={{ transitionDelay: `${idx * 150}ms` }}
+              >
+                {product.imageUrl ? (
+                  <img 
+                    src={product.imageUrl} 
+                    alt={product.title}
+                    className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-90 transition-opacity"
+                  />
+                ) : (
+                  <div className={`absolute inset-0 bg-gradient-to-br ${product.color} opacity-80 group-hover:opacity-90 transition-opacity`}></div>
+                )}
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-6 md:p-8 transform group-hover:translate-y-0 translate-y-4 transition-transform">
+                  <p className="text-xs sm:text-sm text-gray-300 mb-1 sm:mb-2">{product.category}</p>
+                  <h3 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2">{product.title}</h3>
                   <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <span className="text-xs sm:text-sm">View Details</span>
                     <ArrowRight className="ml-2 w-3 h-3 sm:w-4 sm:h-4" size={16} />
@@ -1605,18 +1711,28 @@ export default function LandingPage() {
           onClick={() => setSelectedProject(null)}
         >
           <div 
-            className="bg-gray-900 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border"
+            className="bg-gray-900 rounded-2xl max-w-3xl w-full max-h-[calc(100vh-100px)] overflow-y-auto border"
             style={{ borderColor: 'rgba(21, 102, 65, 0.3)' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="relative h-64 p-8" style={{ background: selectedProject.color }}>
+            <div className="relative h-64 p-8 overflow-hidden">
+              {selectedProject.imageUrl ? (
+                <img 
+                  src={selectedProject.imageUrl} 
+                  alt={selectedProject.title}
+                  className="absolute inset-0 w-full h-full object-cover opacity-90"
+                />
+              ) : (
+                <div className={`absolute inset-0 bg-gradient-to-br ${selectedProject.color}`}></div>
+              )}
+              <div className="absolute inset-0 bg-black/50"></div>
               <button
                 onClick={() => setSelectedProject(null)}
-                className="absolute top-4 right-4 w-10 h-10 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-black/50 transition-colors"
+                className="absolute top-4 right-4 z-10 w-10 h-10 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-black/50 transition-colors"
               >
-                <X size={20} />
+                <X size={20} className="text-white" />
               </button>
-              <div className="mt-12">
+              <div className="relative z-10 mt-12">
                 <p className="text-sm text-white/80 mb-2">{selectedProject.category}</p>
                 <h2 className="text-4xl font-bold text-white">{selectedProject.title}</h2>
               </div>
@@ -1632,7 +1748,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div>
+              <div className="mb-6">
                 <h4 className="text-lg font-semibold mb-3">Services Provided</h4>
                 <div className="flex flex-wrap gap-2">
                   {selectedProject.services.map((service, idx) => (
@@ -1644,6 +1760,164 @@ export default function LandingPage() {
                     </span>
                   ))}
                 </div>
+              </div>
+
+              {selectedProject.techStack && selectedProject.techStack.length > 0 && (
+                <div className="mb-6">
+                  <h4 className="text-lg font-semibold mb-3">Tech Stack</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedProject.techStack.map((tech, idx) => (
+                      <span
+                        key={idx}
+                        className="px-4 py-2 rounded-full text-sm"
+                        style={{ 
+                          backgroundColor: 'rgba(99, 102, 241, 0.1)', 
+                          color: '#818cf8',
+                          border: '1px solid rgba(99, 102, 241, 0.3)'
+                        }}
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {(selectedProject.liveUrl || selectedProject.githubUrl) && (
+                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-800">
+                  {selectedProject.liveUrl && (
+                    <a
+                      href={selectedProject.liveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 px-6 py-3 rounded-lg font-medium text-white transition-all hover:scale-105 flex items-center justify-center gap-2"
+                      style={{ backgroundColor: '#176641' }}
+                    >
+                      <ExternalLink size={18} />
+                      View Project
+                    </a>
+                  )}
+                  {selectedProject.githubUrl && (
+                    <a
+                      href={selectedProject.githubUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 px-6 py-3 rounded-lg font-medium text-white transition-all hover:scale-105 flex items-center justify-center gap-2 bg-gray-800 border border-gray-700 hover:bg-gray-700"
+                    >
+                      <Code size={18} />
+                      View Code
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SaaS Product Modal */}
+      {selectedSaaSProduct && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          onClick={() => setSelectedSaaSProduct(null)}
+        >
+          <div 
+            className="bg-gray-900 rounded-2xl max-w-3xl w-full max-h-[calc(100vh-100px)] overflow-y-auto border"
+            style={{ borderColor: 'rgba(99, 102, 241, 0.3)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative h-64 p-8 overflow-hidden">
+              {selectedSaaSProduct.imageUrl ? (
+                <img 
+                  src={selectedSaaSProduct.imageUrl} 
+                  alt={selectedSaaSProduct.title}
+                  className="absolute inset-0 w-full h-full object-cover opacity-90"
+                />
+              ) : (
+                <div className={`absolute inset-0 bg-gradient-to-br ${selectedSaaSProduct.color}`}></div>
+              )}
+              <div className="absolute inset-0 bg-black/50"></div>
+              <button
+                onClick={() => setSelectedSaaSProduct(null)}
+                className="absolute top-4 right-4 z-10 w-10 h-10 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-black/50 transition-colors"
+              >
+                <X size={20} className="text-white" />
+              </button>
+              <div className="relative z-10 mt-12">
+                <p className="text-sm text-white/80 mb-2">{selectedSaaSProduct.category}</p>
+                <h2 className="text-4xl font-bold text-white">{selectedSaaSProduct.title}</h2>
+              </div>
+            </div>
+            <div className="p-8">
+              <h3 className="text-2xl font-bold mb-4">Product Overview</h3>
+              <p className="text-gray-400 mb-6">{selectedSaaSProduct.description}</p>
+              
+              <div className="mb-6">
+                <h4 className="text-lg font-semibold mb-3">Key Features</h4>
+                <div className="rounded-xl p-4" style={{ backgroundColor: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
+                  <p className="font-semibold" style={{ color: '#a78bfa' }}>{selectedSaaSProduct.results}</p>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <h4 className="text-lg font-semibold mb-3">Features</h4>
+                <div className="flex flex-wrap gap-2">
+                  {selectedSaaSProduct.services.map((service, idx) => (
+                    <span
+                      key={idx}
+                      className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-full text-sm"
+                    >
+                      {service}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {selectedSaaSProduct.techStack && selectedSaaSProduct.techStack.length > 0 && (
+                <div className="mb-6">
+                  <h4 className="text-lg font-semibold mb-3">Tech Stack</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedSaaSProduct.techStack.map((tech, idx) => (
+                      <span
+                        key={idx}
+                        className="px-4 py-2 rounded-full text-sm"
+                        style={{ 
+                          backgroundColor: 'rgba(99, 102, 241, 0.1)', 
+                          color: '#818cf8',
+                          border: '1px solid rgba(99, 102, 241, 0.3)'
+                        }}
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-800">
+                {selectedSaaSProduct.liveUrl && (
+                  <a
+                    href={selectedSaaSProduct.liveUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 px-6 py-3 rounded-lg font-medium text-white transition-all hover:scale-105 flex items-center justify-center gap-2"
+                    style={{ backgroundColor: '#6366f1' }}
+                  >
+                    <ExternalLink size={18} />
+                    View Product
+                  </a>
+                )}
+                {selectedSaaSProduct.githubUrl && (
+                  <a
+                    href={selectedSaaSProduct.githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 px-6 py-3 rounded-lg font-medium text-white transition-all hover:scale-105 flex items-center justify-center gap-2 bg-gray-800 border border-gray-700 hover:bg-gray-700"
+                  >
+                    <Code size={18} />
+                    View Code
+                  </a>
+                )}
               </div>
             </div>
           </div>
@@ -2249,7 +2523,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-950 py-8 sm:py-10 md:py-12 border-t border-gray-800">
+      <footer className="bg-gray-950 py-8 sm:py-10 md:py-12 pb-[80px] md:pb-[90px] border-t border-gray-800">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           {/* Multi-column Layout */}
           <div 
