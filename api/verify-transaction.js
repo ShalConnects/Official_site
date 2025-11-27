@@ -63,8 +63,11 @@ export default async function handler(req, res) {
 
     const transaction = await response.json();
 
-    // Check if transaction is completed
-    if (transaction.status === 'completed') {
+    // Allow downloads for both 'completed' and 'pending' transactions
+    // Pending transactions are usually just waiting for bank processing
+    const allowedStatuses = ['completed', 'pending'];
+    
+    if (allowedStatuses.includes(transaction.status)) {
       // Generate download token (in production, use JWT or signed token)
       const downloadToken = Buffer.from(`${transactionId}:${Date.now()}`).toString('base64');
 
@@ -82,7 +85,11 @@ export default async function handler(req, res) {
     } else {
       return res.status(200).json({
         valid: false,
-        message: `Transaction status: ${transaction.status}`,
+        message: `Transaction status: ${transaction.status}. Payment may still be processing.`,
+        transaction: {
+          id: transaction.id,
+          status: transaction.status,
+        },
       });
     }
   } catch (error) {

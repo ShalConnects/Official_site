@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Download, CheckCircle, XCircle, Loader2, ArrowLeft, AlertCircle } from 'lucide-react';
+import { Download, CheckCircle, XCircle, Loader2, ArrowLeft, AlertCircle, Key } from 'lucide-react';
 import PageLayout from '../components/PageLayout';
 import { usePageTitle } from '../hooks/usePageTitle';
 
@@ -25,25 +25,66 @@ export default function DownloadPage() {
   const [transaction, setTransaction] = useState<TransactionData | null>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
 
-  const transactionId = searchParams.get('transaction') || searchParams.get('_ptxn');
+  // Try multiple ways to get transaction ID:
+  // 1. URL query parameters (various names Paddle might use)
+  // 2. SessionStorage (stored from checkout event)
+  // 3. Hash fragment
+  const getTransactionId = () => {
+    // Check URL parameters (multiple possible names)
+    const urlParams = [
+      searchParams.get('transaction'),
+      searchParams.get('_ptxn'),
+      searchParams.get('txn'),
+      searchParams.get('transaction_id'),
+      searchParams.get('id'),
+    ].find(id => id);
+
+    if (urlParams) {
+      return urlParams;
+    }
+
+    // Check sessionStorage (stored from checkout event)
+    const storedId = sessionStorage.getItem('paddle_transaction_id');
+    if (storedId) {
+      // Clean up after use
+      sessionStorage.removeItem('paddle_transaction_id');
+      return storedId;
+    }
+
+    // Check hash fragment
+    const hash = window.location.hash;
+    const hashMatch = hash.match(/[?&](?:transaction|_ptxn|txn|transaction_id|id)=([^&]+)/);
+    if (hashMatch) {
+      return hashMatch[1];
+    }
+
+    return null;
+  };
+
+  const transactionId = getTransactionId();
 
   useEffect(() => {
     if (!transactionId) {
-      setError('No transaction ID provided. Please complete your purchase first.');
+      // Log all available info for debugging
+      console.log('No transaction ID found. URL:', window.location.href);
+      console.log('Search params:', Object.fromEntries(searchParams.entries()));
+      console.log('SessionStorage:', sessionStorage.getItem('paddle_transaction_id'));
+      
+      setError('No transaction ID found. If you just completed a purchase, please check your email for the download link, or contact support with your transaction details.');
       setLoading(false);
       return;
     }
 
+    console.log('Verifying transaction:', transactionId);
     verifyTransaction(transactionId);
-  }, [transactionId]);
+  }, [transactionId, searchParams]);
 
   const verifyTransaction = async (txnId: string) => {
     try {
       setLoading(true);
       setError(null);
 
-      // Option 1: Call your backend API to verify transaction
-      // Replace this URL with your actual backend endpoint
+      // Call backend API to verify transaction
       const apiUrl = import.meta.env.VITE_API_URL || '/api';
       const response = await fetch(`${apiUrl}/verify-transaction?transaction=${txnId}`, {
         method: 'GET',
@@ -52,26 +93,12 @@ export default function DownloadPage() {
         },
       });
 
-      // If backend is not set up yet, use fallback verification
-      if (!response.ok && response.status === 404) {
-        // Fallback: Show download with warning (less secure)
-        console.warn('Backend API not found. Using fallback verification.');
-        setTransaction({
-          id: txnId,
-          status: 'completed',
-          customer_email: 'customer@example.com',
-          items: [],
-          created_at: new Date().toISOString(),
-        });
-        setVerified(true);
-        // Use Paddle's download URL or your CDN
-        setDownloadUrl(`/api/download?transaction=${txnId}`);
-        setLoading(false);
-        return;
-      }
-
       if (!response.ok) {
-        throw new Error('Failed to verify transaction');
+        if (response.status === 404) {
+          throw new Error('Verification API not found. Please contact support.');
+        }
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Verification failed: ${response.statusText}`);
       }
 
       const data = await response.json();
@@ -82,12 +109,17 @@ export default function DownloadPage() {
         // Generate secure download link
         setDownloadUrl(`/api/download?transaction=${txnId}&token=${data.downloadToken}`);
       } else {
-        setError(data.message || 'Transaction verification failed. Please contact support.');
+        // Show transaction status even if not completed
+        const status = data.transaction?.status || 'unknown';
+        if (status === 'pending') {
+          setError('Your payment is still processing. Please wait a few minutes and refresh this page, or check your email for the download link once payment is confirmed.');
+        } else {
+          setError(data.message || `Transaction verification failed. Status: ${status}. Please contact support with transaction ID: ${txnId}`);
+        }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Verification error:', err);
-      // Fallback: If API is not available, show message
-      setError('Unable to verify transaction. Please check your email for the download link, or contact support with your transaction ID.');
+      setError(err.message || 'Unable to verify transaction. Please check your email for the download link, or contact support with your transaction ID.');
     } finally {
       setLoading(false);
     }
@@ -118,6 +150,16 @@ export default function DownloadPage() {
     );
   }
 
+  const [manualTransactionId, setManualTransactionId] = useState('');
+  const [showManualInput, setShowManualInput] = useState(false);
+
+  const handleManualSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (manualTransactionId.trim()) {
+      verifyTransaction(manualTransactionId.trim());
+    }
+  };
+
   if (error) {
     return (
       <PageLayout title="Download">
@@ -132,9 +174,39 @@ export default function DownloadPage() {
                 <p className="font-mono text-sm text-gray-300 break-all">{transactionId}</p>
               </div>
             )}
+            
+            {/* Manual Transaction ID Input */}
+            {!transactionId && (
+              <div className="bg-gray-900/50 rounded-lg p-6 mb-6 text-left">
+                <div className="flex items-center gap-2 mb-4">
+                  <Key className="w-5 h-5 text-gray-400" />
+                  <h3 className="text-lg font-semibold text-white">Enter Transaction ID Manually</h3>
+                </div>
+                <p className="text-sm text-gray-400 mb-4">
+                  If you have your transaction ID from Paddle (check your email or Paddle dashboard), enter it below:
+                </p>
+                <form onSubmit={handleManualSubmit} className="space-y-4">
+                  <input
+                    type="text"
+                    value={manualTransactionId}
+                    onChange={(e) => setManualTransactionId(e.target.value)}
+                    placeholder="Enter transaction ID (e.g., txn_01...)"
+                    className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
+                  />
+                  <button
+                    type="submit"
+                    className="w-full px-6 py-3 rounded-lg font-medium text-white transition-all hover:scale-105"
+                    style={{ backgroundColor: '#176641' }}
+                  >
+                    Verify Transaction
+                  </button>
+                </form>
+              </div>
+            )}
+
             <div className="flex flex-wrap justify-center gap-4">
               <Link
-                to="/services/wordpress/plugins/variation-images-pro"
+                to={window.location.pathname.includes('/store') ? "/store/variation-images-pro" : "/services/wordpress/plugins/variation-images-pro"}
                 className="px-6 py-3 rounded-lg font-medium text-white transition-all hover:scale-105 flex items-center gap-2"
                 style={{ backgroundColor: '#176641' }}
               >
@@ -204,6 +276,9 @@ export default function DownloadPage() {
                   <div className="text-sm text-gray-300">
                     <p className="font-semibold text-blue-400 mb-1">Important:</p>
                     <ul className="list-disc list-inside space-y-1 text-gray-400">
+                      {transaction.status === 'pending' && (
+                        <li className="text-yellow-400 font-semibold">⚠️ Payment is still processing - download will work once confirmed</li>
+                      )}
                       <li>Download link expires in 24 hours</li>
                       <li>You can download up to 3 times</li>
                       <li>Check your email for the license key</li>

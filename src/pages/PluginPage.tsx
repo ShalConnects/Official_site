@@ -270,6 +270,28 @@ export default function PluginPage() {
         redirectUrl,
       });
 
+      // Set up Paddle event listeners to capture transaction ID
+      // This is important because Paddle may not always pass transaction ID in URL
+      const handleCheckoutComplete = (event: any) => {
+        console.log('Paddle checkout event:', event);
+        const transactionId = event?.detail?.transactionId || 
+                              event?.detail?.transaction?.id ||
+                              event?.detail?.id;
+        if (transactionId) {
+          // Store transaction ID in sessionStorage as backup
+          sessionStorage.setItem('paddle_transaction_id', transactionId);
+          console.log('Transaction ID captured:', transactionId);
+        }
+      };
+
+      // Listen for checkout completion events
+      const completedHandler = (e: any) => handleCheckoutComplete(e);
+      window.addEventListener('paddle:checkout:completed', completedHandler);
+      window.addEventListener('paddle:checkout:transaction-completed', completedHandler);
+      
+      // Cleanup listener after checkout closes (if needed)
+      // Note: These are global events, so cleanup happens on page navigation
+
       // Paddle Checkout v2 API - Try priceId first, fallback to productId
       let checkoutOptions: any;
 
