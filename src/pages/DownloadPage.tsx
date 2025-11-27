@@ -294,7 +294,6 @@ export default function DownloadPage() {
                       )}
                       <li>Download link expires in 24 hours</li>
                       <li>You can download up to 3 times</li>
-                      <li>Check your email for the license key</li>
                       <li>Keep the ZIP file - do not extract before uploading</li>
                     </ul>
                   </div>
@@ -309,7 +308,7 @@ export default function DownloadPage() {
                   <li>Click <strong className="text-white">"Upload Plugin"</strong> button</li>
                   <li>Select the downloaded ZIP file (do not extract it)</li>
                   <li>Click <strong className="text-white">"Install Now"</strong> then <strong className="text-white">"Activate"</strong></li>
-                  <li>Enter your license key in plugin settings</li>
+                  <li>The plugin will be ready to use immediately after activation</li>
                 </ol>
               </div>
 

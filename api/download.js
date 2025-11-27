@@ -78,13 +78,29 @@ export default async function handler(req, res) {
     }
 
     const transactionData = await verifyResponse.json();
+    
+    // Log the full response for debugging
+    console.log('=== DOWNLOAD API - PADDLE RESPONSE ===');
+    console.log(JSON.stringify(transactionData, null, 2));
+    console.log('=== END PADDLE RESPONSE ===');
+
+    // Check if status exists - Paddle API v2 might use different field names
+    // Try multiple possible field names (same as verify-transaction.js)
+    const transactionStatus = transactionData.status || 
+                              transactionData.status_code || 
+                              transactionData.payment_status ||
+                              transactionData.state ||
+                              (transactionData.data && transactionData.data.status) ||
+                              'unknown';
+    
+    console.log('Download API - Extracted transaction status:', transactionStatus);
 
     // Allow downloads for both 'completed' and 'pending' transactions
     // Pending transactions are usually just waiting for bank processing
     const allowedStatuses = ['completed', 'pending'];
-    if (!allowedStatuses.includes(transactionData.status)) {
+    if (!allowedStatuses.includes(transactionStatus)) {
       return res.status(403).json({ 
-        error: `Transaction status is ${transactionData.status}. Payment may still be processing.` 
+        error: `Transaction status is ${transactionStatus}. Payment may still be processing.` 
       });
     }
 
