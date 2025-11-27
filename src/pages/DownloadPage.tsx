@@ -87,11 +87,14 @@ export default function DownloadPage() {
       setError(null);
 
       // Call backend API to verify transaction
+      // Add cache-busting parameter to prevent 304 responses
       const apiUrl = import.meta.env.VITE_API_URL || '/api';
-      const response = await fetch(`${apiUrl}/verify-transaction?transaction=${txnId}`, {
+      const cacheBuster = `_t=${Date.now()}`;
+      const response = await fetch(`${apiUrl}/verify-transaction?transaction=${txnId}&${cacheBuster}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
         },
       });
 
@@ -104,6 +107,9 @@ export default function DownloadPage() {
       }
 
       const data = await response.json();
+      
+      // Log the response for debugging
+      console.log('Verification API response:', data);
 
       if (data.valid && data.transaction) {
         setTransaction(data.transaction);
@@ -112,9 +118,15 @@ export default function DownloadPage() {
         setDownloadUrl(`/api/download?transaction=${txnId}&token=${data.downloadToken}`);
       } else {
         // Show transaction status even if not completed
-        const status = data.transaction?.status || 'unknown';
-        if (status === 'pending') {
+        const status = data.transaction?.status || data.transaction?.status_code || 'unknown';
+        
+        // Better error messages based on what we received
+        if (!data.transaction) {
+          setError(data.message || 'Transaction not found. Please verify your transaction ID is correct.');
+        } else if (status === 'pending') {
           setError('Your payment is still processing. Please wait a few minutes and refresh this page, or check your email for the download link once payment is confirmed.');
+        } else if (status === 'unknown') {
+          setError(data.message || `Unable to determine transaction status. Please contact support with transaction ID: ${txnId}`);
         } else {
           setError(data.message || `Transaction verification failed. Status: ${status}. Please contact support with transaction ID: ${txnId}`);
         }

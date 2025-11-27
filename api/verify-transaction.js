@@ -19,6 +19,11 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  // Prevent caching - always get fresh data from Paddle
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
 
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
@@ -58,37 +63,75 @@ export default async function handler(req, res) {
     });
 
     if (!response.ok) {
-      throw new Error(`Paddle API error: ${response.statusText}`);
+      // Get error details from Paddle
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Paddle API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData,
+      });
+      
+      // Return more specific error messages
+      if (response.status === 404) {
+        return res.status(200).json({
+          valid: false,
+          message: 'Transaction not found. Please check your transaction ID and try again.',
+          transaction: null,
+        });
+      }
+      
+      throw new Error(`Paddle API error: ${response.status} ${response.statusText}`);
     }
 
     const transaction = await response.json();
+    
+    // Log the full response for debugging
+    console.log('Paddle transaction response:', {
+      id: transaction.id,
+      status: transaction.status,
+      hasStatus: 'status' in transaction,
+      keys: Object.keys(transaction),
+    });
+    
+    // Check if transaction object is valid
+    if (!transaction || typeof transaction !== 'object') {
+      console.error('Invalid transaction response:', transaction);
+      return res.status(500).json({
+        valid: false,
+        message: 'Invalid response from Paddle API. Please contact support.',
+      });
+    }
 
+    // Check if status exists
+    const transactionStatus = transaction.status || transaction.status_code || 'unknown';
+    
     // Allow downloads for both 'completed' and 'pending' transactions
     // Pending transactions are usually just waiting for bank processing
     const allowedStatuses = ['completed', 'pending'];
     
-    if (allowedStatuses.includes(transaction.status)) {
+    if (allowedStatuses.includes(transactionStatus)) {
       // Generate download token (in production, use JWT or signed token)
       const downloadToken = Buffer.from(`${transactionId}:${Date.now()}`).toString('base64');
 
       return res.status(200).json({
         valid: true,
         transaction: {
-          id: transaction.id,
-          status: transaction.status,
-          customer_email: transaction.customer_email,
-          items: transaction.items,
-          created_at: transaction.created_at,
+          id: transaction.id || transactionId,
+          status: transactionStatus,
+          customer_email: transaction.customer_email || transaction.email || null,
+          items: transaction.items || [],
+          created_at: transaction.created_at || transaction.created || new Date().toISOString(),
         },
         downloadToken,
       });
     } else {
+      // Return transaction info even if status is not allowed
       return res.status(200).json({
         valid: false,
-        message: `Transaction status: ${transaction.status}. Payment may still be processing.`,
+        message: `Transaction status: ${transactionStatus}. Payment may still be processing.`,
         transaction: {
-          id: transaction.id,
-          status: transaction.status,
+          id: transaction.id || transactionId,
+          status: transactionStatus,
         },
       });
     }
