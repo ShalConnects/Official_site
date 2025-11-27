@@ -108,8 +108,10 @@ export default function DownloadPage() {
 
       const data = await response.json();
       
-      // Log the response for debugging
-      console.log('Verification API response:', data);
+      // Log the FULL response for debugging
+      console.log('=== VERIFICATION API FULL RESPONSE ===');
+      console.log(JSON.stringify(data, null, 2));
+      console.log('=== END VERIFICATION RESPONSE ===');
 
       if (data.valid && data.transaction) {
         setTransaction(data.transaction);
