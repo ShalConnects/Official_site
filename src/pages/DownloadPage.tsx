@@ -24,6 +24,8 @@ export default function DownloadPage() {
   const [error, setError] = useState<string | null>(null);
   const [transaction, setTransaction] = useState<TransactionData | null>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [manualTransactionId, setManualTransactionId] = useState('');
+  const [showManualInput, setShowManualInput] = useState(false);
 
   // Try multiple ways to get transaction ID:
   // 1. URL query parameters (various names Paddle might use)
@@ -137,6 +139,13 @@ export default function DownloadPage() {
     }
   };
 
+  const handleManualSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (manualTransactionId.trim()) {
+      verifyTransaction(manualTransactionId.trim());
+    }
+  };
+
   if (loading) {
     return (
       <PageLayout title="Download">
@@ -149,16 +158,6 @@ export default function DownloadPage() {
       </PageLayout>
     );
   }
-
-  const [manualTransactionId, setManualTransactionId] = useState('');
-  const [showManualInput, setShowManualInput] = useState(false);
-
-  const handleManualSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (manualTransactionId.trim()) {
-      verifyTransaction(manualTransactionId.trim());
-    }
-  };
 
   if (error) {
     return (
