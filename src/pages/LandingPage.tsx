@@ -116,6 +116,9 @@ export default function LandingPage() {
   const productsScrollRef = useRef<HTMLDivElement>(null);
   const productsAutoSlideIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [isProductsHovered, setIsProductsHovered] = useState(false);
+  const [isProductsDragging, setIsProductsDragging] = useState(false);
+  const productsDragStartX = useRef(0);
+  const productsDragScrollLeft = useRef(0);
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -785,42 +788,126 @@ export default function LandingPage() {
       status: 'live',
       platformIcon: 'android',
       quickStats: '10.0.5+ • Privacy-first • Analytics'
+    },
+    {
+      id: 3,
+      title: 'Quran Verse Widget',
+      category: 'Web Widget',
+      color: 'from-amber-500 to-yellow-500',
+      description: 'A beautiful, responsive daily Quran verse widget with Arabic text and English translations. Features dark mode, offline support, social sharing, favorites, and full accessibility. Built with vanilla HTML/CSS/JS, optimized for performance and SEO.',
+      results: 'Fully accessible widget with offline support, retry mechanism, and service worker',
+      services: ['Web Development', 'UI/UX Design', 'Accessibility', 'PWA', 'SEO Optimization'],
+      techStack: ['HTML5', 'CSS3', 'JavaScript', 'Service Worker', 'PWA', 'Google Fonts'],
+      liveUrl: 'https://shalconnects.github.io/quran-verse-widget/',
+      githubUrl: 'https://github.com/ShalConnects/quran-verse-widget',
+      imageUrl: '/images/quran-widget-preview.png',
+      status: 'live',
+      platformIcon: 'web',
+      quickStats: 'PWA • Offline • Accessible'
     }
   ];
 
   // Auto-slide products carousel
   useEffect(() => {
-    if (!productsScrollRef.current || isProductsHovered) return;
+    if (!productsScrollRef.current || isProductsHovered || isProductsDragging) return;
 
     const scrollContainer = productsScrollRef.current;
-    const scrollWidth = scrollContainer.scrollWidth;
-    const clientWidth = scrollContainer.clientWidth;
     
-    // Only auto-slide if content overflows
-    if (scrollWidth <= clientWidth) return;
+    // Wait a bit for layout to settle
+    const checkAndStart = () => {
+      const scrollWidth = scrollContainer.scrollWidth;
+      const clientWidth = scrollContainer.clientWidth;
+      
+      // Only auto-slide if content overflows
+      if (scrollWidth <= clientWidth) return;
 
-    productsAutoSlideIntervalRef.current = setInterval(() => {
-      const currentScroll = scrollContainer.scrollLeft;
-      const maxScroll = scrollWidth - clientWidth;
-      const cardWidth = scrollContainer.querySelector('div')?.offsetWidth || 0;
-      const gap = 32; // gap-8 = 32px
-      const scrollAmount = cardWidth + gap;
-
-      if (currentScroll + scrollAmount >= maxScroll) {
-        // Reset to beginning
-        scrollContainer.scrollTo({ left: 0, behavior: 'smooth' });
-      } else {
-        // Scroll to next card
-        scrollContainer.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      // Clear any existing interval
+      if (productsAutoSlideIntervalRef.current) {
+        clearInterval(productsAutoSlideIntervalRef.current);
       }
-    }, 4000); // Auto-slide every 4 seconds
+
+      productsAutoSlideIntervalRef.current = setInterval(() => {
+        if (!productsScrollRef.current || isProductsHovered || isProductsDragging) return;
+        
+        const currentScroll = scrollContainer.scrollLeft;
+        const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+        const cardWidth = scrollContainer.querySelector('div')?.offsetWidth || 0;
+        const gap = 32; // gap-8 = 32px
+        const scrollAmount = cardWidth + gap;
+
+        if (currentScroll + scrollAmount >= maxScroll) {
+          // Reset to beginning
+          scrollContainer.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          // Scroll to next card
+          scrollContainer.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        }
+      }, 4000); // Auto-slide every 4 seconds
+    };
+
+    // Initial check
+    checkAndStart();
+
+    // Also check when section becomes visible
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          setTimeout(checkAndStart, 500); // Delay to ensure layout is ready
+        }
+      });
+    }, { threshold: 0.1 });
+
+    if (productsScrollRef.current) {
+      observer.observe(productsScrollRef.current);
+    }
 
     return () => {
       if (productsAutoSlideIntervalRef.current) {
         clearInterval(productsAutoSlideIntervalRef.current);
       }
+      observer.disconnect();
     };
-  }, [isProductsHovered]);
+  }, [isProductsHovered, isProductsDragging, products.length]);
+
+  // Mouse drag handlers for products carousel
+  const handleProductsMouseDown = (e: React.MouseEvent) => {
+    if (!productsScrollRef.current) return;
+    // Don't start drag if clicking directly on a card (allow card clicks)
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-product-card]')) return;
+    
+    setIsProductsDragging(true);
+    productsDragStartX.current = e.pageX - productsScrollRef.current.offsetLeft;
+    productsDragScrollLeft.current = productsScrollRef.current.scrollLeft;
+    if (productsScrollRef.current) {
+      productsScrollRef.current.style.cursor = 'grabbing';
+      productsScrollRef.current.style.userSelect = 'none';
+    }
+  };
+
+  const handleProductsMouseMove = (e: React.MouseEvent) => {
+    if (!isProductsDragging || !productsScrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - productsScrollRef.current.offsetLeft;
+    const walk = (x - productsDragStartX.current) * 2; // Scroll speed multiplier
+    productsScrollRef.current.scrollLeft = productsDragScrollLeft.current - walk;
+  };
+
+  const handleProductsMouseUp = () => {
+    setIsProductsDragging(false);
+    if (productsScrollRef.current) {
+      productsScrollRef.current.style.cursor = 'grab';
+      productsScrollRef.current.style.userSelect = '';
+    }
+  };
+
+  const handleProductsMouseLeave = () => {
+    setIsProductsDragging(false);
+    if (productsScrollRef.current) {
+      productsScrollRef.current.style.cursor = 'grab';
+      productsScrollRef.current.style.userSelect = '';
+    }
+  };
 
   // Testimonials data
   const testimonials = [
@@ -1800,8 +1887,14 @@ export default function LandingPage() {
           <div 
             ref={productsScrollRef}
             onMouseEnter={() => setIsProductsHovered(true)}
-            onMouseLeave={() => setIsProductsHovered(false)}
-            className="flex gap-6 md:gap-8 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
+            onMouseLeave={(e) => {
+              setIsProductsHovered(false);
+              handleProductsMouseLeave();
+            }}
+            onMouseDown={handleProductsMouseDown}
+            onMouseMove={handleProductsMouseMove}
+            onMouseUp={handleProductsMouseUp}
+            className="flex gap-6 md:gap-8 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory cursor-grab active:cursor-grabbing"
             style={{
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
@@ -1811,8 +1904,9 @@ export default function LandingPage() {
             {products.map((product, idx) => (
               <div
                 key={product.id}
+                data-product-card
                 onClick={() => setSelectedProduct(product)}
-                className={`group relative h-64 sm:h-72 md:h-80 w-80 sm:w-96 md:w-[28rem] flex-shrink-0 rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer transition-all duration-1000 snap-start ${
+                className={`group relative h-64 sm:h-72 md:h-80 w-72 sm:w-80 md:w-96 flex-shrink-0 rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer transition-all duration-1000 snap-start ${
                   visibleSections.has('saas-products') 
                     ? 'opacity-100 translate-y-0' 
                     : 'opacity-0 translate-y-10'

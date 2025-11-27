@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { Download, CheckCircle, XCircle, Loader2, ArrowLeft, AlertCircle, Key } from 'lucide-react';
 import PageLayout from '../components/PageLayout';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { isStoreContext } from '../utils/storeUtils';
 
 interface TransactionData {
   id: string;
@@ -17,6 +18,7 @@ interface TransactionData {
 
 export default function DownloadPage() {
   usePageTitle('Download');
+  const isStoreSubdomain = isStoreContext();
   
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
@@ -219,7 +221,7 @@ export default function DownloadPage() {
 
             <div className="flex flex-wrap justify-center gap-4">
               <Link
-                to={window.location.pathname.includes('/store') ? "/store/variation-images-pro" : "/services/wordpress/plugins/variation-images-pro"}
+                to={isStoreSubdomain ? "/variation-images-pro" : "/services/wordpress/plugins/variation-images-pro"}
                 className="px-6 py-3 rounded-lg font-medium text-white transition-all hover:scale-105 flex items-center gap-2"
                 style={{ backgroundColor: '#176641' }}
               >
@@ -227,7 +229,7 @@ export default function DownloadPage() {
                 Back to Plugin Page
               </Link>
               <a
-                href="/#contact"
+                href="mailto:hello@shalconnects.com"
                 className="px-6 py-3 rounded-lg font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-colors"
               >
                 Contact Support
@@ -313,7 +315,7 @@ export default function DownloadPage() {
 
               <div className="pt-4">
                 <Link
-                  to="/services/wordpress/plugins/variation-images-pro"
+                  to={isStoreSubdomain ? "/variation-images-pro" : "/services/wordpress/plugins/variation-images-pro"}
                   className="text-center block text-gray-400 hover:text-gray-300 transition-colors text-sm"
                 >
                   ← Back to Plugin Page

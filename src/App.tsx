@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 import { Zap, Target, TrendingUp, Palette, Code, Wrench, FileCode, Layout, Package, Store, List, Image, Smartphone, Globe, Share2, FileText, Layers } from 'lucide-react';
 import { trackPageView } from './utils/analytics';
+import { Analytics } from '@vercel/analytics/react';
 import { SiWordpress, SiShopify, SiWix, SiEbay, SiAmazon, SiWalmart, SiAndroid } from 'react-icons/si';
 import ScrollToTop from './components/ScrollToTop';
 import ServicePage from './pages/ServicePage';
@@ -209,6 +210,7 @@ function ShalConnectsPortfolio() {
                   return (
     <>
       <ScrollToTop />
+      <Analytics />
     <Routes>
       <Route path="/download" element={<DownloadPage />} />
         <Route path="/tools" element={<ToolsPage />} />
