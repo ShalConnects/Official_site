@@ -292,9 +292,8 @@ export default function DownloadPage() {
                       {transaction.status === 'pending' && (
                         <li className="text-yellow-400 font-semibold">⚠️ Payment is still processing - download will work once confirmed</li>
                       )}
-                      <li>Download link expires in 24 hours</li>
-                      <li>You can download up to 3 times</li>
                       <li>Keep the ZIP file - do not extract before uploading</li>
+                      <li>The plugin is ready to use immediately after installation</li>
                     </ul>
                   </div>
                 </div>
@@ -307,8 +306,8 @@ export default function DownloadPage() {
                   <li>Navigate to <strong className="text-white">Plugins → Add New</strong></li>
                   <li>Click <strong className="text-white">"Upload Plugin"</strong> button</li>
                   <li>Select the downloaded ZIP file (do not extract it)</li>
-                  <li>Click <strong className="text-white">"Install Now"</strong> then <strong className="text-white">"Activate"</strong></li>
-                  <li>The plugin will be ready to use immediately after activation</li>
+                  <li>Click <strong className="text-white">"Install Now"</strong></li>
+                  <li>The plugin will be ready to use immediately after installation</li>
                 </ol>
               </div>
 

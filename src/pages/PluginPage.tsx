@@ -270,43 +270,76 @@ export default function PluginPage() {
         redirectUrl,
       });
 
-      // Set up Paddle event listeners to capture transaction ID
-      // This is important because Paddle may not always pass transaction ID in URL
-      const handleCheckoutComplete = (event: any) => {
-        console.log('Paddle checkout event:', event);
-        const transactionId = event?.detail?.transactionId || 
-                              event?.detail?.transaction?.id ||
-                              event?.detail?.id;
+      // Set up Paddle event listeners BEFORE opening checkout
+      // Paddle Checkout v2 events - try multiple event names
+      const handleCheckoutEvent = (event: any) => {
+        console.log('Paddle checkout event received:', event);
+        console.log('Event type:', event.type);
+        console.log('Event detail:', event.detail);
+        
+        // Try multiple ways to extract transaction ID
+        const transactionId = 
+          event?.detail?.transactionId || 
+          event?.detail?.transaction?.id ||
+          event?.detail?.id ||
+          event?.transactionId ||
+          event?.transaction?.id ||
+          event?.id;
+        
         if (transactionId) {
-          // Store transaction ID in sessionStorage as backup
+          console.log('✅ Transaction ID captured from event:', transactionId);
           sessionStorage.setItem('paddle_transaction_id', transactionId);
-          console.log('Transaction ID captured:', transactionId);
+          // Also try to update URL if possible
+          if (window.location.pathname === '/download') {
+            const url = new URL(window.location.href);
+            url.searchParams.set('transaction', transactionId);
+            window.history.replaceState({}, '', url.toString());
+          }
+        } else {
+          console.warn('⚠️ Transaction ID not found in event:', event);
         }
       };
 
-      // Listen for checkout completion events
-      const completedHandler = (e: any) => handleCheckoutComplete(e);
-      window.addEventListener('paddle:checkout:completed', completedHandler);
-      window.addEventListener('paddle:checkout:transaction-completed', completedHandler);
-      
-      // Cleanup listener after checkout closes (if needed)
-      // Note: These are global events, so cleanup happens on page navigation
+      // Listen for ALL possible Paddle checkout events
+      const eventNames = [
+        'paddle:checkout:completed',
+        'paddle:checkout:transaction-completed',
+        'paddle:checkout:close',
+        'checkout:completed',
+        'checkout:transaction-completed',
+      ];
+
+      eventNames.forEach(eventName => {
+        window.addEventListener(eventName, handleCheckoutEvent);
+        console.log(`Listening for event: ${eventName}`);
+      });
 
       // Paddle Checkout v2 API - Try priceId first, fallback to productId
       let checkoutOptions: any;
 
       if (plugin.paddlePriceId) {
         // Use priceId (recommended for Paddle v2)
+        // Add event callbacks if available
         checkoutOptions = {
-        items: [{
+          items: [{
             priceId: plugin.paddlePriceId,
-          quantity: 1,
-        }],
-        settings: {
-          successUrl: redirectUrl,
-          displayMode: 'overlay',
-        },
-      };
+            quantity: 1,
+          }],
+          settings: {
+            successUrl: redirectUrl,
+            displayMode: 'overlay',
+            // Try to get transaction ID in success URL
+            // Paddle should append _ptxn parameter, but we'll also listen for events
+          },
+          // Add event callbacks if Paddle v2 supports them
+          onComplete: (data: any) => {
+            console.log('Paddle onComplete callback:', data);
+            if (data?.transactionId) {
+              sessionStorage.setItem('paddle_transaction_id', data.transactionId);
+              console.log('✅ Transaction ID from onComplete:', data.transactionId);
+            }
+          },
+        };
       } else if (plugin.paddleProductId) {
         // Fallback to productId
         checkoutOptions = {
@@ -315,12 +348,20 @@ export default function PluginPage() {
             successUrl: redirectUrl,
             displayMode: 'overlay',
           },
+          onComplete: (data: any) => {
+            console.log('Paddle onComplete callback:', data);
+            if (data?.transactionId) {
+              sessionStorage.setItem('paddle_transaction_id', data.transactionId);
+              console.log('✅ Transaction ID from onComplete:', data.transactionId);
+            }
+          },
         };
       } else {
         throw new Error('No valid Paddle product or price ID');
       }
 
       // Open checkout with error handling
+      console.log('Opening Paddle checkout with options:', checkoutOptions);
       window.Paddle.Checkout.open(checkoutOptions);
     } catch (error) {
       console.error('Error opening Paddle checkout:', error);
