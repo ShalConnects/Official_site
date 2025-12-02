@@ -971,7 +971,7 @@ export default function LandingPage() {
                 ]
                 .filter((item) => {
                   // Only show items that are NOT in the bottom navigation bar
-                  const bottomBarItems = ['home', 'services', 'contact'];
+                  const bottomBarItems = ['home', 'services', 'process'];
                   return !bottomBarItems.includes(item.id);
                 })
                 .map((item) => {
@@ -1005,7 +1005,7 @@ export default function LandingPage() {
                     { label: 'Store', id: 'store', action: 'external', url: 'https://store.shalconnects.com' },
                     { label: 'About Us', id: 'about', action: 'scroll' },
                     { label: 'Meet the Team', id: 'team', action: 'scroll' },
-                    { label: 'Blog', id: 'blog', action: 'scroll' },
+                    { label: 'Blog', id: 'blog', action: 'navigate', route: '/blog' },
                     { label: 'Tools', id: 'tools', action: 'navigate', route: '/tools' }
                   ].map((item) => (
                     <button
@@ -1082,6 +1082,21 @@ export default function LandingPage() {
                 <Package size={20} />
               </a>
 
+              {/* Process */}
+              <button
+                onClick={() => scrollToSection('process')}
+                className="relative flex flex-col items-center justify-center gap-1 px-3 py-2 transition-all duration-200 touch-manipulation min-h-[44px]"
+                style={{ color: activeSection === 'process' ? '#da651e' : '#4a9d6f' }}
+                onMouseEnter={(e) => activeSection !== 'process' && (e.currentTarget.style.color = '#da651e')}
+                onMouseLeave={(e) => activeSection !== 'process' && (e.currentTarget.style.color = '#4a9d6f')}
+                aria-label="Process"
+              >
+                <Workflow size={20} />
+                {activeSection === 'process' && (
+                  <span className="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full" style={{ backgroundColor: '#da651e' }} />
+                )}
+              </button>
+
               {/* Book a Call - Prominent */}
               <a
                 href="https://calendly.com/hello-shalconnects/30min"
@@ -1096,6 +1111,21 @@ export default function LandingPage() {
                 <span className="absolute -top-1 -right-1 bg-yellow-400 text-gray-900 text-[8px] font-bold px-1.5 py-0.5 rounded-full z-20">FREE</span>
                 <span className="text-xs font-medium text-gray-300 group-hover:text-white transition-colors">Book Call</span>
               </a>
+
+              {/* Work */}
+              <button
+                onClick={() => scrollToSection('work')}
+                className="relative flex flex-col items-center justify-center gap-1 px-3 py-2 transition-all duration-200 touch-manipulation min-h-[44px]"
+                style={{ color: activeSection === 'work' ? '#da651e' : '#4a9d6f' }}
+                onMouseEnter={(e) => activeSection !== 'work' && (e.currentTarget.style.color = '#da651e')}
+                onMouseLeave={(e) => activeSection !== 'work' && (e.currentTarget.style.color = '#4a9d6f')}
+                aria-label="Work"
+              >
+                <Briefcase size={20} />
+                {activeSection === 'work' && (
+                  <span className="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full" style={{ backgroundColor: '#da651e' }} />
+                )}
+              </button>
 
               {/* Contact */}
               <button
@@ -3142,7 +3172,7 @@ export default function LandingPage() {
             </button>
             <button
               onClick={() => {
-                scrollToSection('blog');
+                navigate('/blog');
                 setIsMoreMenuOpen(false);
               }}
               className="w-full text-left px-4 xs:px-5 py-2.5 xs:py-3 text-xs xs:text-sm text-gray-400 hover:text-white active:text-white hover:bg-gray-800/50 active:bg-gray-800/70 transition-all duration-200 touch-manipulation min-h-[44px] flex items-center animate-item-stagger hover:scale-[1.02]"

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Copy, Check, Wand2, Sparkles, Type, Eye, FileText, Minus, Plus, RotateCcw, Minimize2, Search, Replace, Undo2, Redo2, CaseSensitive, CaseLower, CaseUpper, X, ChevronUp, ChevronDown, Regex, Bold, Italic, Underline, Strikethrough, Star } from 'lucide-react';
+import { Copy, Check, Wand2, Sparkles, Type, Eye, FileText, Minus, Plus, RotateCcw, Minimize2, Search, Replace, Undo2, Redo2, CaseSensitive, CaseLower, CaseUpper, X, ChevronUp, ChevronDown, Regex, Bold, Italic, Underline, Strikethrough, Star, Brain, Settings, BarChart3, Trash2, Download } from 'lucide-react';
 import PageLayout from '../components/PageLayout';
 import { usePageTitle } from '../hooks/usePageTitle';
 
@@ -28,6 +28,46 @@ interface FormattingConfig {
   smartParagraphs?: boolean;
 }
 
+// Learning system interfaces
+interface PatternPerformance {
+  pattern: string;
+  type: 'intro' | 'closing' | 'keyword';
+  matches: number;
+  correctMatches: number;
+  incorrectMatches: number;
+  lastUsed: number;
+  confidence: number; // 0-1, calculated from success rate
+}
+
+interface UserCorrection {
+  originalText: string;
+  correctedText: string;
+  removedPatterns: string[];
+  keptPatterns: string[];
+  timestamp: number;
+  context?: string; // Document type or context
+}
+
+interface PatternFeedback {
+  pattern: string;
+  type: 'intro' | 'closing' | 'keyword';
+  feedback: 'correct' | 'incorrect';
+  context: string;
+  timestamp: number;
+}
+
+interface LearningData {
+  patternPerformance: PatternPerformance[];
+  userCorrections: UserCorrection[];
+  patternFeedback: PatternFeedback[];
+  userPreferences: {
+    preferredPatterns: string[];
+    disabledPatterns: string[];
+    domainPreferences: Record<string, string[]>; // domain -> preferred patterns
+  };
+  lastUpdated: number;
+}
+
 export default function AITextFormatter() {
   usePageTitle('AI Text Formatter');
   
@@ -47,7 +87,7 @@ export default function AITextFormatter() {
     return div.innerHTML;
   };
   const [showNotification, setShowNotification] = useState(false);
-  const [notificationType, setNotificationType] = useState<'formatting' | 'success' | 'copied'>('formatting');
+  const [notificationType, setNotificationType] = useState<'formatting' | 'success' | 'copied' | 'correct' | 'incorrect'>('formatting');
   const [, setNotificationMessage] = useState('');
   
   // Formatting options
@@ -75,6 +115,31 @@ export default function AITextFormatter() {
   const [totalMatches, setTotalMatches] = useState(0);
   const [matchPositions, setMatchPositions] = useState<Array<{start: number; end: number}>>([]);
   const [savedConfigs, setSavedConfigs] = useState<Array<{name: string; config: FormattingConfig}>>([]);
+  
+  // Learning system state
+  const [learningData, setLearningData] = useState<LearningData>({
+    patternPerformance: [],
+    userCorrections: [],
+    patternFeedback: [],
+    userPreferences: {
+      preferredPatterns: [],
+      disabledPatterns: [],
+      domainPreferences: {}
+    },
+    lastUpdated: Date.now()
+  });
+  const learningDataRef = useRef<LearningData>(learningData);
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    learningDataRef.current = learningData;
+  }, [learningData]);
+  const [showLearningPanel, setShowLearningPanel] = useState(false);
+  const [showLearningDataView, setShowLearningDataView] = useState(false);
+  const [lastFormattedInput, setLastFormattedInput] = useState('');
+  const [lastFormattedOutput, setLastFormattedOutput] = useState('');
+  const outputTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const isUpdatingLearningDataRef = useRef(false);
   
   // New formatting options state
   type SpacingMode = 'compact' | 'standard' | 'spacious';
@@ -153,6 +218,20 @@ export default function AITextFormatter() {
   };
 
 
+  // Get pattern confidence from learning data (use ref to avoid re-renders)
+  const getPatternConfidence = useCallback((patternId: string): number => {
+    const patternPerf = learningDataRef.current.patternPerformance.find(p => p.pattern === patternId);
+    if (patternPerf && patternPerf.matches > 0) {
+      return patternPerf.confidence;
+    }
+    return 0.5; // Default confidence for new patterns
+  }, []);
+
+  // Check if pattern is disabled by user (use ref to avoid re-renders)
+  const isPatternDisabled = useCallback((patternId: string): boolean => {
+    return learningDataRef.current.userPreferences.disabledPatterns.includes(patternId);
+  }, []);
+
   const removeMetaCommentary = (text: string): string => {
     if (!text || text.trim().length === 0) return text;
 
@@ -181,38 +260,38 @@ export default function AITextFormatter() {
 
     if (paragraphs.length === 0) return text;
 
-    // Patterns for introductory meta-commentary
+    // Patterns for introductory meta-commentary with adaptive confidence
     const introPatterns = [
-      /^(alright|okay|ok)\s+[a-z]+[,\s]/i,  // "Alright Name,"
-      /^here'?s\s+(a|the|your)\s+(tightened|cleaned|short|punchy|corporate|version|draft)/i,
-      /^say\s+less/i,
-      /^here\s+you\s+go/i,
-      /giving\s+["'].*?["']\s+vibes/i,  // "giving 'something' vibes"
-      /you\s+can\s+send\s+back/i,
-      /still\s+complete.*?still\s+professional/i,
-      /more\s+confident\s+version/i,
-      /easier\s+to\s+digest/i,
-      /smoother\s+and/i,
+      { pattern: /^(alright|okay|ok)\s+[a-z]+[,\s]/i, id: 'intro-0' },
+      { pattern: /^here'?s\s+(a|the|your)\s+(tightened|cleaned|short|punchy|corporate|version|draft)/i, id: 'intro-1' },
+      { pattern: /^say\s+less/i, id: 'intro-2' },
+      { pattern: /^here\s+you\s+go/i, id: 'intro-3' },
+      { pattern: /giving\s+["'].*?["']\s+vibes/i, id: 'intro-4' },
+      { pattern: /you\s+can\s+send\s+back/i, id: 'intro-5' },
+      { pattern: /still\s+complete.*?still\s+professional/i, id: 'intro-6' },
+      { pattern: /more\s+confident\s+version/i, id: 'intro-7' },
+      { pattern: /easier\s+to\s+digest/i, id: 'intro-8' },
+      { pattern: /smoother\s+and/i, id: 'intro-9' },
     ];
 
-    // Patterns for closing meta-commentary
+    // Patterns for closing meta-commentary with adaptive confidence
     const closingPatterns = [
-      /^if\s+you\s+want/i,
-      /^let\s+me\s+know\s+if/i,
-      /^just\s+say\s+the\s+word/i,
-      /^i\s+can\s+(also\s+)?craft/i,
-      /^i\s+can\s+compress/i,
-      /^would\s+you\s+like/i,
-      /shorter.*?punchier.*?version/i,
-      /professional\s+corporate\s+energy/i,
-      /more\s+details.*?or\s+anything\s+else/i,
-      /i\s+can\s+(also\s+)?make\s+it\s+more/i,
-      /can\s+(also\s+)?make\s+it\s+more/i,
-      /make\s+it\s+more\s+(casual|formal|concise|punchy|professional)/i,
-      /if\s+you\s+want.*?(casual|formal|concise|punchy|professional)/i,
-      /i\s+can\s+(also\s+)?(make|change|reformat|adjust)/i,
-      /if\s+you\s+want.*?i\s+can\s+also\s+make\s+it/i,
-      /if\s+you\s+want.*?make\s+it\s+more/i,
+      { pattern: /^if\s+you\s+want/i, id: 'closing-0' },
+      { pattern: /^let\s+me\s+know\s+if/i, id: 'closing-1' },
+      { pattern: /^just\s+say\s+the\s+word/i, id: 'closing-2' },
+      { pattern: /^i\s+can\s+(also\s+)?craft/i, id: 'closing-3' },
+      { pattern: /^i\s+can\s+compress/i, id: 'closing-4' },
+      { pattern: /^would\s+you\s+like/i, id: 'closing-5' },
+      { pattern: /shorter.*?punchier.*?version/i, id: 'closing-6' },
+      { pattern: /professional\s+corporate\s+energy/i, id: 'closing-7' },
+      { pattern: /more\s+details.*?or\s+anything\s+else/i, id: 'closing-8' },
+      { pattern: /i\s+can\s+(also\s+)?make\s+it\s+more/i, id: 'closing-9' },
+      { pattern: /can\s+(also\s+)?make\s+it\s+more/i, id: 'closing-10' },
+      { pattern: /make\s+it\s+more\s+(casual|formal|concise|punchy|professional)/i, id: 'closing-11' },
+      { pattern: /if\s+you\s+want.*?(casual|formal|concise|punchy|professional)/i, id: 'closing-12' },
+      { pattern: /i\s+can\s+(also\s+)?(make|change|reformat|adjust)/i, id: 'closing-13' },
+      { pattern: /if\s+you\s+want.*?i\s+can\s+also\s+make\s+it/i, id: 'closing-14' },
+      { pattern: /if\s+you\s+want.*?make\s+it\s+more/i, id: 'closing-15' },
     ];
 
     // Keywords that suggest meta-commentary
@@ -231,10 +310,22 @@ export default function AITextFormatter() {
       const firstLine = para.split('\n')[0];
       const lowerPara = firstLine.toLowerCase();
 
-      // Check patterns on first line only
+      // Check patterns on first line only with adaptive confidence
       const patterns = isIntro ? introPatterns : closingPatterns;
-      if (patterns.some(pattern => pattern.test(firstLine))) {
-        return true;
+      for (const patternObj of patterns) {
+        const patternId = patternObj.id;
+        
+        // Skip disabled patterns
+        if (isPatternDisabled(patternId)) continue;
+        
+        // Check if pattern matches
+        if (patternObj.pattern.test(firstLine)) {
+          const confidence = getPatternConfidence(patternId);
+          // Only consider it meta-commentary if confidence is above threshold (0.3)
+          if (confidence >= 0.3) {
+            return true;
+          }
+        }
       }
 
       // Direct check for the specific closing phrase pattern
@@ -486,6 +577,277 @@ export default function AITextFormatter() {
     }
   }, []);
 
+  // Load learning data from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('aiFormatterLearningData');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setLearningData(parsed);
+      } catch (e) {
+        console.error('Failed to load learning data', e);
+      }
+    }
+  }, []);
+
+  // Save learning data to localStorage
+  const saveLearningData = useCallback((data: LearningData) => {
+    try {
+      localStorage.setItem('aiFormatterLearningData', JSON.stringify(data));
+      learningDataRef.current = data; // Update ref immediately
+      setLearningData(data); // Update state (for UI updates)
+    } catch (e) {
+      console.error('Failed to save learning data', e);
+    }
+  }, []);
+
+  // Track which patterns matched during formatting
+  const trackPatternMatches = useCallback((text: string, formatted: string): string[] => {
+    const matchedPatterns: string[] = [];
+    const originalLines = text.split('\n');
+    const formattedLines = formatted.split('\n');
+    
+    // Compare to find what was removed (likely meta-commentary)
+    const originalText = originalLines.join('\n');
+    const formattedText = formattedLines.join('\n');
+    
+    // Find removed sections
+    const removedSections = originalText.split(formattedText).filter(s => s.trim().length > 0);
+    
+    // Check removed sections against known patterns
+    const introPatterns = [
+      /^(alright|okay|ok)\s+[a-z]+[,\s]/i,
+      /^here'?s\s+(a|the|your)\s+(tightened|cleaned|short|punchy|corporate|version|draft)/i,
+      /^say\s+less/i,
+      /^here\s+you\s+go/i,
+    ];
+    
+    const closingPatterns = [
+      /^if\s+you\s+want/i,
+      /^let\s+me\s+know\s+if/i,
+      /^i\s+can\s+(also\s+)?make\s+it\s+more/i,
+      /^make\s+it\s+more\s+(casual|formal|concise|punchy|professional)/i,
+    ];
+    
+    removedSections.forEach(section => {
+      const lines = section.split('\n');
+      lines.forEach(line => {
+        introPatterns.forEach((pattern, idx) => {
+          if (pattern.test(line.trim())) {
+            matchedPatterns.push(`intro-${idx}`);
+          }
+        });
+        closingPatterns.forEach((pattern, idx) => {
+          if (pattern.test(line.trim())) {
+            matchedPatterns.push(`closing-${idx}`);
+          }
+        });
+      });
+    });
+    
+    return matchedPatterns;
+  }, []);
+
+  // Learn from user corrections
+  const learnFromCorrection = useCallback((originalOutput: string, correctedOutput: string, matchedPatterns: string[]) => {
+    if (!originalOutput || !correctedOutput || originalOutput === correctedOutput) return;
+    
+    const updatedData = { ...learningData };
+    
+    // Find what was added back (false positive - pattern incorrectly removed content)
+    const addedBack = correctedOutput.length > originalOutput.length ? 
+      correctedOutput.replace(originalOutput, '').trim() : '';
+    
+    // Find what was removed (false negative - pattern missed meta-commentary)
+    const removed = originalOutput.length > correctedOutput.length ?
+      originalOutput.replace(correctedOutput, '').trim() : '';
+    
+    // Update pattern performance
+    matchedPatterns.forEach(patternId => {
+      const existing = updatedData.patternPerformance.find(p => p.pattern === patternId);
+      
+      if (addedBack && existing) {
+        // Pattern incorrectly matched - false positive
+        existing.incorrectMatches += 1;
+        existing.matches += 1;
+        existing.confidence = existing.correctMatches / (existing.matches || 1);
+      } else if (removed && existing) {
+        // Pattern should have matched but didn't - false negative
+        existing.matches += 1;
+        existing.correctMatches += 1;
+        existing.confidence = existing.correctMatches / existing.matches;
+      } else if (existing) {
+        // Pattern correctly matched
+        existing.matches += 1;
+        existing.correctMatches += 1;
+        existing.confidence = existing.correctMatches / existing.matches;
+        existing.lastUsed = Date.now();
+      } else {
+        // New pattern
+        const [type, idx] = patternId.split('-');
+        updatedData.patternPerformance.push({
+          pattern: patternId,
+          type: type as 'intro' | 'closing',
+          matches: 1,
+          correctMatches: removed ? 1 : 0,
+          incorrectMatches: addedBack ? 1 : 0,
+          lastUsed: Date.now(),
+          confidence: removed ? 1 : 0.5
+        });
+      }
+    });
+    
+    // Save correction for analysis
+    if (addedBack || removed) {
+      updatedData.userCorrections.push({
+        originalText: originalOutput,
+        correctedText: correctedOutput,
+        removedPatterns: removed ? matchedPatterns : [],
+        keptPatterns: addedBack ? matchedPatterns : [],
+        timestamp: Date.now()
+      });
+      
+      // Keep only last 100 corrections
+      if (updatedData.userCorrections.length > 100) {
+        updatedData.userCorrections = updatedData.userCorrections.slice(-100);
+      }
+    }
+    
+    updatedData.lastUpdated = Date.now();
+    saveLearningData(updatedData);
+  }, [learningData, saveLearningData]);
+
+  // Detect output changes and learn from corrections
+  useEffect(() => {
+    console.log('🔴 useEffect [output] triggered', { 
+      hasLastFormattedOutput: !!lastFormattedOutput,
+      hasOutput: !!output,
+      areEqual: output === lastFormattedOutput,
+      outputLength: output?.length,
+      lastFormattedOutputLength: lastFormattedOutput?.length
+    });
+    
+    if (!lastFormattedOutput || !output || output === lastFormattedOutput) return;
+    
+    // User has edited the output - learn from the correction
+    const matchedPatterns = trackPatternMatches(lastFormattedInput, lastFormattedOutput);
+    learnFromCorrection(lastFormattedOutput, output, matchedPatterns);
+  }, [output, lastFormattedOutput, lastFormattedInput, trackPatternMatches, learnFromCorrection]);
+
+  // Handle explicit feedback
+  const handleFeedback = useCallback((feedback: 'correct' | 'incorrect', e?: React.MouseEvent) => {
+    console.log('🔵 handleFeedback called', { feedback, hasEvent: !!e });
+    
+    // Prevent any event propagation
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.nativeEvent.stopImmediatePropagation();
+    }
+    
+    if (!lastFormattedInput || !lastFormattedOutput) {
+      console.log('🔴 handleFeedback: Missing input/output, returning early');
+      return;
+    }
+    
+    // Set flag to prevent handleInputChange from triggering during update
+    // Set it immediately before any async operations
+    isUpdatingLearningDataRef.current = true;
+    console.log('🔵 handleFeedback: Flag set to prevent input changes');
+    
+    // Use requestAnimationFrame to defer the update and prevent re-render side effects
+    requestAnimationFrame(() => {
+      // Use the ref to get current data without causing re-renders
+      const currentData = learningDataRef.current;
+      const matchedPatterns = trackPatternMatches(lastFormattedInput, lastFormattedOutput);
+      const updatedData = { ...currentData };
+      let learnedSomething = false;
+      
+      if (matchedPatterns.length > 0) {
+        matchedPatterns.forEach(patternId => {
+          // Find or create pattern performance entry
+          let patternPerf = updatedData.patternPerformance.find(p => p.pattern === patternId);
+          
+          if (!patternPerf) {
+            const [type] = patternId.split('-');
+            patternPerf = {
+              pattern: patternId,
+              type: type as 'intro' | 'closing',
+              matches: 0,
+              correctMatches: 0,
+              incorrectMatches: 0,
+              lastUsed: Date.now(),
+              confidence: 0.5
+            };
+            updatedData.patternPerformance.push(patternPerf);
+          }
+          
+          // Update based on feedback
+          patternPerf.matches += 1;
+          if (feedback === 'correct') {
+            patternPerf.correctMatches += 1;
+          } else {
+            patternPerf.incorrectMatches += 1;
+          }
+          patternPerf.confidence = patternPerf.correctMatches / patternPerf.matches;
+          patternPerf.lastUsed = Date.now();
+          learnedSomething = true;
+          
+          // Add to feedback history
+          updatedData.patternFeedback.push({
+            pattern: patternId,
+            type: patternPerf.type,
+            feedback,
+            context: lastFormattedInput.substring(0, 100), // First 100 chars for context
+            timestamp: Date.now()
+          });
+        });
+      } else {
+        // No patterns matched, but still record general feedback
+        updatedData.patternFeedback.push({
+          pattern: 'general',
+          type: 'intro',
+          feedback,
+          context: lastFormattedInput.substring(0, 100),
+          timestamp: Date.now()
+        });
+      }
+      
+      // Keep only last 200 feedback entries
+      if (updatedData.patternFeedback.length > 200) {
+        updatedData.patternFeedback = updatedData.patternFeedback.slice(-200);
+      }
+      
+      updatedData.lastUpdated = Date.now();
+      
+      // Update ref immediately
+      learningDataRef.current = updatedData;
+      
+      // Save to localStorage without triggering state update immediately
+      try {
+        localStorage.setItem('aiFormatterLearningData', JSON.stringify(updatedData));
+      } catch (e) {
+        console.error('Failed to save learning data', e);
+      }
+      
+      // Update state in next tick to avoid re-render during button click
+      setTimeout(() => {
+        setLearningData(updatedData);
+        // Clear flag after state update completes
+        setTimeout(() => {
+          isUpdatingLearningDataRef.current = false;
+        }, 50);
+      }, 100);
+      
+      // Show feedback confirmation only if we learned something or got general feedback
+      if (learnedSomething || matchedPatterns.length === 0) {
+        setNotificationType(feedback === 'correct' ? 'correct' : 'incorrect');
+        setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 2000);
+      }
+    });
+  }, [lastFormattedInput, lastFormattedOutput, trackPatternMatches]);
+
   // Save current configuration (unused but kept for future use)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _saveCurrentConfig = useCallback(() => {
@@ -516,6 +878,12 @@ export default function AITextFormatter() {
   }, []);
 
   const formatText = (textToFormat?: string) => {
+    console.log('🟡 formatText called', { 
+      textToFormat: textToFormat !== undefined,
+      textLength: textToFormat?.length || input.length,
+      stackTrace: new Error().stack?.split('\n').slice(1, 4).join('\n')
+    });
+    
     try {
       const text = textToFormat !== undefined ? textToFormat : input;
       if (!text) {
@@ -1389,6 +1757,13 @@ export default function AITextFormatter() {
     
     formatted = finalCleanedLines.join('\n').trim();
 
+    // Track pattern matches for learning
+    const matchedPatterns = trackPatternMatches(text, formatted);
+    
+    // Store for learning from corrections
+    setLastFormattedInput(text);
+    setLastFormattedOutput(formatted);
+
     setOutput(formatted);
     addToHistory(text, formatted);
     } catch (error) {
@@ -1872,6 +2247,52 @@ export default function AITextFormatter() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
+    
+    console.log('🟢 handleInputChange called', { 
+      newValueLength: newValue.length,
+      oldValueLength: input.length,
+      isUpdatingLearning: isUpdatingLearningDataRef.current,
+      isProgrammaticChange: e.target.value === input // Check if value matches current state
+    });
+    
+    // Ignore if we're updating learning data (prevents false triggers)
+    if (isUpdatingLearningDataRef.current) {
+      console.log('🟢 handleInputChange: Ignored (updating learning data)');
+      // Restore the original value to prevent textarea from being cleared
+      if (textareaRef.current && textareaRef.current.value !== input) {
+        textareaRef.current.value = input || output || '';
+      }
+      return;
+    }
+    
+    // Ignore if the change is clearing the textarea and we have existing content
+    // This prevents accidental clears during re-renders
+    if (newValue.length === 0 && (input.length > 0 || output.length > 0)) {
+      console.log('🟢 handleInputChange: Ignored (preventing accidental clear)', {
+        inputLength: input.length,
+        outputLength: output.length,
+        stackTrace: new Error().stack?.split('\n').slice(1, 5).join('\n')
+      });
+      // Restore the original value immediately
+      const restoreValue = output || input || '';
+      if (textareaRef.current) {
+        // Use requestAnimationFrame to restore after React's render cycle
+        requestAnimationFrame(() => {
+          if (textareaRef.current) {
+            textareaRef.current.value = restoreValue;
+            // Trigger a synthetic event to keep React in sync
+            const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
+            if (nativeInputValueSetter) {
+              nativeInputValueSetter.call(textareaRef.current, restoreValue);
+              const event = new Event('input', { bubbles: true });
+              textareaRef.current.dispatchEvent(event);
+            }
+          }
+        });
+      }
+      return;
+    }
+    
     setInput(newValue);
     setIsFormatting(true);
     // Auto-format on change (debounced)
@@ -2023,12 +2444,16 @@ export default function AITextFormatter() {
             className={`fixed top-2 right-2 sm:top-4 sm:right-4 left-2 sm:left-auto px-3 sm:px-4 py-2 sm:py-3 rounded-lg shadow-lg flex items-center gap-2 z-50 text-xs sm:text-sm md:text-base transition-all duration-300 transform ${
               notificationType === 'formatting' 
                 ? 'bg-[#da651e] text-white animate-pulse translate-x-0' 
+                : notificationType === 'correct'
+                ? 'bg-green-500 text-white translate-x-0 animate-[slideIn_0.3s_ease-out]'
+                : notificationType === 'incorrect'
+                ? 'bg-amber-500 text-white translate-x-0 animate-[slideIn_0.3s_ease-out]'
                 : 'bg-[#4a9d6f] text-white translate-x-0 animate-[slideIn_0.3s_ease-out]'
             }`}
             style={{
               animation: notificationType === 'formatting' 
                 ? 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' 
-                : notificationType === 'success' || notificationType === 'copied'
+                : notificationType === 'success' || notificationType === 'copied' || notificationType === 'correct' || notificationType === 'incorrect'
                 ? 'slideIn 0.3s ease-out, checkmarkPop 0.5s ease-out 0.2s'
                 : undefined
             }}
@@ -2042,6 +2467,16 @@ export default function AITextFormatter() {
               <>
                 <Check className="w-4 h-4 sm:w-5 sm:h-5" style={{ animation: 'checkmarkPop 0.5s ease-out' }} />
                 <span>Text copied to clipboard!</span>
+              </>
+            ) : notificationType === 'correct' ? (
+              <>
+                <Check className="w-4 h-4 sm:w-5 sm:h-5" style={{ animation: 'checkmarkPop 0.5s ease-out' }} />
+                <span>Feedback recorded: Formatting was correct ✓</span>
+              </>
+            ) : notificationType === 'incorrect' ? (
+              <>
+                <X className="w-4 h-4 sm:w-5 sm:h-5" style={{ animation: 'checkmarkPop 0.5s ease-out' }} />
+                <span>Feedback recorded: Formatting needs improvement</span>
               </>
             ) : (
               <>
@@ -2139,11 +2574,235 @@ export default function AITextFormatter() {
                     >
                       <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </button>
+                    {/* Learning Feedback Buttons */}
+                    {lastFormattedOutput && output === lastFormattedOutput && (
+                      <div className="flex items-center gap-1 border-l border-gray-600 pl-2 ml-1">
+                        <button
+                          type="button"
+                          onClick={(e) => handleFeedback('correct', e)}
+                          onMouseDown={(e) => e.preventDefault()}
+                          className="p-1 sm:p-1.5 text-green-400 hover:text-green-300 hover:bg-gray-700 rounded-lg transition-colors"
+                          title="Formatting was correct"
+                        >
+                          <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => handleFeedback('incorrect', e)}
+                          onMouseDown={(e) => e.preventDefault()}
+                          className="p-1 sm:p-1.5 text-red-400 hover:text-red-300 hover:bg-gray-700 rounded-lg transition-colors"
+                          title="Formatting needs improvement"
+                        >
+                          <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        </button>
+                      </div>
+                    )}
+                    {/* Learning Panel Toggle */}
+                    <button
+                      onClick={() => setShowLearningPanel(!showLearningPanel)}
+                      className="p-1 sm:p-1.5 text-gray-400 hover:text-[#4a9d6f] hover:bg-gray-700 rounded-lg transition-colors"
+                      title="View learning insights"
+                    >
+                      <Brain className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    </button>
                   </>
                 )}
                 <span className="text-[10px] sm:text-xs md:text-sm text-gray-400">{(output || input).length} chars</span>
               </div>
             </div>
+
+            {/* Learning Panel */}
+            {showLearningPanel && (
+              <div className="mt-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                    <Brain className="w-4 h-4" />
+                    Learning Insights
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        // Export learning data as JSON file
+                        const dataStr = JSON.stringify(learningData, null, 2);
+                        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                        const url = URL.createObjectURL(dataBlob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `ai-formatter-learning-data-${new Date().toISOString().split('T')[0]}.json`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                      }}
+                      className="text-blue-400 hover:text-blue-300 text-xs flex items-center gap-1"
+                      title="Download learning data as JSON"
+                    >
+                      <Download className="w-3 h-3" />
+                      <span className="hidden sm:inline">Export</span>
+                    </button>
+                    <button
+                      onClick={() => setShowLearningDataView(!showLearningDataView)}
+                      className="text-gray-400 hover:text-white text-xs flex items-center gap-1"
+                      title="View raw learning data"
+                    >
+                      <Eye className="w-3 h-3" />
+                      <span className="hidden sm:inline">View</span>
+                    </button>
+                    <button
+                      onClick={() => setShowLearningPanel(false)}
+                      className="text-gray-400 hover:text-white"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="space-y-3 text-xs">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-gray-300">Patterns Learned</span>
+                      <span className="text-gray-400">{learningData.patternPerformance.length}</span>
+                    </div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-gray-300">User Corrections</span>
+                      <span className="text-gray-400">{learningData.userCorrections.length}</span>
+                    </div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-gray-300">Feedback Received</span>
+                      <span className="text-gray-400">{learningData.patternFeedback.length}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-300">Last Updated</span>
+                      <span className="text-gray-400">
+                        {learningData.lastUpdated ? new Date(learningData.lastUpdated).toLocaleDateString() : 'Never'}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Raw Data View */}
+                  {showLearningDataView && (
+                    <div className="mt-3 pt-3 border-t border-gray-700">
+                      <div className="mb-2">
+                        <span className="text-gray-300 font-medium">Raw Learning Data</span>
+                      </div>
+                      <div className="bg-gray-900 rounded p-2 max-h-64 overflow-auto">
+                        <pre className="text-[10px] text-gray-400 whitespace-pre-wrap break-words">
+                          {JSON.stringify(learningData, null, 2)}
+                        </pre>
+                      </div>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(JSON.stringify(learningData, null, 2));
+                          setNotificationType('copied');
+                          setShowNotification(true);
+                          setTimeout(() => setShowNotification(false), 2000);
+                        }}
+                        className="mt-2 text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                      >
+                        <Copy className="w-3 h-3" />
+                        Copy JSON
+                      </button>
+                    </div>
+                  )}
+                  
+                  {/* Feedback History */}
+                  {learningData.patternFeedback.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-gray-700">
+                      <div className="mb-2">
+                        <span className="text-gray-300 font-medium">Recent Feedback</span>
+                      </div>
+                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                        {learningData.patternFeedback
+                          .slice(-5)
+                          .reverse()
+                          .map((feedback, idx) => (
+                            <div key={idx} className="text-gray-400 text-[10px]">
+                              <div className="flex items-center gap-2">
+                                <span className={`px-1.5 py-0.5 rounded text-[9px] ${
+                                  feedback.feedback === 'correct' 
+                                    ? 'bg-green-500/20 text-green-400' 
+                                    : 'bg-amber-500/20 text-amber-400'
+                                }`}>
+                                  {feedback.feedback === 'correct' ? '✓' : '✗'}
+                                </span>
+                                <span className="truncate flex-1">{feedback.pattern}</span>
+                                <span className="text-gray-500">
+                                  {new Date(feedback.timestamp).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {learningData.patternPerformance.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-gray-700">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-gray-300 font-medium">Top Patterns</span>
+                        <button
+                          onClick={() => {
+                            if (confirm('Reset all learning data? This cannot be undone.')) {
+                              const resetData: LearningData = {
+                                patternPerformance: [],
+                                userCorrections: [],
+                                patternFeedback: [],
+                                userPreferences: {
+                                  preferredPatterns: [],
+                                  disabledPatterns: [],
+                                  domainPreferences: {}
+                                },
+                                lastUpdated: Date.now()
+                              };
+                              saveLearningData(resetData);
+                            }
+                          }}
+                          className="text-red-400 hover:text-red-300 text-xs flex items-center gap-1"
+                          title="Reset learning data"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          Reset
+                        </button>
+                      </div>
+                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                        {learningData.patternPerformance
+                          .sort((a, b) => b.confidence - a.confidence)
+                          .slice(0, 5)
+                          .map((perf) => (
+                            <div key={perf.pattern} className="flex items-center justify-between text-gray-400">
+                              <span className="truncate flex-1">{perf.pattern}</span>
+                              <div className="flex items-center gap-2 ml-2">
+                                <span className="text-xs">
+                                  {Math.round(perf.confidence * 100)}%
+                                </span>
+                                <button
+                                  onClick={() => {
+                                    const updated = { ...learningData };
+                                    if (updated.userPreferences.disabledPatterns.includes(perf.pattern)) {
+                                      updated.userPreferences.disabledPatterns = 
+                                        updated.userPreferences.disabledPatterns.filter(p => p !== perf.pattern);
+                                    } else {
+                                      updated.userPreferences.disabledPatterns.push(perf.pattern);
+                                    }
+                                    saveLearningData(updated);
+                                  }}
+                                  className={`text-xs px-1.5 py-0.5 rounded ${
+                                    learningData.userPreferences.disabledPatterns.includes(perf.pattern)
+                                      ? 'bg-red-500/20 text-red-400'
+                                      : 'bg-green-500/20 text-green-400'
+                                  }`}
+                                >
+                                  {learningData.userPreferences.disabledPatterns.includes(perf.pattern) ? 'Disabled' : 'Active'}
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Output Display */}
             {/* Unified Textarea - shows formatted output but is editable */}

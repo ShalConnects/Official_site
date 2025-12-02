@@ -20,6 +20,8 @@ const URLEncoderDecoder = lazy(() => import('./pages/URLEncoderDecoder'));
 const LoremIpsumGenerator = lazy(() => import('./pages/LoremIpsumGenerator'));
 const QRCodeGenerator = lazy(() => import('./pages/QRCodeGenerator'));
 import ToolsPage from './pages/ToolsPage';
+import BlogPage from './pages/BlogPage';
+import BlogPostPage from './pages/BlogPostPage';
 import StoreHome from './pages/StoreHome';
 import { isStoreContext } from './utils/storeUtils';
 
@@ -240,6 +242,8 @@ function ShalConnectsPortfolio() {
             <QRCodeGenerator />
           </Suspense>
         } />
+        <Route path="/blog" element={<BlogPage />} />
+        <Route path="/blog/:postId" element={<BlogPostPage />} />
       <Route path="/store" element={isStoreSubdomain ? <Navigate to="/" replace /> : <StoreHome />} />
       <Route path="/store/:productSlug" element={<PluginPage />} />
       <Route path="/services/:serviceSlug" element={<ServicePage serviceCategories={serviceCategories as any} />} />
