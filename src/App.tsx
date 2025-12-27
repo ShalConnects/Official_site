@@ -23,6 +23,7 @@ import ToolsPage from './pages/ToolsPage';
 import BlogPage from './pages/BlogPage';
 import BlogPostPage from './pages/BlogPostPage';
 import StoreHome from './pages/StoreHome';
+import AboutPage from './pages/AboutPage';
 import { isStoreContext } from './utils/storeUtils';
 
 function ShalConnectsPortfolio() {
@@ -94,7 +95,8 @@ function ShalConnectsPortfolio() {
             { icon: Store, label: 'eBay Store Management', desc: 'Complete store optimization' },
             { icon: List, label: 'eBay Listing', desc: 'Professional product listings' },
             { icon: Layout, label: 'eBay Template', desc: 'Custom store templates' },
-            { icon: Palette, label: 'eBay Store Redesign', desc: 'Modern store makeovers' }
+            { icon: Palette, label: 'eBay Store Redesign', desc: 'Modern store makeovers' },
+            { icon: Package, label: 'eBay Dropshipping', desc: 'Complete dropshipping setup and automation tools' }
           ]
         },
         { 
@@ -247,6 +249,7 @@ function ShalConnectsPortfolio() {
       <Route path="/store" element={isStoreSubdomain ? <Navigate to="/" replace /> : <StoreHome />} />
       <Route path="/store/:productSlug" element={<PluginPage />} />
       <Route path="/services/:serviceSlug" element={<ServicePage serviceCategories={serviceCategories as any} />} />
+        <Route path="/about" element={<AboutPage />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/refund" element={<RefundPolicy />} />

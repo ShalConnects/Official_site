@@ -430,7 +430,7 @@ export default function PluginPage() {
                   Buy Pro Version {plugin.price && `- ${plugin.price}`}
                 </button>
               <a
-                href="https://wordpress.org/plugins/wc-variation-images-pro"
+                href="https://wordpress.org/plugins/dynamic-variation-images/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
@@ -888,7 +888,7 @@ export default function PluginPage() {
               Buy Pro Version {plugin.price && `- ${plugin.price}`}
             </button>
             <a
-              href="https://wordpress.org/plugins/wc-variation-images-pro"
+              href="https://wordpress.org/plugins/dynamic-variation-images/"
               target="_blank"
               rel="noopener noreferrer"
               className="px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"

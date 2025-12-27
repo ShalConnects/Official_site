@@ -147,6 +147,19 @@ html {
   animation: spin-slow 15s linear infinite;
 }
 
+@keyframes gradient-border {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-gradient-border {
+  animation: gradient-border 4s linear infinite;
+}
+
 .animate-spin-slow-reverse {
   animation: spin-slow 20s linear infinite reverse;
 }
@@ -322,4 +335,56 @@ html {
   animation: fadeInStagger 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   opacity: 0;
 }
+
+/* Brand Marquee Animations - Seamless infinite scroll */
+/* Moving exactly 1/6 (16.666%) creates perfect loop with 6 copies */
+/* Optimized for smooth 60fps performance */
+@keyframes marquee-left {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-16.666%, 0, 0);
+  }
+}
+
+@keyframes marquee-right {
+  from {
+    transform: translate3d(-16.666%, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-marquee-left {
+  animation: marquee-left linear infinite;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-font-smoothing: antialiased;
+  animation-fill-mode: both;
+  /* Force GPU acceleration and smooth rendering */
+  -webkit-transform: translate3d(0, 0, 0);
+  -moz-transform: translate3d(0, 0, 0);
+  -ms-transform: translate3d(0, 0, 0);
+  -o-transform: translate3d(0, 0, 0);
+}
+
+.animate-marquee-right {
+  animation: marquee-right linear infinite;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-font-smoothing: antialiased;
+  animation-fill-mode: both;
+  /* Force GPU acceleration and smooth rendering */
+  -webkit-transform: translate3d(0, 0, 0);
+  -moz-transform: translate3d(0, 0, 0);
+  -ms-transform: translate3d(0, 0, 0);
+  -o-transform: translate3d(0, 0, 0);
+}
+
 

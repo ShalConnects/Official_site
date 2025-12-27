@@ -1,8 +1,12 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { X, Zap, Target, TrendingUp, Clock, CheckCircle, Star, Quote, ExternalLink, XCircle, ChevronDown, Palette, Code, Wrench, FileCode, Layout, Package, Store, List, Image, Smartphone, Globe, Share2, FileText, Layers, Home, Briefcase, MoreHorizontal, ArrowUp, ArrowRight, Mail, Search, Workflow, Rocket, Wand2, Activity, Key, Link2, QrCode } from 'lucide-react';
+import { X, Zap, Target, TrendingUp, Clock, CheckCircle, Star, Quote, ExternalLink, XCircle, ChevronDown, Palette, Code, Wrench, FileCode, Layout, Package, Store, List, Image, Smartphone, Globe, Share2, FileText, Layers, Home, Briefcase, MoreHorizontal, ArrowUp, ArrowRight, Mail, Search, Workflow, Rocket, Wand2, Activity, Key, Link2, QrCode, User } from 'lucide-react';
 import { SiWordpress, SiShopify, SiWix, SiEbay, SiAmazon, SiWalmart, SiAndroid, SiLinkedin, SiX, SiWhatsapp, SiYoutube } from 'react-icons/si';
 import Logo from '../components/Logo';
+import WorkSlider from '../components/WorkSlider';
+import BrandMarquee from '../components/BrandMarquee';
+import { brandImagesFirstHalf, brandImagesSecondHalf } from '../data/brands';
+import { workPortfolio, shuffleArray } from '../data/workPortfolio';
 
 // Type definitions
 interface Particle {
@@ -220,7 +224,7 @@ export default function LandingPage() {
       setScrollProgress(Math.min(100, Math.max(0, progress)));
       
       // Determine active section
-      const sections = ['home', 'services', 'process', 'work', 'saas-products', 'testimonials', 'products', 'tools', 'contact'];
+      const sections = ['home', 'services', 'process', 'work', 'saas-products', 'testimonials', 'products', 'tools', 'about', 'contact'];
       let current = 'home';
       
       for (const section of sections) {
@@ -398,7 +402,7 @@ export default function LandingPage() {
     const observer = new IntersectionObserver(observerCallback, observerOptions);
 
     // Observe all sections
-    const sections = ['home', 'services', 'process', 'work', 'saas-products', 'testimonials', 'tools', 'contact'];
+    const sections = ['home', 'services', 'process', 'work', 'saas-products', 'testimonials', 'tools', 'about', 'contact'];
     sections.forEach(section => {
       const element = document.getElementById(section);
       if (element) {
@@ -557,7 +561,8 @@ export default function LandingPage() {
             { icon: Store, label: 'eBay Store Management', desc: 'Complete store optimization' },
             { icon: List, label: 'eBay Listing', desc: 'Professional product listings' },
             { icon: Layout, label: 'eBay Template', desc: 'Custom store templates' },
-            { icon: Palette, label: 'eBay Store Redesign', desc: 'Modern store makeovers' }
+            { icon: Palette, label: 'eBay Store Redesign', desc: 'Modern store makeovers' },
+            { icon: Package, label: 'eBay Dropshipping', desc: 'Complete dropshipping setup and automation tools' }
           ]
         },
         { 
@@ -756,6 +761,21 @@ export default function LandingPage() {
   const products: Product[] = [
     {
       id: 1,
+      title: 'Be Better You',
+      category: 'Motivational Website',
+      color: 'from-pink-500 to-rose-500',
+      description: 'Your personal hype squad in website form! A motivational platform dedicated to bringing back the fire inside you. Whether you\'re chasing career dreams, breaking free from bad habits, or just need a daily dose of "you got this," Be Better You is here to turn your "what ifs" into "holy moly, I DID IT!" moments. Daily motivational quotes, inspiring blog posts, and content designed to unleash the awesome that\'s been hiding inside you.',
+      results: 'Motivational content platform with daily quotes, blog posts, and resources to inspire personal growth and achievement',
+      services: ['WordPress Development', 'Content Management', 'Blog Platform', 'Daily Quotes', 'Motivational Content'],
+      techStack: ['WordPress', 'PHP', 'MySQL'],
+      liveUrl: 'https://bebetteryou.net/',
+      imageUrl: '/images/be-better-you-logo.png',
+      status: 'live',
+      platformIcon: 'web',
+      quickStats: 'Daily Quotes • Blog • Motivation'
+    },
+    {
+      id: 2,
       title: 'Balanze',
       category: 'Full-Stack SaaS',
       color: 'from-indigo-500 to-purple-500',
@@ -771,7 +791,7 @@ export default function LandingPage() {
       quickStats: 'Multi-currency • Real-time • SaaS'
     },
     {
-      id: 2,
+      id: 3,
       title: 'Screen Time Tracker',
       category: 'Android App',
       color: 'from-blue-500 to-cyan-500',
@@ -790,7 +810,7 @@ export default function LandingPage() {
       quickStats: '10.0.5+ • Privacy-first • Analytics'
     },
     {
-      id: 3,
+      id: 4,
       title: 'Quran Verse Widget',
       category: 'Web Widget',
       color: 'from-amber-500 to-yellow-500',
@@ -971,7 +991,7 @@ export default function LandingPage() {
                 ]
                 .filter((item) => {
                   // Only show items that are NOT in the bottom navigation bar
-                  const bottomBarItems = ['home', 'services', 'process'];
+                  const bottomBarItems = ['home', 'services', 'process', 'work', 'contact'];
                   return !bottomBarItems.includes(item.id);
                 })
                 .map((item) => {
@@ -1003,8 +1023,8 @@ export default function LandingPage() {
                   <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">More</div>
                   {[
                     { label: 'Store', id: 'store', action: 'external', url: 'https://store.shalconnects.com' },
-                    { label: 'About Us', id: 'about', action: 'scroll' },
-                    { label: 'Meet the Team', id: 'team', action: 'scroll' },
+                    { label: 'About Us', id: 'about', action: 'navigate', route: '/about' },
+                    { label: 'Meet the Team', id: 'team', action: 'navigate', route: '/about#team' },
                     { label: 'Blog', id: 'blog', action: 'navigate', route: '/blog' },
                     { label: 'Tools', id: 'tools', action: 'navigate', route: '/tools' }
                   ].map((item) => (
@@ -1457,6 +1477,30 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Brand Marquee Section */}
+      <section className="relative border-y border-gray-800/50 overflow-hidden"
+        style={{
+          background: 'linear-gradient(to bottom, rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.98), rgba(17, 24, 39, 0.95))',
+        }}>
+        {/* Subtle background pattern overlay */}
+        <div className="absolute inset-0 opacity-[0.02]" 
+          style={{
+            backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)',
+            backgroundSize: '40px 40px'
+          }}
+        />
+        <div className="relative max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pb-6 sm:pb-8" style={{ paddingTop: '3rem' }}>
+          <div className="text-center" style={{ marginBottom: 0 }}>
+            <p className="text-sm sm:text-base text-gray-400/80 mt-2">Trusted by leading brands worldwide</p>
+          </div>
+        </div>
+        <div className="relative">
+          <BrandMarquee direction="left" speed={200} brands={brandImagesFirstHalf} />
+          <BrandMarquee direction="right" speed={210} brands={brandImagesSecondHalf} />
+        </div>
+        <div className="relative max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pt-6 sm:pt-8" style={{ paddingBottom: '3rem' }}></div>
+      </section>
+
       {/* Services Section */}
       <section 
         id="services" 
@@ -1891,6 +1935,38 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Work Showcase Slider Section - Design Monks Style */}
+      {workPortfolio.length > 0 && (
+        <section 
+          id="work-showcase" 
+          className="py-12 sm:py-16 md:py-20 relative"
+          style={{ backgroundColor: 'rgba(139, 92, 246, 0.05)' }}
+        >
+          <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
+            <div className={`text-center mb-8 sm:mb-12 md:mb-16 transition-all duration-1000 ${
+              visibleSections.has('work') 
+                ? 'opacity-100 translate-y-0' 
+                : 'opacity-0 translate-y-10'
+            }`}>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 px-2">Our Latest Work</h2>
+              <p className="text-base sm:text-lg md:text-xl text-gray-400 px-2">We've recently worked on some amazing projects</p>
+            </div>
+
+            <div className={`transition-all duration-1000 ${
+              visibleSections.has('work') 
+                ? 'opacity-100 translate-y-0' 
+                : 'opacity-0 translate-y-10'
+            }`}>
+              <WorkSlider 
+                images={workPortfolio} 
+                showServiceMarquee={true}
+                speed={20}
+              />
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Our SaaS Products Section */}
       <section 
         id="saas-products" 
@@ -2264,7 +2340,7 @@ export default function LandingPage() {
                     style={{ backgroundColor: '#6366f1' }}
                   >
                     <ExternalLink size={18} />
-                    View Product
+                    {selectedProduct.title === 'Be Better You' ? 'Visit Site' : 'View Product'}
                   </a>
                 )}
                 {selectedProduct.githubUrl && (
@@ -2551,6 +2627,185 @@ export default function LandingPage() {
                 <span>View All Tools</span>
                 <ArrowRight size={16} />
               </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* About Me Overview Section */}
+      <section 
+        id="about" 
+        ref={(el) => (sectionRefs.current.about = el)}
+        className="py-12 sm:py-16 md:py-20 relative"
+        style={{ 
+          background: 'linear-gradient(to bottom, transparent, rgba(21, 102, 65, 0.03))'
+        }}
+      >
+        <div className="max-w-4xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
+          <div className={`text-center mb-8 sm:mb-12 transition-all duration-1000 ${
+            visibleSections.has('about') 
+              ? 'opacity-100 translate-y-0' 
+              : 'opacity-0 translate-y-10'
+          }`}>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 px-2">About Me</h2>
+          </div>
+
+          <div className={`bg-gray-800/50 border border-gray-700/50 rounded-xl sm:rounded-2xl overflow-hidden transition-all duration-1000 shadow-2xl relative mx-auto max-w-full ${
+            visibleSections.has('about') 
+              ? 'opacity-100 translate-y-0' 
+              : 'opacity-0 translate-y-10'
+          }`}>
+            {/* Pulsing Border Accent */}
+            <div className="absolute -inset-[2px] pointer-events-none overflow-hidden rounded-xl sm:rounded-2xl z-0">
+              <div 
+                className="absolute inset-0 rounded-xl sm:rounded-2xl animate-pulse-border"
+                style={{
+                  background: 'linear-gradient(to right, rgba(21, 102, 65, 0.5), rgba(218, 101, 30, 0.5))',
+                  border: '2px solid transparent'
+                }}
+              ></div>
+            </div>
+            
+            {/* CSS Animation for pulsing border */}
+            <style>{`
+              @keyframes pulse-border {
+                0%, 100% {
+                  opacity: 0.3;
+                  transform: scale(1);
+                }
+                50% {
+                  opacity: 0.8;
+                  transform: scale(1.01);
+                }
+              }
+              .animate-pulse-border {
+                animation: pulse-border 2.5s ease-in-out infinite;
+              }
+              @keyframes pulse-border-mobile {
+                0%, 100% {
+                  opacity: 0.5;
+                }
+                50% {
+                  opacity: 1;
+                }
+              }
+              .animate-pulse-border-mobile {
+                animation: pulse-border-mobile 2s ease-in-out infinite;
+              }
+            `}</style>
+            
+            <div className="flex flex-col lg:flex-row">
+              {/* Text Content Side - Left (50% width on desktop, full width on mobile) */}
+              <div className="w-full lg:w-1/2 p-4 sm:p-6 md:p-8 lg:p-10 xl:p-12 flex flex-col justify-center relative min-h-0">
+                {/* Subtle background pattern */}
+                <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-green-500/5 to-orange-500/5 rounded-full blur-3xl -z-0"></div>
+                <div className="absolute bottom-0 left-0 w-16 h-16 sm:w-24 sm:h-24 bg-gradient-to-tr from-orange-500/5 to-green-500/5 rounded-full blur-2xl -z-0"></div>
+                
+                <div className="relative z-10 space-y-3 sm:space-y-4 md:space-y-5 text-center lg:text-left">
+                  {/* Name highlight */}
+                  <div className="mb-1 sm:mb-2">
+                    <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-0.5 sm:mb-1">
+                      Shalauddin Kader
+                    </h3>
+                    <p className="text-xs sm:text-sm md:text-base text-gray-400 font-medium">
+                      Founder & Developer
+                    </p>
+                  </div>
+
+                  <p className="text-xs sm:text-sm md:text-base text-gray-300 leading-relaxed">
+                    I develop websites, manage eCommerce listings, create graphics, and handle social media. If it lives on the internet, I've probably worked on it.
+                  </p>
+                  
+                  <p className="text-xs sm:text-sm md:text-base text-gray-300 leading-relaxed">
+                    I'm curious about AI, emerging tech, and systems that change how we live and earn. Lately, I've been building AI-powered products instead of just selling my time.
+                  </p>
+
+                  {/* Quote section */}
+                  <div className="bg-gray-900/40 border-l-4 border-green-500 pl-3 sm:pl-4 md:pl-6 py-2 sm:py-3 md:py-4 rounded-r-lg my-3 sm:my-4 md:my-6">
+                    <p className="text-xs sm:text-sm text-gray-200 font-medium leading-relaxed">
+                      Still learning. Still building. Still here.
+                    </p>
+                  </div>
+
+                  {/* CTA Button */}
+                  <div className="pt-1 sm:pt-2 md:pt-4 flex justify-center lg:justify-start">
+                    <Link
+                      to="/about"
+                      className="inline-flex items-center justify-center gap-2 w-auto px-4 sm:px-5 md:px-7 py-2.5 sm:py-3 md:py-3.5 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm md:text-base transition-all hover:scale-105 active:scale-95 group/btn"
+                      style={{ 
+                        background: 'linear-gradient(to right, #176641, #da651e)',
+                        color: 'white'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.boxShadow = '0 10px 25px -5px rgba(21, 102, 65, 0.6)';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.boxShadow = 'none';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
+                    >
+                      <span>Read Full Story</span>
+                      <ArrowRight size={14} className="sm:w-4 sm:h-4 transition-transform group-hover/btn:translate-x-1" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              {/* Image Side - Right (50% width on desktop, full width on mobile) */}
+              <div className="relative w-full lg:w-1/2 h-48 xs:h-56 sm:h-64 md:h-80 lg:h-auto lg:min-h-[500px] overflow-hidden group order-first lg:order-last flex items-center justify-center lg:items-stretch lg:justify-stretch">
+                {/* Mobile: Circular Image Container */}
+                <div className="lg:hidden w-40 h-40 xs:w-48 xs:h-48 sm:w-56 sm:h-56 rounded-full overflow-hidden border-4 border-gray-700/50 shadow-xl relative">
+                  <img 
+                    src="/images/profile.png" 
+                    alt="Shalauddin Kader"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.parentElement?.querySelector('.fallback-bg-mobile');
+                      if (fallback) {
+                        (fallback as HTMLElement).style.display = 'flex';
+                      }
+                    }}
+                  />
+                  {/* Fallback for mobile */}
+                  <div className="fallback-bg-mobile hidden absolute inset-0 w-full h-full items-center justify-center bg-gradient-to-br from-green-500/40 via-orange-500/30 to-green-500/40 rounded-full">
+                    <User size={48} className="text-white opacity-90" />
+                  </div>
+                  {/* Mobile border glow */}
+                  <div className="absolute inset-0 rounded-full border-2 border-green-500/30 animate-pulse-border-mobile"></div>
+                </div>
+
+                {/* Desktop: Full Image */}
+                <div className="hidden lg:block absolute inset-0 w-full h-full">
+                  <img 
+                    src="/images/profile.png" 
+                    alt="Shalauddin Kader"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.parentElement?.querySelector('.fallback-bg');
+                      if (fallback) {
+                        (fallback as HTMLElement).style.display = 'flex';
+                      }
+                    }}
+                  />
+                  {/* Fallback Gradient Background */}
+                  <div className="fallback-bg hidden absolute inset-0 w-full h-full items-center justify-center bg-gradient-to-br from-green-500/40 via-orange-500/30 to-green-500/40">
+                    <div className="w-32 h-32 rounded-full bg-gradient-to-br from-green-500 to-orange-500 flex items-center justify-center border-4 border-white/30 shadow-2xl">
+                      <User size={64} className="text-white opacity-90" />
+                    </div>
+                  </div>
+                  {/* Subtle gradient overlay for depth */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-gray-900/20 via-transparent to-gray-900/40"></div>
+                  {/* Decorative gradient accent bar */}
+                  <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gradient-to-r from-green-500 via-orange-500 to-green-500 shadow-lg"></div>
+                  {/* Corner accent */}
+                  <div className="absolute top-4 right-4 w-16 h-16 bg-gradient-to-br from-green-500/20 to-orange-500/20 rounded-full blur-2xl"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -3150,26 +3405,22 @@ export default function LandingPage() {
               <span>Store</span>
               <ExternalLink size={14} className="opacity-60" />
             </a>
-            <button
-              onClick={() => {
-                scrollToSection('about');
-                setIsMoreMenuOpen(false);
-              }}
+            <Link
+              to="/about"
+              onClick={() => setIsMoreMenuOpen(false)}
               className="w-full text-left px-4 xs:px-5 py-2.5 xs:py-3 text-xs xs:text-sm text-gray-400 hover:text-white active:text-white hover:bg-gray-800/50 active:bg-gray-800/70 transition-all duration-200 touch-manipulation min-h-[44px] flex items-center animate-item-stagger hover:scale-[1.02]"
               style={{ animationDelay: '0.1s' }}
             >
               About Us
-            </button>
-            <button
-              onClick={() => {
-                scrollToSection('team');
-                setIsMoreMenuOpen(false);
-              }}
+            </Link>
+            <Link
+              to="/about#team"
+              onClick={() => setIsMoreMenuOpen(false)}
               className="w-full text-left px-4 xs:px-5 py-2.5 xs:py-3 text-xs xs:text-sm text-gray-400 hover:text-white active:text-white hover:bg-gray-800/50 active:bg-gray-800/70 transition-all duration-200 touch-manipulation min-h-[44px] flex items-center animate-item-stagger hover:scale-[1.02]"
               style={{ animationDelay: '0.15s' }}
             >
               Meet the Team
-            </button>
+            </Link>
             <button
               onClick={() => {
                 navigate('/blog');

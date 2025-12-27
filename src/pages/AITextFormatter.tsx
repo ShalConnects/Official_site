@@ -31,7 +31,7 @@ interface FormattingConfig {
 // Learning system interfaces
 interface PatternPerformance {
   pattern: string;
-  type: 'intro' | 'closing' | 'keyword';
+  type: 'intro' | 'closing' | 'keyword' | 'emdash';
   matches: number;
   correctMatches: number;
   incorrectMatches: number;
@@ -46,11 +46,17 @@ interface UserCorrection {
   keptPatterns: string[];
   timestamp: number;
   context?: string; // Document type or context
+  emDashReplacements?: Array<{
+    original: string; // Text with em dash
+    replaced: string; // Text after replacement
+    context: 'sentence' | 'list' | 'parenthetical' | 'other';
+    position: number; // Character position
+  }>;
 }
 
 interface PatternFeedback {
   pattern: string;
-  type: 'intro' | 'closing' | 'keyword';
+  type: 'intro' | 'closing' | 'keyword' | 'emdash';
   feedback: 'correct' | 'incorrect';
   context: string;
   timestamp: number;
@@ -140,6 +146,7 @@ export default function AITextFormatter() {
   const [lastFormattedOutput, setLastFormattedOutput] = useState('');
   const outputTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const isUpdatingLearningDataRef = useRef(false);
+  const emDashReplacementsRef = useRef<Array<{ original: string; replaced: string; context: 'sentence' | 'list' | 'parenthetical' | 'other'; position: number }>>([]);
   
   // New formatting options state
   type SpacingMode = 'compact' | 'standard' | 'spacious';
@@ -513,6 +520,102 @@ export default function AITextFormatter() {
     }
   };
 
+  // Smart em dash replacement with context awareness and learning system integration
+  const replaceEmDashes = (text: string): { text: string; replacements: Array<{ original: string; replaced: string; context: 'sentence' | 'list' | 'parenthetical' | 'other'; position: number }> } => {
+    if (!text || text.trim().length === 0) {
+      return { text, replacements: [] };
+    }
+
+    const replacements: Array<{ original: string; replaced: string; context: 'sentence' | 'list' | 'parenthetical' | 'other'; position: number }> = [];
+    let result = text;
+
+    // Find all em dashes and their context
+    const matches: Array<{ index: number; context: 'sentence' | 'list' | 'parenthetical' | 'other' }> = [];
+    let match;
+    const tempRegex = /—/g;
+    
+    while ((match = tempRegex.exec(text)) !== null) {
+      const index = match.index;
+      const before = text.substring(Math.max(0, index - 50), index);
+      const after = text.substring(index + 1, Math.min(text.length, index + 51));
+      const fullContext = before + '—' + after;
+      
+      // Determine context
+      let context: 'sentence' | 'list' | 'parenthetical' | 'other' = 'sentence';
+      
+      // Check if it's in a list (starts with bullet, dash, number, etc.)
+      const lineStart = text.lastIndexOf('\n', index) + 1;
+      const lineBeforeDash = text.substring(lineStart, index).trim();
+      if (/^[•\-\*\d]+\.?\s/.test(lineBeforeDash) || /^[-•*]\s/.test(text.substring(lineStart, index + 1))) {
+        context = 'list';
+      }
+      // Check if it's parenthetical (surrounded by spaces, often used for asides)
+      else if (/\s—\s/.test(fullContext) && (before.trim().endsWith(',') || after.trim().startsWith(','))) {
+        context = 'parenthetical';
+      }
+      // Check if it's sentence-level (between words, not in lists)
+      else if (/\w\s*—\s*\w/.test(fullContext)) {
+        context = 'sentence';
+      }
+      else {
+        context = 'other';
+      }
+      
+      matches.push({ index, context });
+    }
+
+    // Replace em dashes based on context and learning system (process in reverse to maintain indices)
+    for (let i = matches.length - 1; i >= 0; i--) {
+      const { index, context } = matches[i];
+      const patternId = `emdash-${context}-${i}`;
+      
+      // Check if this pattern is disabled by user
+      const isDisabled = learningDataRef.current.userPreferences.disabledPatterns.includes(patternId);
+      if (isDisabled) {
+        // Skip replacement if pattern is disabled
+        continue;
+      }
+      
+      // Get confidence for this context type
+      const contextPatterns = learningDataRef.current.patternPerformance.filter(
+        p => p.type === 'emdash' && p.pattern.startsWith(`emdash-${context}-`)
+      );
+      const avgConfidence = contextPatterns.length > 0
+        ? contextPatterns.reduce((sum, p) => sum + p.confidence, 0) / contextPatterns.length
+        : 0.5;
+      
+      // Only replace if confidence is above threshold (0.3)
+      if (avgConfidence < 0.3) {
+        continue;
+      }
+      
+      // Replace all em dashes with commas (simpler, more natural for AI-generated text)
+      // Remove any spaces before the em dash to ensure no space before comma
+      let spaceCount = 0;
+      let checkIndex = index - 1;
+      // Count consecutive spaces before the em dash
+      while (checkIndex >= 0 && result[checkIndex] === ' ') {
+        spaceCount++;
+        checkIndex--;
+      }
+      
+      const replacement = ',';
+      const startIndex = index - spaceCount;
+      
+      replacements.unshift({
+        original: text.substring(Math.max(0, startIndex - 20), Math.min(text.length, index + 21)),
+        replaced: text.substring(Math.max(0, startIndex - 20), startIndex) + replacement + text.substring(index + 1, Math.min(text.length, index + 21)),
+        context,
+        position: startIndex
+      });
+      
+      // Replace em dash and any spaces before it with just the comma
+      result = result.substring(0, startIndex) + replacement + result.substring(index + 1);
+    }
+
+    return { text: result, replacements };
+  };
+
   // Performance: Debounced AI detection
   const debouncedDetectAI = useCallback((text: string) => {
     if (detectTimeoutRef.current) {
@@ -645,6 +748,14 @@ export default function AITextFormatter() {
       });
     });
     
+    // Track em dash replacements
+    const emDashReplacements = emDashReplacementsRef.current;
+    if (emDashReplacements && emDashReplacements.length > 0) {
+      emDashReplacements.forEach((replacement, idx) => {
+        matchedPatterns.push(`emdash-${replacement.context}-${idx}`);
+      });
+    }
+    
     return matchedPatterns;
   }, []);
 
@@ -666,6 +777,9 @@ export default function AITextFormatter() {
     matchedPatterns.forEach(patternId => {
       const existing = updatedData.patternPerformance.find(p => p.pattern === patternId);
       
+      // Check if this is an em dash pattern
+      const isEmDashPattern = patternId.startsWith('emdash-');
+      
       if (addedBack && existing) {
         // Pattern incorrectly matched - false positive
         existing.incorrectMatches += 1;
@@ -684,10 +798,19 @@ export default function AITextFormatter() {
         existing.lastUsed = Date.now();
       } else {
         // New pattern
-        const [type, idx] = patternId.split('-');
+        const parts = patternId.split('-');
+        let type: 'intro' | 'closing' | 'keyword' | 'emdash' = 'keyword';
+        if (isEmDashPattern) {
+          type = 'emdash';
+        } else if (parts[0] === 'intro') {
+          type = 'intro';
+        } else if (parts[0] === 'closing') {
+          type = 'closing';
+        }
+        
         updatedData.patternPerformance.push({
           pattern: patternId,
-          type: type as 'intro' | 'closing',
+          type: type,
           matches: 1,
           correctMatches: removed ? 1 : 0,
           incorrectMatches: addedBack ? 1 : 0,
@@ -699,12 +822,17 @@ export default function AITextFormatter() {
     
     // Save correction for analysis
     if (addedBack || removed) {
+      // Extract em dash replacements for this correction
+      const emDashReplacements = emDashReplacementsRef.current || [];
+      const emDashPatterns = matchedPatterns.filter(p => p.startsWith('emdash-'));
+      
       updatedData.userCorrections.push({
         originalText: originalOutput,
         correctedText: correctedOutput,
         removedPatterns: removed ? matchedPatterns : [],
         keptPatterns: addedBack ? matchedPatterns : [],
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        emDashReplacements: emDashPatterns.length > 0 ? emDashReplacements : undefined
       });
       
       // Keep only last 100 corrections
@@ -719,14 +847,6 @@ export default function AITextFormatter() {
 
   // Detect output changes and learn from corrections
   useEffect(() => {
-    console.log('🔴 useEffect [output] triggered', { 
-      hasLastFormattedOutput: !!lastFormattedOutput,
-      hasOutput: !!output,
-      areEqual: output === lastFormattedOutput,
-      outputLength: output?.length,
-      lastFormattedOutputLength: lastFormattedOutput?.length
-    });
-    
     if (!lastFormattedOutput || !output || output === lastFormattedOutput) return;
     
     // User has edited the output - learn from the correction
@@ -736,8 +856,6 @@ export default function AITextFormatter() {
 
   // Handle explicit feedback
   const handleFeedback = useCallback((feedback: 'correct' | 'incorrect', e?: React.MouseEvent) => {
-    console.log('🔵 handleFeedback called', { feedback, hasEvent: !!e });
-    
     // Prevent any event propagation
     if (e) {
       e.preventDefault();
@@ -746,14 +864,12 @@ export default function AITextFormatter() {
     }
     
     if (!lastFormattedInput || !lastFormattedOutput) {
-      console.log('🔴 handleFeedback: Missing input/output, returning early');
       return;
     }
     
     // Set flag to prevent handleInputChange from triggering during update
     // Set it immediately before any async operations
     isUpdatingLearningDataRef.current = true;
-    console.log('🔵 handleFeedback: Flag set to prevent input changes');
     
     // Use requestAnimationFrame to defer the update and prevent re-render side effects
     requestAnimationFrame(() => {
@@ -769,10 +885,18 @@ export default function AITextFormatter() {
           let patternPerf = updatedData.patternPerformance.find(p => p.pattern === patternId);
           
           if (!patternPerf) {
-            const [type] = patternId.split('-');
+            const parts = patternId.split('-');
+            let type: 'intro' | 'closing' | 'keyword' | 'emdash' = 'keyword';
+            if (patternId.startsWith('emdash-')) {
+              type = 'emdash';
+            } else if (parts[0] === 'intro') {
+              type = 'intro';
+            } else if (parts[0] === 'closing') {
+              type = 'closing';
+            }
             patternPerf = {
               pattern: patternId,
-              type: type as 'intro' | 'closing',
+              type: type,
               matches: 0,
               correctMatches: 0,
               incorrectMatches: 0,
@@ -878,12 +1002,6 @@ export default function AITextFormatter() {
   }, []);
 
   const formatText = (textToFormat?: string) => {
-    console.log('🟡 formatText called', { 
-      textToFormat: textToFormat !== undefined,
-      textLength: textToFormat?.length || input.length,
-      stackTrace: new Error().stack?.split('\n').slice(1, 4).join('\n')
-    });
-    
     try {
       const text = textToFormat !== undefined ? textToFormat : input;
       if (!text) {
@@ -936,7 +1054,12 @@ export default function AITextFormatter() {
 
     // Remove meta-commentary first (before markdown processing)
     formatted = removeMetaCommentary(formatted);
-
+    
+    // Replace em dashes with smart context-aware replacement
+    const emDashResult = replaceEmDashes(formatted);
+    formatted = emDashResult.text;
+    // Store replacements for learning system
+    emDashReplacementsRef.current = emDashResult.replacements;
 
     // Handle markdown headers (# ## ###) - convert to plain text with colon
     // Process line by line to detect signature sections
@@ -2248,16 +2371,8 @@ export default function AITextFormatter() {
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     
-    console.log('🟢 handleInputChange called', { 
-      newValueLength: newValue.length,
-      oldValueLength: input.length,
-      isUpdatingLearning: isUpdatingLearningDataRef.current,
-      isProgrammaticChange: e.target.value === input // Check if value matches current state
-    });
-    
     // Ignore if we're updating learning data (prevents false triggers)
     if (isUpdatingLearningDataRef.current) {
-      console.log('🟢 handleInputChange: Ignored (updating learning data)');
       // Restore the original value to prevent textarea from being cleared
       if (textareaRef.current && textareaRef.current.value !== input) {
         textareaRef.current.value = input || output || '';
@@ -2268,11 +2383,6 @@ export default function AITextFormatter() {
     // Ignore if the change is clearing the textarea and we have existing content
     // This prevents accidental clears during re-renders
     if (newValue.length === 0 && (input.length > 0 || output.length > 0)) {
-      console.log('🟢 handleInputChange: Ignored (preventing accidental clear)', {
-        inputLength: input.length,
-        outputLength: output.length,
-        stackTrace: new Error().stack?.split('\n').slice(1, 5).join('\n')
-      });
       // Restore the original value immediately
       const restoreValue = output || input || '';
       if (textareaRef.current) {
@@ -2768,35 +2878,53 @@ export default function AITextFormatter() {
                         {learningData.patternPerformance
                           .sort((a, b) => b.confidence - a.confidence)
                           .slice(0, 5)
-                          .map((perf) => (
-                            <div key={perf.pattern} className="flex items-center justify-between text-gray-400">
-                              <span className="truncate flex-1">{perf.pattern}</span>
-                              <div className="flex items-center gap-2 ml-2">
-                                <span className="text-xs">
-                                  {Math.round(perf.confidence * 100)}%
-                                </span>
-                                <button
-                                  onClick={() => {
-                                    const updated = { ...learningData };
-                                    if (updated.userPreferences.disabledPatterns.includes(perf.pattern)) {
-                                      updated.userPreferences.disabledPatterns = 
-                                        updated.userPreferences.disabledPatterns.filter(p => p !== perf.pattern);
-                                    } else {
-                                      updated.userPreferences.disabledPatterns.push(perf.pattern);
-                                    }
-                                    saveLearningData(updated);
-                                  }}
-                                  className={`text-xs px-1.5 py-0.5 rounded ${
-                                    learningData.userPreferences.disabledPatterns.includes(perf.pattern)
-                                      ? 'bg-red-500/20 text-red-400'
-                                      : 'bg-green-500/20 text-green-400'
-                                  }`}
-                                >
-                                  {learningData.userPreferences.disabledPatterns.includes(perf.pattern) ? 'Disabled' : 'Active'}
-                                </button>
+                          .map((perf) => {
+                            // Format pattern name for display
+                            let displayName = perf.pattern;
+                            if (perf.type === 'emdash') {
+                              const parts = perf.pattern.split('-');
+                              if (parts.length >= 2) {
+                                const context = parts[1]; // sentence, list, parenthetical, other
+                                displayName = `Em Dash (${context})`;
+                              } else {
+                                displayName = 'Em Dash Replacement';
+                              }
+                            } else if (perf.type === 'intro') {
+                              displayName = `Intro: ${perf.pattern}`;
+                            } else if (perf.type === 'closing') {
+                              displayName = `Closing: ${perf.pattern}`;
+                            }
+                            
+                            return (
+                              <div key={perf.pattern} className="flex items-center justify-between text-gray-400">
+                                <span className="truncate flex-1" title={perf.pattern}>{displayName}</span>
+                                <div className="flex items-center gap-2 ml-2">
+                                  <span className="text-xs">
+                                    {Math.round(perf.confidence * 100)}%
+                                  </span>
+                                  <button
+                                    onClick={() => {
+                                      const updated = { ...learningData };
+                                      if (updated.userPreferences.disabledPatterns.includes(perf.pattern)) {
+                                        updated.userPreferences.disabledPatterns = 
+                                          updated.userPreferences.disabledPatterns.filter(p => p !== perf.pattern);
+                                      } else {
+                                        updated.userPreferences.disabledPatterns.push(perf.pattern);
+                                      }
+                                      saveLearningData(updated);
+                                    }}
+                                    className={`text-xs px-1.5 py-0.5 rounded ${
+                                      learningData.userPreferences.disabledPatterns.includes(perf.pattern)
+                                        ? 'bg-red-500/20 text-red-400'
+                                        : 'bg-green-500/20 text-green-400'
+                                    }`}
+                                  >
+                                    {learningData.userPreferences.disabledPatterns.includes(perf.pattern) ? 'Disabled' : 'Active'}
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                       </div>
                     </div>
                   )}
