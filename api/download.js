@@ -29,7 +29,7 @@ const getPluginUrl = (req) => {
   const host = req.headers['x-forwarded-host'] || req.headers.host || process.env.VERCEL_URL || 'localhost:5173';
   const baseUrl = `${protocol}://${host}`;
   
-  return `${baseUrl}/downloads/wc-variation-images-pro-pro-v1.0.0.zip`;
+  return `${baseUrl}/downloads/variation-images-pro.zip`;
 };
 
 /**

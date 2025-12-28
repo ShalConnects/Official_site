@@ -1489,16 +1489,16 @@ export default function LandingPage() {
             backgroundSize: '40px 40px'
           }}
         />
-        <div className="relative max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pb-6 sm:pb-8" style={{ paddingTop: '3rem' }}>
+        <div className="relative max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pb-4 sm:pb-6 md:pb-8 pt-8 sm:pt-12 md:pt-16 lg:pt-20">
           <div className="text-center" style={{ marginBottom: 0 }}>
-            <p className="text-sm sm:text-base text-gray-400/80 mt-2">Trusted by leading brands worldwide</p>
+            <p className="text-xs sm:text-sm md:text-base text-gray-400/80 mt-1 sm:mt-2">Trusted by leading brands worldwide</p>
           </div>
         </div>
         <div className="relative">
           <BrandMarquee direction="left" speed={200} brands={brandImagesFirstHalf} />
           <BrandMarquee direction="right" speed={210} brands={brandImagesSecondHalf} />
         </div>
-        <div className="relative max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pt-6 sm:pt-8" style={{ paddingBottom: '3rem' }}></div>
+        <div className="relative max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pt-4 sm:pt-6 md:pt-8 pb-8 sm:pb-12 md:pb-16 lg:pb-20"></div>
       </section>
 
       {/* Services Section */}

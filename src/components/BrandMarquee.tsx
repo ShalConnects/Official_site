@@ -194,7 +194,7 @@ export default function BrandMarquee({
   return (
     <div 
       ref={containerRef}
-      className={`relative overflow-hidden pt-4 pb-4 ${className}`}
+      className={`relative overflow-hidden pt-2 sm:pt-3 md:pt-4 pb-2 sm:pb-3 md:pb-4 ${className}`}
       style={{
         contain: 'layout style paint',
         transform: 'translateZ(0)',
@@ -205,13 +205,13 @@ export default function BrandMarquee({
     >
       {/* Enhanced fade edges with theme colors - responsive width */}
       <div 
-        className="absolute left-0 top-0 bottom-0 w-16 sm:w-20 md:w-24 z-10 pointer-events-none"
+        className="absolute left-0 top-0 bottom-0 w-8 sm:w-12 md:w-16 lg:w-20 xl:w-24 z-10 pointer-events-none"
         style={{
           background: 'linear-gradient(to right, rgba(17, 24, 39, 0.98) 0%, rgba(17, 24, 39, 0.85) 40%, rgba(17, 24, 39, 0.5) 70%, transparent 100%)',
         }}
       />
       <div 
-        className="absolute right-0 top-0 bottom-0 w-16 sm:w-20 md:w-24 z-10 pointer-events-none"
+        className="absolute right-0 top-0 bottom-0 w-8 sm:w-12 md:w-16 lg:w-20 xl:w-24 z-10 pointer-events-none"
         style={{
           background: 'linear-gradient(to left, rgba(17, 24, 39, 0.98) 0%, rgba(17, 24, 39, 0.85) 40%, rgba(17, 24, 39, 0.5) 70%, transparent 100%)',
         }}
@@ -219,7 +219,7 @@ export default function BrandMarquee({
       
       <div 
         ref={animationRef}
-        className={`flex gap-4 items-center ${direction === 'left' ? 'animate-marquee-left' : 'animate-marquee-right'}`}
+        className={`flex gap-2 sm:gap-3 md:gap-4 items-center ${direction === 'left' ? 'animate-marquee-left' : 'animate-marquee-right'}`}
         style={{
           animationDuration: animationDuration,
           animationTimingFunction: 'linear',
@@ -255,11 +255,9 @@ export default function BrandMarquee({
             }}
           >
             <div 
-              className="h-full flex items-center justify-center border transition-all duration-300"
+              className="h-full flex items-center justify-center border transition-all duration-300 p-0.5 sm:p-1 md:p-1 rounded-md sm:rounded-lg md:rounded-lg"
               style={{
-                padding: '4px',
                 background: customBackground || (isBlackBackground ? '#000' : (isSpecialImage ? 'transparent' : '#fff')),
-                borderRadius: '6px',
                 transform: 'translateZ(0)',
                 willChange: 'auto',
                 borderColor: 'rgba(75, 85, 99, 0.3)',
@@ -298,9 +296,8 @@ export default function BrandMarquee({
               <img
                 src={`/images/brands/${brand}`}
                 alt={getAltText(brand)}
-                className="h-full w-auto object-contain opacity-90 hover:opacity-100 transition-opacity duration-300"
+                className="h-full w-auto object-contain opacity-90 hover:opacity-100 transition-opacity duration-300 max-w-[80px] sm:max-w-[100px] md:max-w-[120px] lg:max-w-[150px]"
                 style={{
-                  maxWidth: '150px',
                   transform: 'translateZ(0)',
                   backfaceVisibility: 'hidden',
                   imageRendering: 'auto',
