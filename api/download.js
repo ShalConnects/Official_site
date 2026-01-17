@@ -120,8 +120,21 @@ export default async function handler(req, res) {
       }
     }
 
-    // Track download (optional - store in database)
-    // await trackDownload(transaction);
+    // Track premium download
+    try {
+      // Call tracking endpoint asynchronously (don't wait for response)
+      fetch(`${req.headers['x-forwarded-proto'] || 'https'}://${req.headers['x-forwarded-host'] || req.headers.host || process.env.VERCEL_URL || 'localhost:5173'}/api/track-premium-download`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).catch(err => {
+        console.error('Failed to track download (non-blocking):', err);
+      });
+    } catch (error) {
+      console.error('Error tracking download:', error);
+      // Don't block download if tracking fails
+    }
 
     // Serve the file
     // Get the download URL (use Paddle's if available, otherwise use our hosted file)

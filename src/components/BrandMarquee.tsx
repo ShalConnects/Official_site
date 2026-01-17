@@ -16,6 +16,7 @@ export default function BrandMarquee({
   const [isPaused, setIsPaused] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set()); // Track loaded images by unique key
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<HTMLDivElement>(null);
   const isInteractingRef = useRef(false);
@@ -252,16 +253,18 @@ export default function BrandMarquee({
             className="flex-shrink-0 flex items-center justify-center h-12 sm:h-14 md:h-16"
             style={{
               width: 'auto',
+              minWidth: '60px',
             }}
           >
             <div 
-              className="h-full flex items-center justify-center border transition-all duration-300 p-0.5 sm:p-1 md:p-1 rounded-md sm:rounded-lg md:rounded-lg"
+              className="h-full flex items-center justify-center border transition-all duration-300 p-0.5 sm:p-1 md:p-1 rounded-md sm:rounded-lg md:rounded-lg relative"
               style={{
                 background: customBackground || (isBlackBackground ? '#000' : (isSpecialImage ? 'transparent' : '#fff')),
                 transform: 'translateZ(0)',
                 willChange: 'auto',
                 borderColor: 'rgba(75, 85, 99, 0.3)',
                 borderWidth: '1px',
+                minWidth: '60px',
                 boxShadow: customBackground 
                   ? '0 2px 8px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05)' 
                   : (isSpecialImage 
@@ -293,10 +296,28 @@ export default function BrandMarquee({
                 target.style.transform = 'translateY(0) scale(1)';
               }}
             >
+              {/* Skeleton placeholder - shows while image is loading */}
+              {!loadedImages.has(uniqueKey) && (
+                <div 
+                  className="absolute inset-0 flex items-center justify-center"
+                  style={{
+                    background: customBackground || (isBlackBackground ? '#000' : (isSpecialImage ? 'transparent' : '#fff')),
+                  }}
+                >
+                  <div 
+                    className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded"
+                    style={{
+                      background: 'linear-gradient(90deg, rgba(75, 85, 99, 0.2) 25%, rgba(75, 85, 99, 0.3) 50%, rgba(75, 85, 99, 0.2) 75%)',
+                      backgroundSize: '200% 100%',
+                      animation: 'shimmer 1.5s infinite',
+                    }}
+                  />
+                </div>
+              )}
               <img
                 src={`/images/brands/${brand}`}
                 alt={getAltText(brand)}
-                className="h-full w-auto object-contain opacity-90 hover:opacity-100 transition-opacity duration-300 max-w-[80px] sm:max-w-[100px] md:max-w-[120px] lg:max-w-[150px]"
+                className={`h-full w-auto object-contain transition-opacity duration-300 max-w-[80px] sm:max-w-[100px] md:max-w-[120px] lg:max-w-[150px] ${loadedImages.has(uniqueKey) ? 'opacity-90 hover:opacity-100' : 'opacity-0'}`}
                 style={{
                   transform: 'translateZ(0)',
                   backfaceVisibility: 'hidden',
@@ -309,10 +330,24 @@ export default function BrandMarquee({
                 loading="eager"
                 draggable={false}
                 onDragStart={(e) => e.preventDefault()}
+                onLoad={() => {
+                  setLoadedImages(prev => {
+                    const newSet = new Set(prev);
+                    newSet.add(uniqueKey);
+                    return newSet;
+                  });
+                }}
                 onError={(e) => {
                   // Handle image load errors more gracefully
                   const target = e.target as HTMLImageElement;
                   const src = target.src;
+                  
+                  // Mark as loaded to hide skeleton even on error
+                  setLoadedImages(prev => {
+                    const newSet = new Set(prev);
+                    newSet.add(uniqueKey);
+                    return newSet;
+                  });
                   
                   // Check if it's a TIFF file (not supported by browsers)
                   if (src.includes('.tif') || src.includes('.tiff')) {

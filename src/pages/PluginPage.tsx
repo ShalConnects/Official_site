@@ -33,25 +33,76 @@ export default function PluginPage() {
   const slug = pluginSlug || productSlug;
   const navigate = useNavigate();
   const isStoreSubdomain = isStoreContext();
-  const [isSidebarVisible, setIsSidebarVisible] = useState<boolean>(false); // Hidden by default on mobile
+  const [isSidebarVisible, setIsSidebarVisible] = useState<boolean>(false); // Hidden by default - user must click burger to open
+  const [downloadStats, setDownloadStats] = useState<{
+    free: { today: number; yesterday: number; last7days: number; allTime: number; lastUpdated?: string | null };
+    premium: { today: number; yesterday: number; last7days: number; allTime: number; lastUpdated?: string | null };
+  } | null>(null);
+  const [statsLoading, setStatsLoading] = useState<boolean>(true);
+  const [statsError, setStatsError] = useState<string | null>(null);
 
-  // Show sidebar by default on desktop, hide on mobile
+  // Fetch download statistics
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setIsSidebarVisible(true);
-      } else {
-        setIsSidebarVisible(false);
+    const fetchStats = async () => {
+      setStatsLoading(true);
+      setStatsError(null);
+      try {
+        const response = await fetch('/api/get-download-stats');
+        if (response.ok) {
+          const data = await response.json();
+          setDownloadStats(data);
+          console.log('Download stats loaded:', data);
+        } else {
+          throw new Error(`API returned ${response.status}`);
+        }
+      } catch (error) {
+        console.error('Error fetching download statistics:', error);
+        // In local development, API routes don't work (they're Vercel serverless functions)
+        // Show mock data so the component is visible
+        const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        if (isLocalDev) {
+          setStatsError('Note: Stats API works in production. Showing placeholder data.');
+          // Set mock data for local development
+          const now = new Date().toISOString();
+          setDownloadStats({
+            free: { today: 0, yesterday: 1, last7days: 9, allTime: 120, lastUpdated: now },
+            premium: { today: 0, yesterday: 0, last7days: 0, allTime: 0, lastUpdated: now }
+          });
+        } else {
+          setStatsError('Unable to load download statistics');
+          setDownloadStats({
+            free: { today: 0, yesterday: 0, last7days: 0, allTime: 0, lastUpdated: null },
+            premium: { today: 0, yesterday: 0, last7days: 0, allTime: 0, lastUpdated: null }
+          });
+        }
+      } finally {
+        setStatsLoading(false);
       }
     };
 
-    // Set initial state
-    handleResize();
-
-    // Listen for resize events
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    fetchStats();
   }, []);
+
+  // Helper function to format "Last updated" time
+  const formatLastUpdated = (timestamp: string | null | undefined): string => {
+    if (!timestamp) return '';
+    try {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins}m ago`;
+      if (diffHours < 24) return `${diffHours}h ago`;
+      const diffDays = Math.floor(diffHours / 24);
+      if (diffDays < 7) return `${diffDays}d ago`;
+      return date.toLocaleDateString();
+    } catch {
+      return '';
+    }
+  };
 
   // Plugin data - will be expanded based on slug
   // CONFIGURATION REQUIRED:
@@ -477,7 +528,7 @@ export default function PluginPage() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 items-stretch">
                     {/* Visual Designer */}
                     <div className="relative flex flex-col">
-                      <div className="absolute -top-2 -left-2 sm:-top-3 sm:-left-3 lg:-top-4 lg:-left-4 z-20 bg-blue-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 rounded-lg shadow-xl font-semibold text-xs sm:text-sm lg:text-base whitespace-nowrap">
+                      <div className="absolute -top-2 -left-2 sm:-top-3 sm:-left-3 lg:-top-4 lg:-left-4 z-20 bg-blue-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 rounded-lg shadow-xl font-semibold text-xs sm:text-sm lg:text-base whitespace-nowrap max-w-[calc(100%-1rem)] sm:max-w-none overflow-hidden text-ellipsis">
                         Visual Designer
                         <div className="absolute -bottom-1.5 sm:-bottom-2 left-4 sm:left-6 lg:left-8 w-0 h-0 border-l-4 border-r-4 border-t-4 sm:border-l-6 sm:border-r-6 sm:border-t-6 lg:border-l-8 lg:border-r-8 lg:border-t-8 border-transparent border-t-blue-600"></div>
                     </div>
@@ -497,10 +548,10 @@ export default function PluginPage() {
                       
                     {/* Visual Variation Management */}
                     <div className="relative flex flex-col">
-                      <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 lg:-top-4 lg:-right-4 z-20 bg-blue-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 rounded-lg shadow-xl font-semibold text-xs sm:text-sm lg:text-base">
-                        <span className="whitespace-normal sm:whitespace-nowrap">Visual Variation Management</span>
+                      <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 lg:-top-4 lg:-right-4 z-20 bg-blue-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 rounded-lg shadow-xl font-semibold text-xs sm:text-sm lg:text-base max-w-[calc(100%-1rem)] sm:max-w-none">
+                        <span className="whitespace-normal sm:whitespace-nowrap break-words">Visual Variation Management</span>
                         <div className="absolute -bottom-1.5 sm:-bottom-2 right-4 sm:right-6 lg:right-8 w-0 h-0 border-l-4 border-r-4 border-t-4 sm:border-l-6 sm:border-r-6 sm:border-t-6 lg:border-l-8 lg:border-r-8 lg:border-t-8 border-transparent border-t-blue-600"></div>
-                        </div>
+                      </div>
                         
                       <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden mt-6 sm:mt-7 lg:mt-8 flex-1 flex items-center justify-center">
                         <img 
@@ -520,7 +571,7 @@ export default function PluginPage() {
                   <div className="flex justify-center">
                     {/* Multiple Display Styles */}
                     <div className="relative max-w-2xl w-full">
-                      <div className="absolute -top-2 -left-2 sm:-top-3 sm:-left-3 lg:-top-4 lg:-left-4 z-20 bg-blue-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 rounded-lg shadow-xl font-semibold text-xs sm:text-sm lg:text-base whitespace-nowrap">
+                      <div className="absolute -top-2 -left-2 sm:-top-3 sm:-left-3 lg:-top-4 lg:-left-4 z-20 bg-blue-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 rounded-lg shadow-xl font-semibold text-xs sm:text-sm lg:text-base whitespace-nowrap max-w-[calc(100%-1rem)] sm:max-w-none overflow-hidden text-ellipsis">
                         Multiple Display Styles
                         <div className="absolute -bottom-1.5 sm:-bottom-2 left-4 sm:left-6 lg:left-8 w-0 h-0 border-l-4 border-r-4 border-t-4 sm:border-l-6 sm:border-r-6 sm:border-t-6 lg:border-l-8 lg:border-r-8 lg:border-t-8 border-transparent border-t-blue-600"></div>
                       </div>
@@ -616,38 +667,38 @@ export default function PluginPage() {
           <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 overflow-hidden">
             <div className="overflow-x-auto -mx-4 sm:mx-0">
               <div className="inline-block min-w-full align-middle">
-                <table className="w-full min-w-[600px]">
+                <table className="w-full min-w-[500px] sm:min-w-[600px]">
                   <thead>
                     <tr className="border-b border-gray-700/50">
-                      <th className="text-left px-4 sm:px-6 py-4 text-white font-semibold text-sm sm:text-base">Feature</th>
-                      <th className="text-center px-4 sm:px-6 py-4 text-white font-semibold text-sm sm:text-base">Free Version</th>
-                      <th className="text-center px-4 sm:px-6 py-4 text-white font-semibold text-sm sm:text-base" style={{ color: '#da651e' }}>Pro Version</th>
+                      <th className="text-left px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-white font-semibold text-xs sm:text-sm md:text-base">Feature</th>
+                      <th className="text-center px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-white font-semibold text-xs sm:text-sm md:text-base">Free Version</th>
+                      <th className="text-center px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-white font-semibold text-xs sm:text-sm md:text-base" style={{ color: '#da651e' }}>Pro Version</th>
                     </tr>
                   </thead>
                   <tbody>
                     {plugin.freeFeatures.map((item, idx) => (
                       <tr key={idx} className="border-b border-gray-700/30 hover:bg-gray-800/70 transition-colors">
-                        <td className="px-4 sm:px-6 py-4 text-gray-300 text-sm sm:text-base">{item.feature}</td>
-                        <td className="px-4 sm:px-6 py-4 text-center">
+                        <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-gray-300 text-xs sm:text-sm md:text-base">{item.feature}</td>
+                        <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-center">
                           {typeof item.free === 'boolean' ? (
                             item.free ? (
-                              <CheckCircle size={20} className="mx-auto text-green-500" />
+                              <CheckCircle size={18} className="sm:w-5 sm:h-5 mx-auto text-green-500" />
                             ) : (
-                              <X size={20} className="mx-auto text-gray-600" />
+                              <X size={18} className="sm:w-5 sm:h-5 mx-auto text-gray-600" />
                             )
                           ) : (
-                            <span className="text-gray-400 text-sm sm:text-base">{item.free}</span>
+                            <span className="text-gray-400 text-xs sm:text-sm md:text-base break-words">{item.free}</span>
                           )}
                         </td>
-                        <td className="px-4 sm:px-6 py-4 text-center">
+                        <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-center">
                           {typeof item.pro === 'boolean' ? (
                             item.pro ? (
-                              <CheckCircle size={20} className="mx-auto" style={{ color: '#da651e' }} />
+                              <CheckCircle size={18} className="sm:w-5 sm:h-5 mx-auto" style={{ color: '#da651e' }} />
                           ) : (
-                            <X size={20} className="mx-auto text-gray-600" />
+                            <X size={18} className="sm:w-5 sm:h-5 mx-auto text-gray-600" />
                           )
                         ) : (
-                          <span className="text-sm sm:text-base" style={{ color: '#da651e' }}>{item.pro}</span>
+                          <span className="text-xs sm:text-sm md:text-base break-words" style={{ color: '#da651e' }}>{item.pro}</span>
                           )}
                         </td>
                       </tr>
@@ -879,6 +930,7 @@ export default function PluginPage() {
           <p className="text-base sm:text-lg md:text-xl text-gray-400 mb-6 sm:mb-7 md:mb-8 px-2">
             Download the Pro version now and unlock all premium features.
           </p>
+          
           <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4">
             <button
               onClick={handlePurchase}
@@ -897,6 +949,58 @@ export default function PluginPage() {
               Try Free Version
             </a>
           </div>
+          
+          {/* Download Statistics - Side by Side Cards */}
+          {downloadStats && (
+            <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 mt-8 sm:mt-10 px-2">
+              {/* Premium Version Card - First */}
+              <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-4 sm:p-5 md:p-6 w-full sm:w-auto sm:min-w-[140px] md:min-w-[160px]">
+                <div className="text-center">
+                  <div className="text-sm sm:text-base font-medium text-gray-300 mb-2">Premium Version</div>
+                  <div className="text-xs text-gray-400 mb-1 break-words">(ShalConnects.com)</div>
+                  {statsLoading ? (
+                    <div className="text-gray-500 text-xs">Loading...</div>
+                  ) : (
+                    <>
+                      <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 break-words">
+                        {downloadStats.premium.allTime.toLocaleString()}
+                      </div>
+                      <div className="text-xs sm:text-sm text-gray-400 mb-2">All Time Downloads</div>
+                      {downloadStats.premium.lastUpdated && (
+                        <div className="text-[10px] sm:text-xs text-gray-500 mt-1">
+                          Updated {formatLastUpdated(downloadStats.premium.lastUpdated)}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+              
+              {/* Free Version Card - Second */}
+              <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-4 sm:p-5 md:p-6 w-full sm:w-auto sm:min-w-[140px] md:min-w-[160px]">
+                <div className="text-center">
+                  <div className="text-sm sm:text-base font-medium text-gray-300 mb-2">Free Version</div>
+                  <div className="text-xs text-gray-400 mb-1 break-words">(WordPress.org)</div>
+                  {statsLoading ? (
+                    <div className="text-gray-500 text-xs">Loading...</div>
+                  ) : (
+                    <>
+                      <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 break-words">
+                        {downloadStats.free.allTime.toLocaleString()}
+                      </div>
+                      <div className="text-xs sm:text-sm text-gray-400 mb-2">All Time Downloads</div>
+                      {downloadStats.free.lastUpdated && (
+                        <div className="text-[10px] sm:text-xs text-gray-500 mt-1">
+                          Updated {formatLastUpdated(downloadStats.free.lastUpdated)}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          
           </div>
         </section>
         </main>
