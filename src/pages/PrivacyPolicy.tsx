@@ -1,4 +1,7 @@
 import PageLayout from '../components/PageLayout';
+import PageHero from '../components/PageHero';
+import PageContainer from '../components/PageContainer';
+import PageSection from '../components/PageSection';
 import { isStoreContext } from '../utils/storeUtils';
 
 export default function PrivacyPolicy() {
@@ -6,11 +9,14 @@ export default function PrivacyPolicy() {
   
   return (
     <PageLayout title="Privacy Policy">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 md:py-12">
-        <h1 className="text-3xl sm:text-4xl font-bold mb-4 sm:mb-6 md:mb-8">Privacy Policy</h1>
-        <p className="text-gray-400 mb-6">Last updated: November 2025</p>
+      <PageHero
+        title="Privacy Policy"
+        description="Last updated: November 2025"
+      />
 
-        <div className="prose prose-invert max-w-none space-y-6 text-gray-300">
+      <PageSection>
+        <PageContainer>
+          <div className="prose prose-invert max-w-none space-y-6 text-gray-300">
           <section>
             <h2 className="text-2xl font-semibold text-white mb-4">1. {isStore ? 'Information We Collect' : 'Introduction'}</h2>
             {isStore ? (
@@ -178,8 +184,9 @@ export default function PrivacyPolicy() {
               </section>
             </>
           )}
-        </div>
-      </div>
+          </div>
+        </PageContainer>
+      </PageSection>
     </PageLayout>
   );
 }

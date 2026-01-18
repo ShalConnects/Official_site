@@ -24,6 +24,7 @@ import BlogPage from './pages/BlogPage';
 import BlogPostPage from './pages/BlogPostPage';
 import StoreHome from './pages/StoreHome';
 import AboutPage from './pages/AboutPage';
+import ReviewsPage from './pages/ReviewsPage';
 import { isStoreContext } from './utils/storeUtils';
 
 function ShalConnectsPortfolio() {
@@ -250,6 +251,7 @@ function ShalConnectsPortfolio() {
       <Route path="/store/:productSlug" element={<PluginPage />} />
       <Route path="/services/:serviceSlug" element={<ServicePage serviceCategories={serviceCategories as any} />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/reviews" element={<ReviewsPage />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/refund" element={<RefundPolicy />} />

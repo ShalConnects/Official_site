@@ -2,6 +2,9 @@ import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Clock, ArrowRight, FileText, Sparkles, Share2, Mail, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import PageLayout from '../components/PageLayout';
+import PageHero from '../components/PageHero';
+import PageContainer from '../components/PageContainer';
+import PageSection from '../components/PageSection';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { blogPosts, getAllCategories, getFeaturedPost, getPostsByCategory } from '../utils/blogData';
 
@@ -95,24 +98,15 @@ export default function BlogPage() {
 
   return (
     <PageLayout title="Blog">
-      {/* Header Section - Minimalist */}
-      <section className="bg-gray-800/50 py-10 sm:py-12 md:py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 text-white">
-              Blog
-            </h1>
-            <p className="text-gray-400 text-lg sm:text-xl max-w-2xl mx-auto">
-              Insights, tips, and guides about web development, design, e-commerce, and digital marketing
-            </p>
-          </div>
-        </div>
-      </section>
+      <PageHero
+        title="Blog"
+        description="Insights, tips, and guides about web development, design, e-commerce, and digital marketing"
+      />
 
       {/* Featured Post Section - Enhanced */}
       {featuredPost && (
-        <section className="py-8 sm:py-12">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <PageSection>
+          <PageContainer maxWidth="4xl">
             <div className="flex items-center gap-2 mb-6">
               <Sparkles className="w-5 h-5 text-gradient-theme" />
               <h2 className="text-2xl sm:text-3xl font-bold text-white">Featured Post</h2>
@@ -167,13 +161,13 @@ export default function BlogPage() {
                 </div>
               </div>
             </Link>
-          </div>
-        </section>
+          </PageContainer>
+        </PageSection>
       )}
 
       {/* Blog Posts Section */}
-      <section className="py-12 sm:py-16 md:py-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <PageSection>
+        <PageContainer maxWidth="7xl">
           {/* Categories Filter - Enhanced */}
           {categories.length > 0 && (
             <div className="mb-8 sm:mb-10">
@@ -334,12 +328,12 @@ export default function BlogPage() {
               </button>
             </div>
           )}
-        </div>
-      </section>
+        </PageContainer>
+      </PageSection>
 
       {/* Newsletter Subscription Section - Enhanced */}
-      <section className="py-12 sm:py-16 md:py-20 bg-gray-800/30">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <PageSection className="bg-gray-800/30">
+        <PageContainer maxWidth="4xl">
           <div className="bg-gray-800/50 rounded-2xl border border-gray-700/50 p-8 sm:p-10 md:p-12">
             <div className="text-center mb-6 sm:mb-8">
               <div className="flex items-center justify-center gap-3 mb-4">
@@ -379,8 +373,8 @@ export default function BlogPage() {
               </form>
             )}
           </div>
-        </div>
-      </section>
+        </PageContainer>
+      </PageSection>
     </PageLayout>
   );
 }

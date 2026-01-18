@@ -2,6 +2,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Wand2, ArrowRight, Activity, Key, Link2, FileText, QrCode } from 'lucide-react';
 import PageLayout from '../components/PageLayout';
+import PageHero from '../components/PageHero';
+import PageContainer from '../components/PageContainer';
+import PageSection from '../components/PageSection';
 import { useMetaTags } from '../hooks/useMetaTags';
 
 interface Tool {
@@ -87,21 +90,18 @@ export default function ToolsPage() {
 
   return (
     <PageLayout title="Fun Project">
-      {/* Header Section */}
-      <section className="bg-gray-800/50 py-12 sm:py-16 md:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-center">
-            Fun Project
-          </h1>
-          <p className="text-center text-gray-400 mb-8 max-w-2xl mx-auto text-lg">
-            Free utilities and tools crafted by <Link to="/" className="text-gradient-theme font-semibold hover:opacity-80 transition-opacity cursor-pointer inline-block">ShalConnects</Link> to help you work smarter
-          </p>
-        </div>
-      </section>
+      <PageHero
+        title="Fun Project"
+        description="Free utilities and tools crafted by ShalConnects to help you work smarter"
+      />
 
-      {/* Tools Grid Section */}
-      <section className="py-12 sm:py-16 md:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <PageSection>
+        <PageContainer>
+          <div className="text-center mb-8">
+            <p className="text-gray-400 max-w-2xl mx-auto text-lg">
+              Free utilities and tools crafted by <Link to="/" className="text-gradient-theme font-semibold hover:opacity-80 transition-opacity cursor-pointer inline-block">ShalConnects</Link> to help you work smarter
+            </p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {tools.map((tool) => {
               const Icon = tool.icon;
@@ -161,8 +161,8 @@ export default function ToolsPage() {
               <p className="text-gray-400 text-lg">No tools available yet. Check back soon!</p>
             </div>
           )}
-        </div>
-      </section>
+        </PageContainer>
+      </PageSection>
     </PageLayout>
   );
 }
