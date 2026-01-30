@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { X, Zap, Target, TrendingUp, Clock, CheckCircle, Star, Quote, ExternalLink, XCircle, ChevronDown, Palette, Code, Wrench, FileCode, Layout, Package, Store, List, Image, Smartphone, Globe, Share2, FileText, Layers, Home, Briefcase, MoreHorizontal, ArrowUp, ArrowRight, Mail, Search, Workflow, Rocket, Wand2, Activity, Key, Link2, QrCode, User, Heart } from 'lucide-react';
 import { SiWordpress, SiShopify, SiWix, SiEbay, SiAmazon, SiWalmart, SiAndroid, SiLinkedin, SiX, SiWhatsapp, SiYoutube } from 'react-icons/si';
@@ -99,6 +99,8 @@ export default function LandingPage() {
   const moreMenuCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [floatingWidgetIndex, setFloatingWidgetIndex] = useState(0);
   const [showFloatingWidget, setShowFloatingWidget] = useState(true);
+  const [isWidgetHovered, setIsWidgetHovered] = useState(false);
+  const [imageLoadError, setImageLoadError] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
 
   // Testimonials data - defined early for use in useEffect
@@ -470,14 +472,20 @@ export default function LandingPage() {
 
   // Rotate testimonials in floating widget
   useEffect(() => {
-    if (testimonials.length === 0) return;
+    if (testimonials.length === 0 || !showFloatingWidget || isWidgetHovered) return;
     
     const interval = setInterval(() => {
       setFloatingWidgetIndex((prev) => (prev + 1) % testimonials.length);
+      setImageLoadError(false); // Reset image error state on testimonial change
     }, 5000); // Rotate every 5 seconds
 
     return () => clearInterval(interval);
-  }, [testimonials.length]);
+  }, [testimonials.length, showFloatingWidget, isWidgetHovered]);
+
+  // Reset image error when testimonial changes
+  useEffect(() => {
+    setImageLoadError(false);
+  }, [floatingWidgetIndex]);
 
   // Intersection Observer for service cards
   useEffect(() => {
@@ -1194,19 +1202,21 @@ export default function LandingPage() {
               </button>
 
               {/* Book a Call - Prominent */}
-              <a
-                href="https://calendly.com/hello-shalconnects/30min"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative inline-flex items-center justify-center gap-1 px-4 py-2.5 rounded-full transition-all duration-300 touch-manipulation min-h-[44px]"
-                style={{
-                  background: 'linear-gradient(rgba(17, 24, 39, 0.6), rgba(17, 24, 39, 0.6)) padding-box, linear-gradient(to right, #176641, #da651e) border-box',
-                  border: '2px solid transparent'
-                }}
-              >
-                <span className="absolute -top-1 -right-1 bg-yellow-400 text-gray-900 text-[8px] font-bold px-1.5 py-0.5 rounded-full z-20">FREE</span>
-                <span className="text-xs font-medium text-gray-300 group-hover:text-white transition-colors">Book Call</span>
-              </a>
+              <span className="relative inline-block" style={{ padding: '2px' }}>
+                <a
+                  href="https://calendly.com/shalconnects/30min"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative inline-flex items-center justify-center gap-1 px-4 py-2.5 rounded-full transition-all duration-300 touch-manipulation min-h-[44px] animate-pulse-glow"
+                  style={{
+                    background: 'linear-gradient(rgba(17, 24, 39, 0.6), rgba(17, 24, 39, 0.6)) padding-box, linear-gradient(to right, #176641, #da651e) border-box',
+                    border: '2px solid transparent'
+                  }}
+                >
+                  <span className="absolute -top-1 -right-1 bg-yellow-400 text-gray-900 text-[8px] font-bold px-1.5 py-0.5 rounded-full z-20">FREE</span>
+                  <span className="text-xs font-medium text-gray-300 group-hover:text-white transition-colors">Book Call</span>
+                </a>
+              </span>
 
               {/* Work */}
               <button
@@ -1514,7 +1524,7 @@ export default function LandingPage() {
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 md:gap-4 justify-center lg:justify-start animate-fade-in px-2 sm:px-0" style={{ animationDelay: '0.5s' }}>
           <a
-            href="https://calendly.com/hello-shalconnects/30min"
+            href="https://calendly.com/shalconnects/30min"
             target="_blank"
             rel="noopener noreferrer"
                   className="group bg-gradient-theme px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 rounded-full text-xs sm:text-base md:text-lg font-semibold hover:shadow-2xl transition-all duration-300 inline-flex items-center justify-center transform hover:scale-105 w-auto max-w-fit self-center sm:self-auto"
@@ -2592,51 +2602,64 @@ export default function LandingPage() {
       </section>
 
       {/* Floating/Sticky Testimonial Widget */}
-      {showFloatingWidget && testimonials.length > 0 && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 lg:bottom-[5.5rem] lg:left-4 lg:translate-x-0 z-[60] block animate-fade-in">
-          <div className="bg-gray-900 rounded-xl border border-gray-800 shadow-2xl p-4 w-80 max-w-[calc(100vw-2rem)] transition-all duration-500 hover:scale-105 hover:shadow-green-500/20" style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)' }}>
-            {(() => {
-              const currentTestimonial = testimonials[floatingWidgetIndex];
-              return (
-                <div className="flex items-start gap-3">
-                  {currentTestimonial.image ? (
-                    <img 
-                      src={currentTestimonial.image} 
-                      alt={currentTestimonial.name}
-                      className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0">
-                      <User className="w-5 h-5 text-gray-400" />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <p className="text-sm font-semibold text-white truncate">{currentTestimonial.name}</p>
-                      {currentTestimonial.verified && (
-                        <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-400 mb-2 line-clamp-2">{currentTestimonial.content.substring(0, 100)}...</p>
-                    <div className="flex items-center gap-1">
-                      {[...Array(currentTestimonial.rating)].map((_, i) => (
-                        <Star key={i} className="text-yellow-400 fill-yellow-400 w-3 h-3" />
-                      ))}
-                    </div>
+      {showFloatingWidget && testimonials.length > 0 && (() => {
+        const currentTestimonial = testimonials[floatingWidgetIndex];
+        // Safety check to prevent crashes
+        if (!currentTestimonial) return null;
+        
+        return (
+          <div 
+            className="fixed bottom-20 left-1/2 -translate-x-1/2 lg:bottom-[5.5rem] lg:left-4 lg:translate-x-0 z-[60] block animate-fade-in"
+            role="complementary"
+            aria-live="polite"
+            aria-label="Client testimonial"
+          >
+            <div 
+              className="bg-gray-900 rounded-xl border border-gray-800 shadow-2xl p-4 w-80 max-w-[calc(100vw-2rem)] transition-all duration-500 hover:scale-105 hover:shadow-green-500/20"
+              style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)' }}
+              onMouseEnter={() => setIsWidgetHovered(true)}
+              onMouseLeave={() => setIsWidgetHovered(false)}
+            >
+              <div className="flex items-start gap-3">
+                {currentTestimonial.image && !imageLoadError ? (
+                  <img 
+                    src={currentTestimonial.image} 
+                    alt={`${currentTestimonial.name}'s profile`}
+                    className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                    onError={() => setImageLoadError(true)}
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0">
+                    <User className="w-5 h-5 text-gray-400" />
                   </div>
-                  <button 
-                    className="text-gray-400 hover:text-white transition-colors flex-shrink-0"
-                    onClick={() => setShowFloatingWidget(false)}
-                    aria-label="Close widget"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <p className="text-sm font-semibold text-white truncate">{currentTestimonial.name}</p>
+                    {currentTestimonial.verified && (
+                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" aria-label="Verified" />
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-400 mb-2 line-clamp-2">{currentTestimonial.content}</p>
+                  <div className="flex items-center gap-1" aria-label={`${currentTestimonial.rating} out of 5 stars`}>
+                    {[...Array(currentTestimonial.rating)].map((_, i) => (
+                      <Star key={i} className="text-yellow-400 fill-yellow-400 w-3 h-3" aria-hidden="true" />
+                    ))}
+                  </div>
                 </div>
-              );
-            })()}
+                <button 
+                  className="text-gray-400 hover:text-white focus:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900 rounded transition-colors flex-shrink-0"
+                  onClick={() => setShowFloatingWidget(false)}
+                  aria-label="Close testimonial widget"
+                  type="button"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Client Reviews Section */}
       <section 
@@ -3570,20 +3593,22 @@ export default function LandingPage() {
               })}
               
               {/* Outlined Button with Icon and Free Badge */}
-              <a
-                href="https://calendly.com/hello-shalconnects/30min"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative inline-flex items-center justify-center gap-1 xs:gap-1.5 sm:gap-2 px-2.5 xs:px-3 sm:px-4 md:px-5 lg:px-6 py-2 xs:py-2.5 sm:py-2.5 md:py-3 rounded-full transition-all duration-300 flex-shrink-0 touch-manipulation min-h-[44px] snap-center"
-                style={{
-                  background: 'linear-gradient(rgba(17, 24, 39, 0.6), rgba(17, 24, 39, 0.6)) padding-box, linear-gradient(to right, #176641, #da651e) border-box',
-                  border: '2px solid transparent'
-                }}
-              >
-                <span className="absolute -top-0.5 xs:-top-1 sm:-top-1.5 -right-0.5 xs:-right-1 sm:-right-1.5 bg-yellow-400 text-gray-900 text-[7px] xs:text-[8px] sm:text-[9px] md:text-[10px] font-bold px-1 xs:px-1.5 sm:px-2 py-0.5 rounded-full z-20 whitespace-nowrap leading-none">FREE</span>
-                <span className="absolute inset-0 rounded-full bg-gradient-theme opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300 -z-10"></span>
-                <span className="relative z-10 text-gray-300 group-hover:text-white group-active:text-white transition-colors duration-300 whitespace-nowrap" style={{ fontSize: '1rem', fontWeight: 'bold' }}>Book a Call</span>
-              </a>
+              <span className="relative inline-block" style={{ padding: '2px' }}>
+                <a
+                  href="https://calendly.com/shalconnects/30min"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative inline-flex items-center justify-center gap-1 xs:gap-1.5 sm:gap-2 px-2.5 xs:px-3 sm:px-4 md:px-5 lg:px-6 py-2 xs:py-2.5 sm:py-2.5 md:py-3 rounded-full transition-all duration-300 flex-shrink-0 touch-manipulation min-h-[44px] snap-center animate-pulse-glow"
+                  style={{
+                    background: 'linear-gradient(rgba(17, 24, 39, 0.6), rgba(17, 24, 39, 0.6)) padding-box, linear-gradient(to right, #176641, #da651e) border-box',
+                    border: '2px solid transparent'
+                  }}
+                >
+                  <span className="absolute -top-0.5 xs:-top-1 sm:-top-1.5 -right-0.5 xs:-right-1 sm:-right-1.5 bg-yellow-400 text-gray-900 text-[7px] xs:text-[8px] sm:text-[9px] md:text-[10px] font-bold px-1 xs:px-1.5 sm:px-2 py-0.5 rounded-full z-20 whitespace-nowrap leading-none">FREE</span>
+                  <span className="absolute inset-0 rounded-full bg-gradient-theme opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300 -z-10"></span>
+                  <span className="relative z-10 text-gray-300 group-hover:text-white group-active:text-white transition-colors duration-300 whitespace-nowrap" style={{ fontSize: '1rem', fontWeight: 'bold' }}>Book a Call</span>
+                </a>
+              </span>
               
               {[
                 { label: 'Work', id: 'work', icon: Briefcase },

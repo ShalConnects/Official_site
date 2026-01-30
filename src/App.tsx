@@ -1,10 +1,11 @@
-﻿import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { Zap, Target, TrendingUp, Palette, Code, Wrench, FileCode, Layout, Package, Store, List, Image, Smartphone, Globe, Share2, FileText, Layers } from 'lucide-react';
 import { trackPageView } from './utils/analytics';
 import { Analytics } from '@vercel/analytics/react';
 import { SiWordpress, SiShopify, SiWix, SiEbay, SiAmazon, SiWalmart, SiAndroid } from 'react-icons/si';
 import ScrollToTop from './components/ScrollToTop';
+import LoadingScreen from './components/LoadingScreen';
 import ServicePage from './pages/ServicePage';
 import PluginPage from './pages/PluginPage';
 import DownloadPage from './pages/DownloadPage';
@@ -29,6 +30,10 @@ import { isStoreContext } from './utils/storeUtils';
 
 function ShalConnectsPortfolio() {
   const location = useLocation();
+  const [isLoading, setIsLoading] = useState(() => {
+    // Only show loading screen on first visit (not in sessionStorage)
+    return !sessionStorage.getItem('hasLoaded');
+  });
   
   // Track page views
   useEffect(() => {
@@ -37,6 +42,12 @@ function ShalConnectsPortfolio() {
   
   // Check if we're on the store subdomain or store routes
   const isStoreSubdomain = isStoreContext();
+  
+  // Mark as loaded when loading completes
+  const handleLoadingComplete = () => {
+    setIsLoading(false);
+    sessionStorage.setItem('hasLoaded', 'true');
+  };
   // serviceCategories is kept here for ServicePage
   // LandingPage has its own copy of serviceCategories
   const serviceCategories = [
@@ -214,6 +225,7 @@ function ShalConnectsPortfolio() {
 
                   return (
     <>
+      {isLoading && <LoadingScreen onComplete={handleLoadingComplete} />}
       <ScrollToTop />
       <Analytics />
     <Routes>
