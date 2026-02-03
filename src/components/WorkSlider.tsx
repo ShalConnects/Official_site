@@ -6,13 +6,15 @@ interface WorkSliderProps {
   showServiceMarquee?: boolean;
   className?: string;
   speed?: number; // Animation speed in seconds (lower = faster)
+  compact?: boolean; // Smaller cards so more slides fit in viewport (e.g. landing page)
 }
 
 export default function WorkSlider({
   images,
   showServiceMarquee = true,
   className = '',
-  speed = 20
+  speed = 20,
+  compact = false
 }: WorkSliderProps) {
   const carouselRef = useRef<HTMLDivElement>(null);
   const marqueeRef = useRef<HTMLDivElement>(null);
@@ -296,7 +298,7 @@ export default function WorkSlider({
           {duplicatedImages.map((work, idx) => (
             <div
               key={`${work.id}-${idx}`}
-              className="flex-shrink-0 w-[400px] sm:w-[500px] md:w-[600px] group cursor-pointer"
+              className={`flex-shrink-0 group cursor-pointer ${compact ? 'w-[260px] sm:w-[300px] md:w-[340px] lg:w-[380px]' : 'w-[400px] sm:w-[500px] md:w-[600px]'}`}
               onClick={(e) => {
                 // Only open link if user didn't drag
                 if (!hasDragged.current && work.projectUrl && work.projectUrl !== '#') {
@@ -304,18 +306,15 @@ export default function WorkSlider({
                 }
               }}
             >
-              <div className="relative bg-gray-900 rounded-xl overflow-hidden border border-gray-700/50 hover:border-gray-600/50 transition-all hover:scale-[1.02]">
-                {/* Image */}
-                <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] overflow-hidden">
+              <div className="relative bg-gray-900 rounded-xl overflow-hidden border border-gray-700/50">
+                {/* Image - full width, vertically centered */}
+                <div className={`relative flex items-center justify-center w-full overflow-hidden bg-gray-900 ${compact ? 'h-[200px] sm:h-[220px] md:h-[260px] lg:h-[280px]' : 'h-[300px] sm:h-[400px] md:h-[500px]'}`}>
                   <img
                     src={work.image}
                     alt={work.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    className="w-full h-full object-contain"
                     loading="lazy"
                   />
-                  {/* Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  
                   {/* Service Badge */}
                   {work.services.length > 0 && (
                     <div className="absolute top-4 left-4">
@@ -325,20 +324,13 @@ export default function WorkSlider({
                     </div>
                   )}
 
-                  {/* Title Overlay on Hover */}
-                  <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 bg-gradient-to-t from-black/90 via-black/70 to-transparent">
-                    <h3 className="text-lg sm:text-xl font-semibold text-white mb-1">
-                      {work.title}
-                    </h3>
-                    {work.description && (
-                      <p className="text-sm text-gray-300 line-clamp-2">
-                        {work.description}
-                      </p>
-                    )}
-                    {work.projectUrl && work.projectUrl !== '#' && (
-                      <p className="text-xs text-blue-400 mt-2">View Project →</p>
-                    )}
-                  </div>
+                </div>
+                {/* Always-on strip: client + title */}
+                <div className="px-4 py-3 bg-gray-800/80 border-t border-gray-700/50">
+                  {work.clientName && (
+                    <p className="text-xs text-gray-400 truncate">{work.clientName}</p>
+                  )}
+                  <h3 className="text-sm font-semibold text-white truncate">{work.title}</h3>
                 </div>
               </div>
             </div>

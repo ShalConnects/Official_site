@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, Zap, Shield, Clock, Users, TrendingUp, ChevronDown, ChevronUp, Star, Quote, ExternalLink, Mail, Share2, Download, ShoppingCart, X } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Zap, Shield, Clock, Users, TrendingUp, ChevronDown, ChevronUp, Star, ExternalLink, Mail, Share2, Download, ShoppingCart, X } from 'lucide-react';
 import { SiWhatsapp } from 'react-icons/si';
 import PageLayout from '../components/PageLayout';
 import WorkSlider from '../components/WorkSlider';
 import { getWorkByService } from '../data/workPortfolio';
+import { testimonials } from '../data/testimonials';
+import { TestimonialSlider } from '../components/TestimonialSlider';
 
 interface SubService {
   icon: React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }>;
@@ -466,69 +468,20 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
               </div>
             </section>
 
-            {/* Testimonials Section */}
+            {/* Testimonials Section - same slider as landing */}
             <section id="testimonials" className="py-12 sm:py-16 md:py-20 lg:py-24 relative" style={{ 
                       background: `linear-gradient(to bottom, ${foundCategory.color}08, ${foundCategory.color}03)`
                     }}>
-                      {/* Subtle Top Border */}
                       <div className="absolute top-0 left-0 right-0 h-px opacity-20" style={{ 
                         background: `linear-gradient(to right, transparent, ${foundCategory.color}50, #da651e50, transparent)`
                       }}></div>
                       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 lg:pr-8">
-                        <div className="text-center mb-10 sm:mb-12 md:mb-16">
-                          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white" style={{ marginBottom: '0' }}>What Clients Say</h2>
-                          <p className="text-sm sm:text-base md:text-lg text-gray-400 max-w-2xl mx-auto">Testimonials from our amazing partners</p>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 md:gap-8">
-            {[
-              {
-                name: 'Sarah Johnson',
-                role: 'Business Owner',
-                content: `Working with ShalConnects on our ${foundService.title} project was a game-changer. The team was professional, responsive, and delivered exactly what we needed. Highly recommend!`,
-                rating: 5
-              },
-              {
-                name: 'Michael Chen',
-                role: 'Marketing Director',
-                content: `The ${foundService.title} solution they built for us exceeded our expectations. It's fast, reliable, and exactly what we needed to grow our business.`,
-                rating: 5
-              },
-              {
-                name: 'Emily Rodriguez',
-                role: 'Entrepreneur',
-                content: `I was impressed by their attention to detail and commitment to quality. Our ${foundService.title} project was completed on time and within budget. Excellent service!`,
-                rating: 5
-              }
-            ].map((testimonial, idx) => (
-              <div
-                key={idx}
-                className="bg-gray-800/60 backdrop-blur-sm p-6 sm:p-7 md:p-8 rounded-xl border border-gray-700/50 hover:border-gray-600/70 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl group relative overflow-hidden"
-                style={{ 
-                  boxShadow: '0 8px 20px -5px rgba(0, 0, 0, 0.3)'
-                }}
-              >
-                {/* Subtle gradient overlay on hover */}
-                <div 
-                  className="absolute top-0 right-0 w-24 h-24 opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-full blur-2xl"
-                  style={{ backgroundColor: foundCategory.color }}
-                ></div>
-                
-                <div className="relative z-10">
-                  <Quote className="mb-4 w-8 h-8 sm:w-10 sm:h-10" style={{ color: foundCategory.color }} />
-                  <div className="flex mb-4 gap-1">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="text-yellow-400 fill-yellow-400 w-4 h-4 sm:w-5 sm:h-5" />
-                    ))}
-                  </div>
-                  <p className="text-sm sm:text-base text-gray-300 mb-6 italic leading-relaxed">"{testimonial.content}"</p>
-                  <div className="pt-4 border-t border-gray-700/50">
-                    <p className="text-sm sm:text-base font-semibold text-white mb-1">{testimonial.name}</p>
-                    <p className="text-xs sm:text-sm text-gray-400">{testimonial.role}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-                        </div>
+                        <TestimonialSlider
+                          testimonials={testimonials}
+                          accentColor={foundCategory.color}
+                          showHeading={true}
+                          showViewAll={true}
+                        />
                       </div>
                     </section>
             </>
@@ -693,6 +646,16 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
                   showServiceMarquee={false}
                   speed={20}
                 />
+                <div className="text-center mt-8 sm:mt-10">
+                  <Link
+                    to={`/work?service=${encodeURIComponent(foundService.title)}`}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-white border border-gray-600 hover:border-gray-500 transition-colors"
+                    style={{ backgroundColor: foundCategory.color + '20' }}
+                  >
+                    View all {foundService.title} work
+                    <ExternalLink size={18} />
+                  </Link>
+                </div>
               </div>
             </section>
           )}

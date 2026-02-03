@@ -26,6 +26,8 @@ import BlogPostPage from './pages/BlogPostPage';
 import StoreHome from './pages/StoreHome';
 import AboutPage from './pages/AboutPage';
 import ReviewsPage from './pages/ReviewsPage';
+import TestimonialsPage from './pages/TestimonialsPage';
+import WorkPage from './pages/WorkPage';
 import { isStoreContext } from './utils/storeUtils';
 
 function ShalConnectsPortfolio() {
@@ -264,6 +266,8 @@ function ShalConnectsPortfolio() {
       <Route path="/services/:serviceSlug" element={<ServicePage serviceCategories={serviceCategories as any} />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/reviews" element={<ReviewsPage />} />
+        <Route path="/testimonials" element={<TestimonialsPage />} />
+        <Route path="/work" element={<WorkPage />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/refund" element={<RefundPolicy />} />

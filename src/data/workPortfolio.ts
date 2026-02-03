@@ -9,6 +9,10 @@ export interface WorkImage {
   services: string[]; // Service names that this work belongs to (e.g., ['WordPress', 'Shopify'])
   category?: string; // Optional category like 'e-commerce', 'design', etc.
   projectUrl?: string; // Optional link to live project
+  clientName?: string; // Optional client/project name for showcase
+  results?: string; // Optional one-line results (e.g. "+40% sales")
+  quote?: string; // Optional short testimonial or quote
+  featured?: boolean; // Optional: show in featured highlights
 }
 
 // TODO: Add your actual work images here
@@ -104,6 +108,11 @@ export const getWorkByService = (serviceName: string): WorkImage[] => {
       service.toLowerCase() === serviceName.toLowerCase()
     )
   );
+};
+
+// Helper function to get featured work (for highlights on landing/service pages)
+export const getFeaturedWork = (): WorkImage[] => {
+  return workPortfolio.filter(work => work.featured === true);
 };
 
 // Helper function to shuffle array (for landing page)

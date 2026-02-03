@@ -5,6 +5,7 @@ import PageLayout from '../components/PageLayout';
 import PageHero from '../components/PageHero';
 import PageContainer from '../components/PageContainer';
 import PageSection from '../components/PageSection';
+import ScrollBrightness from '../components/ScrollBrightness';
 
 export default function AboutPage() {
   const location = useLocation();
@@ -137,7 +138,7 @@ export default function AboutPage() {
               {/* Timeline Items */}
               <div className="space-y-8 sm:space-y-12">
                 {/* 2024 - Right Side (Index 0) */}
-                <div className="relative">
+                <ScrollBrightness className="relative">
                   <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
                     {/* Date Badge - Left Side */}
                     <div className="flex-shrink-0 md:w-1/2 md:pr-8 md:text-right">
@@ -174,10 +175,10 @@ export default function AboutPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </ScrollBrightness>
 
                 {/* Another 2024 Event - Left Side (Index 1) */}
-                <div className="relative">
+                <ScrollBrightness className="relative">
                   <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
                     {/* Content Card - Left Side */}
                     <div className="md:w-1/2 md:pr-8 md:text-right ml-8 sm:ml-12 md:ml-0 order-2 md:order-1">
@@ -215,10 +216,10 @@ export default function AboutPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </ScrollBrightness>
 
                 {/* 2023 - Right Side (Index 2) */}
-                <div className="relative">
+                <ScrollBrightness className="relative">
                   <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
                     {/* Date Badge - Left Side */}
                     <div className="flex-shrink-0 md:w-1/2 md:pr-8 md:text-right">
@@ -255,10 +256,10 @@ export default function AboutPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </ScrollBrightness>
 
                 {/* 2023 Learning - Left Side (Index 3) */}
-                <div className="relative">
+                <ScrollBrightness className="relative">
                   <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
                     {/* Content Card - Left Side */}
                     <div className="md:w-1/2 md:pr-8 md:text-right ml-8 sm:ml-12 md:ml-0 order-2 md:order-1">
@@ -296,10 +297,10 @@ export default function AboutPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </ScrollBrightness>
 
                 {/* 2022 - Right Side (Index 4) */}
-                <div className="relative">
+                <ScrollBrightness className="relative">
                   <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
                     {/* Date Badge - Left Side */}
                     <div className="flex-shrink-0 md:w-1/2 md:pr-8 md:text-right">
@@ -337,10 +338,10 @@ export default function AboutPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </ScrollBrightness>
 
                 {/* 2021 - Left Side (Index 5) */}
-                <div className="relative">
+                <ScrollBrightness className="relative">
                   <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
                     {/* Content Card - Left Side */}
                     <div className="md:w-1/2 md:pr-8 md:text-right ml-8 sm:ml-12 md:ml-0 order-2 md:order-1">
@@ -378,7 +379,7 @@ export default function AboutPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </ScrollBrightness>
               </div>
             </div>
 

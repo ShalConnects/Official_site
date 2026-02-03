@@ -1,13 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { X, Zap, Target, TrendingUp, Clock, CheckCircle, Star, Quote, ExternalLink, XCircle, ChevronDown, Palette, Code, Wrench, FileCode, Layout, Package, Store, List, Image, Smartphone, Globe, Share2, FileText, Layers, Home, Briefcase, MoreHorizontal, ArrowUp, ArrowRight, Mail, Search, Workflow, Rocket, Wand2, Activity, Key, Link2, QrCode, User, Heart } from 'lucide-react';
-import { SiWordpress, SiShopify, SiWix, SiEbay, SiAmazon, SiWalmart, SiAndroid, SiLinkedin, SiX, SiWhatsapp, SiYoutube } from 'react-icons/si';
+import { X, Zap, Target, TrendingUp, Clock, CheckCircle, Star, Quote, ExternalLink, XCircle, ChevronDown, ChevronLeft, ChevronRight, Palette, Code, Wrench, FileCode, Layout, Package, Store, List, Image, Smartphone, Globe, Share2, FileText, Layers, Home, Briefcase, MoreHorizontal, ArrowUp, ArrowRight, Mail, Search, Workflow, Rocket, Wand2, Activity, Key, Link2, QrCode, User, Heart } from 'lucide-react';
+import { SiWordpress, SiShopify, SiWix, SiEbay, SiAmazon, SiWalmart, SiAndroid, SiLinkedin, SiQuora, SiX, SiWhatsapp, SiYoutube } from 'react-icons/si';
 import Logo from '../components/Logo';
 import WorkSlider from '../components/WorkSlider';
 import BrandMarquee from '../components/BrandMarquee';
 import ReviewsMarquee from '../components/ReviewsMarquee';
+import { ViewAllLink } from '../components/ViewAllLink';
+import { TestimonialSlider } from '../components/TestimonialSlider';
 import { brandImagesFirstHalf, brandImagesSecondHalf } from '../data/brands';
-import { workPortfolio, shuffleArray } from '../data/workPortfolio';
+import { workPortfolio, shuffleArray, getFeaturedWork } from '../data/workPortfolio';
+import { testimonials } from '../data/testimonials';
 
 // Type definitions
 interface Particle {
@@ -103,35 +106,6 @@ export default function LandingPage() {
   const [imageLoadError, setImageLoadError] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
 
-  // Testimonials data - defined early for use in useEffect
-  const testimonials = [
-    {
-      name: 'James Michaelson',
-      role: 'Founder of Phoenix Projectors AV',
-      content: 'Salauddin is a very good & skilled freelancer and I enjoy working with him. He has overall experience with every sector you might need. He created an eBay template and store for me and I loved it. He is good at Website Design & WordPress. That will be our next project. Communication is splendid. I thank him for being helpful and patient. It was a pleasure working with him. Thank you, Salauddin!',
-      rating: 5,
-      image: '/images/testimonials/james-michaelson.png',
-      verified: true,
-      linkedin: 'https://www.linkedin.com/in/james-michaelson-bornagaineco',
-      website: 'https://pp-av.com/',
-      projectImage: '/images/images/work/Banner_1.jpg',
-      projectTitle: 'eBay Store & Template Design',
-      projectDescription: 'Custom eBay store design and template creation',
-      projectLink: 'https://pp-av.com/'
-    },
-    {
-      name: 'Jane Smith',
-      role: 'Founder, GreenEarth',
-      content: 'Outstanding work! They understood our vision and brought it to life beautifully.',
-      rating: 5
-    },
-    {
-      name: 'Mike Johnson',
-      role: 'Director, UrbanStyle',
-      content: 'The best investment we made. Our sales increased significantly after the redesign.',
-      rating: 5
-    }
-  ];
   const [formData, setFormData] = useState<FormData>({ name: '', email: '', message: '', service: '' });
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -141,12 +115,14 @@ export default function LandingPage() {
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
   const [_activeTab] = useState(0);
   const [activeServiceCard, setActiveServiceCard] = useState(0);
-  const [currentTestimonialIndex, setCurrentTestimonialIndex] = useState(0);
-  const [isTestimonialPaused, setIsTestimonialPaused] = useState(false);
   const [visibleServiceCards, setVisibleServiceCards] = useState<Set<string>>(new Set());
   const [selectedProcessStep, setSelectedProcessStep] = useState<number | null>(null);
   const [activeProcessTab, setActiveProcessTab] = useState<'subSteps' | 'deliverables' | 'questions'>('subSteps');
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+  const landingWorkImages = useMemo(() => {
+    const featured = getFeaturedWork();
+    return featured.length > 0 ? featured : shuffleArray(workPortfolio).slice(0, 10);
+  }, []);
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const serviceCardRefs = useRef<Record<string, HTMLElement | null>>({});
   const serviceDropdownRef = useRef<HTMLDivElement>(null);
@@ -316,27 +292,6 @@ export default function LandingPage() {
       }
     };
   }, [isToolsHovered, tools]);
-
-  // Auto-play testimonial carousel
-  useEffect(() => {
-    if (isTestimonialPaused || testimonials.length <= 1 || testimonials.length === 0) return;
-
-    const interval = setInterval(() => {
-      setCurrentTestimonialIndex((prev) => {
-        const nextIndex = (prev + 1) % testimonials.length;
-        return nextIndex;
-      });
-    }, 3000); // 3 seconds
-
-    return () => clearInterval(interval);
-  }, [isTestimonialPaused, testimonials.length]);
-
-  // Ensure current index is valid
-  useEffect(() => {
-    if (testimonials.length > 0 && currentTestimonialIndex >= testimonials.length) {
-      setCurrentTestimonialIndex(0);
-    }
-  }, [testimonials.length, currentTestimonialIndex]);
 
   // Stats counter animation
   useEffect(() => {
@@ -2021,15 +1976,15 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Work Showcase Slider Section - Design Monks Style */}
+      {/* Work Showcase Slider Section - Full screen */}
       {workPortfolio.length > 0 && (
         <section 
           id="work-showcase" 
-          className="py-12 sm:py-16 md:py-20 relative"
+          className="min-h-screen flex flex-col relative"
           style={{ backgroundColor: 'rgba(139, 92, 246, 0.05)' }}
         >
-          <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
-            <div className={`text-center mb-8 sm:mb-12 md:mb-16 transition-all duration-1000 ${
+          <div className="flex flex-col flex-1 w-full">
+            <div className={`flex-shrink-0 text-center py-8 sm:py-10 md:py-12 px-2 sm:px-4 transition-all duration-1000 ${
               visibleSections.has('work') 
                 ? 'opacity-100 translate-y-0' 
                 : 'opacity-0 translate-y-10'
@@ -2038,16 +1993,31 @@ export default function LandingPage() {
               <p className="text-base sm:text-lg md:text-xl text-gray-400 px-2">We've recently worked on some amazing projects</p>
             </div>
 
-            <div className={`transition-all duration-1000 ${
+            <div className={`flex-1 min-h-0 flex flex-col justify-center px-0 transition-all duration-1000 ${
               visibleSections.has('work') 
                 ? 'opacity-100 translate-y-0' 
                 : 'opacity-0 translate-y-10'
             }`}>
               <WorkSlider 
-                images={workPortfolio} 
-                showServiceMarquee={true}
+                images={landingWorkImages} 
+                showServiceMarquee={false}
                 speed={20}
+                compact={true}
               />
+            </div>
+
+            <div className={`flex-shrink-0 text-center py-8 sm:py-10 transition-all duration-1000 ${
+              visibleSections.has('work') 
+                ? 'opacity-100 translate-y-0' 
+                : 'opacity-0 translate-y-10'
+            }`}>
+              <Link
+                to="/work"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-white bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-colors"
+              >
+                View all work
+                <ArrowRight size={18} />
+              </Link>
             </div>
           </div>
         </section>
@@ -2460,116 +2430,19 @@ export default function LandingPage() {
           background: 'linear-gradient(to right, transparent, rgba(21, 102, 65, 0.5), rgba(218, 101, 30, 0.5), transparent)'
         }}></div>
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-          <div className={`text-center mb-6 sm:mb-8 md:mb-12 lg:mb-16 transition-all duration-1000 ${
+          {/* Same testimonial slider as service and testimonials pages */}
+          <div className={`transition-all duration-1000 ${
             visibleSections.has('testimonials') 
               ? 'opacity-100 translate-y-0' 
               : 'opacity-0 translate-y-10'
           }`}>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2 sm:mb-3 md:mb-4 px-2">Featured Testimonials</h2>
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-400 px-2">Hear from our clients about their experience</p>
+            <TestimonialSlider
+              testimonials={testimonials}
+              autoPlay
+              showHeading={true}
+              showViewAll={true}
+            />
           </div>
-
-          {/* Large Pull Quote Hero - Featured Testimonial Carousel */}
-          {testimonials[currentTestimonialIndex] && (
-            <div 
-              className={`mb-6 sm:mb-8 md:mb-12 lg:mb-16 transition-all duration-1000 ${
-                visibleSections.has('testimonials') 
-                  ? 'opacity-100 translate-y-0' 
-                  : 'opacity-0 translate-y-10'
-              }`}
-              onMouseEnter={() => setIsTestimonialPaused(true)}
-              onMouseLeave={() => setIsTestimonialPaused(false)}
-            >
-              <div 
-                key={currentTestimonialIndex}
-                className="group/hero bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 p-4 sm:p-6 md:p-8 lg:p-12 rounded-xl sm:rounded-2xl md:rounded-3xl border border-gray-800/50 relative overflow-hidden transition-all duration-700 hover:border-green-500/30 hover:shadow-2xl hover:shadow-green-500/10" 
-                style={{ 
-                  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2)',
-                  animation: 'slideInFromRight 0.6s ease-out',
-                  willChange: 'transform, opacity'
-                }}
-              >
-                {/* Enhanced background gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-green-500/5 pointer-events-none transition-opacity duration-700 group-hover/hero:from-green-500/10 group-hover/hero:to-green-500/10"></div>
-                
-                {/* Decorative corner accent */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-500/10 to-transparent rounded-bl-full opacity-0 group-hover/hero:opacity-100 transition-opacity duration-700"></div>
-                
-                <div className="relative z-10">
-                  {/* Large Pull Quote */}
-                  <div className="flex items-start gap-2 sm:gap-3 md:gap-4 mb-3 sm:mb-4 md:mb-6">
-                    <Quote className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 opacity-30 flex-shrink-0 transition-all duration-700 group-hover/hero:opacity-50 group-hover/hero:scale-110" style={{ color: '#4a9d6f' }} aria-hidden="true" />
-                    <blockquote className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-bold leading-[1.5] sm:leading-[1.6] md:leading-[1.7] lg:leading-[1.8] italic flex-1 transition-colors duration-700 group-hover/hero:text-white px-1 sm:px-2 break-words" style={{ color: '#e5e7eb', textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)', letterSpacing: '0.01em' }}>
-                      "{testimonials[currentTestimonialIndex].content}"
-                    </blockquote>
-                  </div>
-                  
-                  {/* Client Info */}
-                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 pt-4 sm:pt-6 border-t border-gray-800/50">
-                    {testimonials[currentTestimonialIndex].image && (
-                      <div className="relative flex-shrink-0">
-                        <img 
-                          src={testimonials[currentTestimonialIndex].image} 
-                          alt={testimonials[currentTestimonialIndex].name}
-                          loading="lazy"
-                          className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full object-cover ring-2 ring-green-500/50 transition-all duration-700 group-hover/hero:ring-green-500/80 group-hover/hero:scale-110 group-hover/hero:shadow-lg group-hover/hero:shadow-green-500/30"
-                        />
-                        {testimonials[currentTestimonialIndex].verified && (
-                          <div className="absolute -bottom-0.5 -right-0.5 bg-green-500 rounded-full p-0.5 border-2 border-gray-900">
-                            <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    <div className="flex-1 text-center sm:text-left">
-                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-3 mb-0">
-                        <p className="text-base sm:text-lg md:text-xl font-bold text-white transition-colors duration-700 group-hover/hero:text-green-400">{testimonials[currentTestimonialIndex].name}</p>
-                        <div className="flex items-center gap-0.5" role="img" aria-label={`Rating: ${testimonials[currentTestimonialIndex].rating} out of 5 stars`}>
-                          {[...Array(testimonials[currentTestimonialIndex].rating)].map((_, i) => (
-                            <Star 
-                              key={i} 
-                              className="text-yellow-400 fill-yellow-400 w-3.5 h-3.5 sm:w-4 sm:h-4 transition-all duration-500 group-hover/hero:scale-110" 
-                              aria-hidden="true"
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-3 mb-2">
-                        <p className="text-xs sm:text-sm text-gray-400 transition-colors duration-700 group-hover/hero:text-gray-300">{testimonials[currentTestimonialIndex].role}</p>
-                        {(testimonials[currentTestimonialIndex].linkedin || testimonials[currentTestimonialIndex].website) && (
-                          <>
-                            <span className="text-gray-600 hidden sm:inline">•</span>
-                            {testimonials[currentTestimonialIndex].linkedin && (
-                              <a
-                                href={testimonials[currentTestimonialIndex].linkedin}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center text-gray-400 hover:text-blue-400 transition-all duration-500 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 rounded group/link"
-                                aria-label="LinkedIn profile"
-                              >
-                                <SiLinkedin className="w-4 h-4 sm:w-5 sm:h-5" />
-                              </a>
-                            )}
-                            {testimonials[currentTestimonialIndex].website && (
-                              <a
-                                href={testimonials[currentTestimonialIndex].website}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center text-gray-400 hover:text-green-400 transition-all duration-500 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900 rounded group/link"
-                                aria-label="Website"
-                              >
-                                <Globe className="w-4 h-4 sm:w-5 sm:h-5" />
-                              </a>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Social Proof Numbers Banner - Combined Stats */}
           <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6 lg:gap-8 mt-6 sm:mt-8 md:mt-12 lg:mt-16 transition-all duration-1000 ${
@@ -2598,6 +2471,7 @@ export default function LandingPage() {
               <div className="text-[10px] sm:text-xs md:text-sm text-gray-400 leading-tight">Average Rating</div>
             </div>
           </div>
+
         </div>
       </section>
 
@@ -2713,13 +2587,7 @@ export default function LandingPage() {
               ? 'opacity-100 translate-y-0' 
               : 'opacity-0 translate-y-10'
           }`}>
-            <Link
-              to="/reviews"
-              className="inline-flex items-center gap-2 px-6 py-3 sm:px-8 sm:py-4 bg-gradient-to-r from-green-500 to-orange-500 hover:from-green-600 hover:to-orange-600 text-white rounded-lg font-medium transition-all duration-300 hover:shadow-lg hover:shadow-green-500/25 hover:scale-105"
-            >
-              <span>View All Reviews</span>
-              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-            </Link>
+            <ViewAllLink to="/reviews">View All Reviews</ViewAllLink>
           </div>
         </div>
       </section>
@@ -2787,15 +2655,7 @@ export default function LandingPage() {
             </div>
 
             <div className="mt-6 text-center">
-              <a
-                href="https://store.shalconnects.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm sm:text-base"
-              >
-                <span>View All Products</span>
-                <ArrowRight size={16} />
-              </a>
+              <ViewAllLink href="https://store.shalconnects.com">View All Products</ViewAllLink>
             </div>
           </div>
         </div>
@@ -2892,13 +2752,7 @@ export default function LandingPage() {
 
             {/* View All Tools Link */}
             <div className="mt-8 text-center">
-              <Link
-                to="/tools"
-                className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm sm:text-base"
-              >
-                <span>View All Tools</span>
-                <ArrowRight size={16} />
-              </Link>
+              <ViewAllLink to="/tools">View All Tools</ViewAllLink>
             </div>
           </div>
         </div>
