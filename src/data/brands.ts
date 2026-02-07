@@ -83,6 +83,7 @@ const allBrandImages = [
   'left-logo-65.png',
   'left-logo-66.jpg',
   'left-logo-67.png',
+  'left-logo-68.png',
   'right-logo-1.jpg',
   'right-logo-2.png',
   'right-logo-3.jpg',

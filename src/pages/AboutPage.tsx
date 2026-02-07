@@ -384,22 +384,26 @@ export default function AboutPage() {
             </div>
 
             {/* Quick Stats */}
-            <div className="mt-12 sm:mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+            <div className="mt-12 sm:mt-16 grid grid-cols-2 md:grid-cols-5 gap-4 sm:gap-6">
               <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-4 sm:p-6 text-center">
                 <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-gradient-theme mb-2">8+</div>
                 <div className="text-xs sm:text-sm text-gray-400">Years Experience</div>
               </div>
               <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-4 sm:p-6 text-center">
-                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-gradient-theme mb-2">150+</div>
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-gradient-theme mb-2">250+</div>
                 <div className="text-xs sm:text-sm text-gray-400">Projects Completed</div>
               </div>
               <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-4 sm:p-6 text-center">
-                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-gradient-theme mb-2">200+</div>
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-gradient-theme mb-2">500+</div>
                 <div className="text-xs sm:text-sm text-gray-400">Happy Clients</div>
               </div>
               <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-4 sm:p-6 text-center">
-                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-gradient-theme mb-2">5+</div>
-                <div className="text-xs sm:text-sm text-gray-400">Products Launched</div>
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-gradient-theme mb-2">98%</div>
+                <div className="text-xs sm:text-sm text-gray-400">Satisfaction Rate</div>
+              </div>
+              <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-4 sm:p-6 text-center">
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-gradient-theme mb-2">4.9/5</div>
+                <div className="text-xs sm:text-sm text-gray-400">Average Rating</div>
               </div>
             </div>
         </PageContainer>

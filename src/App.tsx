@@ -89,8 +89,8 @@ function ShalConnectsPortfolio() {
           startingPrice: '$400',
           subServices: [
             { icon: Palette, label: 'Wix Site Design', desc: 'Custom Wix website designs' },
-            { icon: Layout, label: 'Wix Customization', desc: 'Tailored Wix site customization' },
-            { icon: Wrench, label: 'Wix Maintenance', desc: 'Ongoing Wix site support' }
+            { icon: Layout, label: 'Wix Theme', desc: 'Custom Wix themes and templates' },
+            { icon: Package, label: 'Wix App', desc: 'Custom Wix app development' }
           ]
         }
       ]
@@ -106,11 +106,9 @@ function ShalConnectsPortfolio() {
           desc: 'Complete eBay store management and optimization',
           startingPrice: '$300',
           subServices: [
-            { icon: Store, label: 'eBay Store Management', desc: 'Complete store optimization' },
+            { icon: Store, label: 'eBay Store Management', desc: 'Complete store optimization and dropshipping setup and automation tools' },
             { icon: List, label: 'eBay Listing', desc: 'Professional product listings' },
-            { icon: Layout, label: 'eBay Template', desc: 'Custom store templates' },
-            { icon: Palette, label: 'eBay Store Redesign', desc: 'Modern store makeovers' },
-            { icon: Package, label: 'eBay Dropshipping', desc: 'Complete dropshipping setup and automation tools' }
+            { icon: Layout, label: 'eBay Template', desc: 'Custom store templates' }
           ]
         },
         { 
@@ -163,9 +161,7 @@ function ShalConnectsPortfolio() {
             { icon: Smartphone, label: 'Web to App', desc: 'Convert your website to app' },
             { icon: Code, label: 'Scratch to App', desc: 'Native app development' },
             { icon: Wrench, label: 'App Maintenance', desc: 'Ongoing support and updates' },
-            { icon: TrendingUp, label: 'App Store Optimization', desc: 'ASO and listing optimization' },
-            { icon: Palette, label: 'App UI/UX Design', desc: 'Interface design services' },
-            { icon: Globe, label: 'App Integration', desc: 'API and third-party integrations' }
+            { icon: Palette, label: 'App UI/UX Design', desc: 'Interface design services' }
           ]
         }
       ]

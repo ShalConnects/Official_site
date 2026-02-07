@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { X, Zap, Target, TrendingUp, Clock, CheckCircle, Star, Quote, ExternalLink, XCircle, ChevronDown, ChevronLeft, ChevronRight, Palette, Code, Wrench, FileCode, Layout, Package, Store, List, Image, Smartphone, Globe, Share2, FileText, Layers, Home, Briefcase, MoreHorizontal, ArrowUp, ArrowRight, Mail, Search, Workflow, Rocket, Wand2, Activity, Key, Link2, QrCode, User, Heart } from 'lucide-react';
 import { SiWordpress, SiShopify, SiWix, SiEbay, SiAmazon, SiWalmart, SiAndroid, SiLinkedin, SiQuora, SiX, SiWhatsapp, SiYoutube } from 'react-icons/si';
@@ -8,6 +8,7 @@ import BrandMarquee from '../components/BrandMarquee';
 import ReviewsMarquee from '../components/ReviewsMarquee';
 import { ViewAllLink } from '../components/ViewAllLink';
 import { TestimonialSlider } from '../components/TestimonialSlider';
+import ContactForm from '../components/ContactForm';
 import { brandImagesFirstHalf, brandImagesSecondHalf } from '../data/brands';
 import { workPortfolio, shuffleArray, getFeaturedWork } from '../data/workPortfolio';
 import { testimonials } from '../data/testimonials';
@@ -141,7 +142,7 @@ export default function LandingPage() {
   
   // Stats counter animation
   const [stats, setStats] = useState<Stats>({ projects: 0, clients: 0, years: 0, satisfaction: 0 });
-  const statsTarget: Stats = { projects: 150, clients: 200, years: 8, satisfaction: 98 };
+  const statsTarget: Stats = { projects: 250, clients: 500, years: 8, satisfaction: 98 };
 
   // Mouse position for interactive effects
   const [mousePosition, _setMousePosition] = useState({ x: 0, y: 0 });
@@ -237,7 +238,7 @@ export default function LandingPage() {
       setScrollProgress(Math.min(100, Math.max(0, progress)));
       
       // Determine active section
-      const sections = ['home', 'services', 'process', 'work', 'saas-products', 'testimonials', 'reviews', 'products', 'tools', 'about', 'contact'];
+      const sections = ['home', 'services', 'process', 'work', 'products', 'testimonials', 'reviews', 'tools', 'about', 'contact'];
       let current = 'home';
       
       for (const section of sections) {
@@ -414,7 +415,7 @@ export default function LandingPage() {
     const observer = new IntersectionObserver(observerCallback, observerOptions);
 
     // Observe all sections
-    const sections = ['home', 'services', 'process', 'work', 'saas-products', 'testimonials', 'reviews', 'tools', 'about', 'contact'];
+    const sections = ['home', 'services', 'process', 'work', 'products', 'testimonials', 'reviews', 'tools', 'about', 'contact'];
     sections.forEach(section => {
       const element = document.getElementById(section);
       if (element) {
@@ -570,8 +571,8 @@ export default function LandingPage() {
           startingPrice: '$400',
           subServices: [
             { icon: Palette, label: 'Wix Site Design', desc: 'Custom Wix website designs' },
-            { icon: Layout, label: 'Wix Customization', desc: 'Tailored Wix site customization' },
-            { icon: Wrench, label: 'Wix Maintenance', desc: 'Ongoing Wix site support' }
+            { icon: Layout, label: 'Wix Theme', desc: 'Custom Wix themes and templates' },
+            { icon: Package, label: 'Wix App', desc: 'Custom Wix app development' }
           ]
         }
       ]
@@ -587,11 +588,9 @@ export default function LandingPage() {
           desc: 'Complete eBay store management and optimization',
           startingPrice: '$300',
           subServices: [
-            { icon: Store, label: 'eBay Store Management', desc: 'Complete store optimization' },
+            { icon: Store, label: 'eBay Store Management', desc: 'Complete store optimization and dropshipping setup and automation tools' },
             { icon: List, label: 'eBay Listing', desc: 'Professional product listings' },
-            { icon: Layout, label: 'eBay Template', desc: 'Custom store templates' },
-            { icon: Palette, label: 'eBay Store Redesign', desc: 'Modern store makeovers' },
-            { icon: Package, label: 'eBay Dropshipping', desc: 'Complete dropshipping setup and automation tools' }
+            { icon: Layout, label: 'eBay Template', desc: 'Custom store templates' }
           ]
         },
         { 
@@ -644,9 +643,7 @@ export default function LandingPage() {
             { icon: Smartphone, label: 'Web to App', desc: 'Convert your website to app' },
             { icon: Code, label: 'Scratch to App', desc: 'Native app development' },
             { icon: Wrench, label: 'App Maintenance', desc: 'Ongoing support and updates' },
-            { icon: TrendingUp, label: 'App Store Optimization', desc: 'ASO and listing optimization' },
-            { icon: Palette, label: 'App UI/UX Design', desc: 'Interface design services' },
-            { icon: Globe, label: 'App Integration', desc: 'API and third-party integrations' }
+            { icon: Palette, label: 'App UI/UX Design', desc: 'Interface design services' }
           ]
         }
       ]
@@ -2023,10 +2020,10 @@ export default function LandingPage() {
         </section>
       )}
 
-      {/* Our SaaS Products Section */}
+      {/* Our Products Section (combined: apps, WordPress, and more) */}
       <section 
-        id="saas-products" 
-        ref={(el) => (sectionRefs.current['saas-products'] = el)}
+        id="products" 
+        ref={(el) => (sectionRefs.current['products'] = el)}
         className="py-12 sm:py-16 md:py-20 relative"
         style={{ 
           background: 'linear-gradient(to bottom, rgba(99, 102, 241, 0.03), transparent)'
@@ -2038,12 +2035,63 @@ export default function LandingPage() {
         }}></div>
         <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
           <div className={`text-center mb-8 sm:mb-12 md:mb-16 transition-all duration-1000 ${
-            visibleSections.has('saas-products') 
+            visibleSections.has('products') 
               ? 'opacity-100 translate-y-0' 
               : 'opacity-0 translate-y-10'
           }`}>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 px-2">Our Products</h2>
             <p className="text-base sm:text-lg md:text-xl text-gray-400 px-2">Things we've built and launched</p>
+          </div>
+
+          {/* Featured WordPress product */}
+          <div className={`max-w-4xl mx-auto mb-10 sm:mb-12 transition-all duration-1000 ${
+            visibleSections.has('products') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+          }`}>
+            <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl sm:rounded-2xl p-6 sm:p-8 md:p-10 hover:border-gray-600/50 transition-all">
+              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                <div className="flex-shrink-0">
+                  <img 
+                    src="/images/plugin/thumbnail.png" 
+                    alt="Variation Images Pro"
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.parentElement?.querySelector('.fallback-icon');
+                      if (fallback) {
+                        (fallback as HTMLElement).style.display = 'flex';
+                      }
+                    }}
+                  />
+                  <div className="fallback-icon hidden w-16 h-16 sm:w-20 sm:h-20 rounded-lg items-center justify-center" style={{ backgroundColor: '#2271b1' }}>
+                    <Package size={32} className="sm:w-10 sm:h-10 text-white" />
+                  </div>
+                </div>
+                <div className="flex-1 text-center sm:text-left">
+                  <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">Variation Images Pro</h3>
+                  <p className="text-gray-400 text-sm sm:text-base mb-4">Add unlimited custom images to WooCommerce product variations. Transform dropdown menus into beautiful visual swatches and galleries.</p>
+                  <div className="flex flex-wrap gap-2 justify-center sm:justify-start mb-4">
+                    <span className="px-3 py-1 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: '#2271b1' }}>WordPress Plugin</span>
+                    <span className="px-3 py-1 rounded-full text-xs font-semibold text-gray-300 bg-gray-700">WooCommerce</span>
+                  </div>
+                  <a
+                    href="https://store.shalconnects.com/store/variation-images-pro"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm sm:text-base transition-all hover:scale-105"
+                    style={{ 
+                      background: 'linear-gradient(to right, #176641, #da651e)',
+                      color: 'white'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(21, 102, 65, 0.5)'}
+                    onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
+                  >
+                    <span>Buy Now - $24.99</span>
+                    <ExternalLink size={16} />
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div 
@@ -2069,7 +2117,7 @@ export default function LandingPage() {
                 data-product-card
                 onClick={() => setSelectedProduct(product)}
                 className={`group relative h-64 sm:h-72 md:h-80 w-72 sm:w-80 md:w-96 flex-shrink-0 rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer transition-all duration-1000 snap-start ${
-                  visibleSections.has('saas-products') 
+                  visibleSections.has('products') 
                     ? 'opacity-100 translate-y-0' 
                     : 'opacity-0 translate-y-10'
                 }`}
@@ -2138,6 +2186,10 @@ export default function LandingPage() {
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className="mt-8 text-center">
+            <ViewAllLink href="https://store.shalconnects.com">View All Products</ViewAllLink>
           </div>
         </div>
       </section>
@@ -2592,75 +2644,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Products Section */}
-      <section 
-        id="products" 
-        className="py-12 sm:py-16 md:py-20 relative"
-        style={{ 
-          background: 'linear-gradient(to bottom, transparent, rgba(21, 102, 65, 0.03))'
-        }}
-      >
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
-          <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 px-2">Our WordPress Products</h2>
-            <p className="text-base sm:text-lg md:text-xl text-gray-400 px-2">Premium plugins and themes to enhance your WordPress website</p>
-          </div>
-
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl sm:rounded-2xl p-6 sm:p-8 md:p-10 hover:border-gray-600/50 transition-all">
-              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-                <div className="flex-shrink-0">
-                  <img 
-                    src="/images/plugin/thumbnail.png" 
-                    alt="Variation Images Pro"
-                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      // Fallback to icon if image fails to load
-                      const fallback = target.parentElement?.querySelector('.fallback-icon');
-                      if (fallback) {
-                        (fallback as HTMLElement).style.display = 'flex';
-                      }
-                    }}
-                  />
-                  <div className="fallback-icon hidden w-16 h-16 sm:w-20 sm:h-20 rounded-lg items-center justify-center" style={{ backgroundColor: '#2271b1' }}>
-                    <Package size={32} className="sm:w-10 sm:h-10 text-white" />
-                  </div>
-                </div>
-                <div className="flex-1 text-center sm:text-left">
-                  <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">Variation Images Pro</h3>
-                  <p className="text-gray-400 text-sm sm:text-base mb-4">Add unlimited custom images to WooCommerce product variations. Transform dropdown menus into beautiful visual swatches and galleries.</p>
-                  <div className="flex flex-wrap gap-2 justify-center sm:justify-start mb-4">
-                    <span className="px-3 py-1 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: '#2271b1' }}>WordPress Plugin</span>
-                    <span className="px-3 py-1 rounded-full text-xs font-semibold text-gray-300 bg-gray-700">WooCommerce</span>
-                  </div>
-                  <a
-                    href="https://store.shalconnects.com/store/variation-images-pro"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm sm:text-base transition-all hover:scale-105"
-                    style={{ 
-                      background: 'linear-gradient(to right, #176641, #da651e)',
-                      color: 'white'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(21, 102, 65, 0.5)'}
-                    onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
-                  >
-                    <span>Buy Now - $24.99</span>
-                    <ExternalLink size={16} />
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 text-center">
-              <ViewAllLink href="https://store.shalconnects.com">View All Products</ViewAllLink>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Tools Section */}
       <section 
         id="tools" 
@@ -3024,258 +3007,15 @@ export default function LandingPage() {
                 ? 'opacity-100 translate-y-0' 
                 : 'opacity-0 translate-y-10'
             }`} style={{ background: 'linear-gradient(to bottom right, rgba(21, 102, 65, 0.2), rgba(218, 101, 30, 0.2))', borderColor: 'rgba(21, 102, 65, 0.3)' }}>
-              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-                <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
-                  <div>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      placeholder="Your Name"
-                      className={`w-full bg-gray-900 border rounded-lg sm:rounded-xl px-4 py-3 sm:px-6 sm:py-4 text-sm sm:text-base focus:outline-none transition-colors ${
-                        formErrors.name 
-                          ? 'border-red-500 focus:border-red-500' 
-                          : 'border-gray-700'
-                      }`}
-                      onFocus={(e) => !formErrors.name && (e.currentTarget.style.borderColor = '#176641')}
-                      onBlur={(e) => !formErrors.name && (e.currentTarget.style.borderColor = '#374151')}
-                    />
-                    {formErrors.name && (
-                      <p className="text-red-400 text-xs sm:text-sm mt-2 flex items-center">
-                        <XCircle size={12} className="sm:w-3.5 sm:h-3.5 mr-1" />
-                        {formErrors.name}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      placeholder="Your Email"
-                      className={`w-full bg-gray-900 border rounded-lg sm:rounded-xl px-4 py-3 sm:px-6 sm:py-4 text-sm sm:text-base focus:outline-none transition-colors ${
-                        formErrors.email 
-                          ? 'border-red-500 focus:border-red-500' 
-                          : 'border-gray-700'
-                      }`}
-                      onFocus={(e) => !formErrors.email && (e.currentTarget.style.borderColor = '#176641')}
-                      onBlur={(e) => !formErrors.email && (e.currentTarget.style.borderColor = '#374151')}
-                    />
-                    {formErrors.email && (
-                      <p className="text-red-400 text-xs sm:text-sm mt-2 flex items-center">
-                        <XCircle size={12} className="sm:w-3.5 sm:h-3.5 mr-1" />
-                        {formErrors.email}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="relative" ref={serviceDropdownRef}>
-                  <button
-                    type="button"
-                    onClick={() => setIsServiceDropdownOpen(!isServiceDropdownOpen)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        setIsServiceDropdownOpen(!isServiceDropdownOpen);
-                      } else if (e.key === 'ArrowDown' && !isServiceDropdownOpen) {
-                        e.preventDefault();
-                        setIsServiceDropdownOpen(true);
-                        setHoveredServiceIndex(0);
-                      }
-                    }}
-                    className={`w-full bg-gray-900 border rounded-lg sm:rounded-xl py-3 sm:py-4 pr-10 sm:pr-12 text-left text-sm sm:text-base focus:outline-none transition-all duration-200 border-gray-700 text-white cursor-pointer hover:border-gray-600 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 ${
-                      formData.service ? 'pl-8 sm:pl-10' : 'pl-4 sm:pl-6'
-                    }`}
-                    style={{
-                      backgroundImage: formData.service ? 'none' : 'linear-gradient(to right, rgba(21, 102, 65, 0.05), rgba(218, 101, 30, 0.05))',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (document.activeElement !== e.currentTarget) {
-                        e.currentTarget.style.borderColor = '#4b5563';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (document.activeElement !== e.currentTarget) {
-                        e.currentTarget.style.borderColor = formData.service ? '#4a9d6f' : '#374151';
-                      }
-                    }}
-                  >
-                    <span className={formData.service ? 'text-white' : 'text-gray-400'}>
-                      {formData.service || 'Select a Service (Optional)'}
-                    </span>
-                  </button>
-                  <ChevronDown 
-                    size={20} 
-                    className={`absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 pointer-events-none transition-all duration-200 ${
-                      isServiceDropdownOpen ? 'rotate-180' : ''
-                    }`}
-                    style={{ 
-                      color: formData.service ? '#4a9d6f' : '#9ca3af',
-                    }}
-                  />
-                  {formData.service && (
-                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                    </div>
-                  )}
-                  
-                  {/* Dropdown Menu */}
-                  {isServiceDropdownOpen && (
-                    <div 
-                      className="absolute z-50 w-full mt-2 bg-gray-900 border border-gray-700 rounded-lg sm:rounded-xl shadow-2xl max-h-60 sm:max-h-72 md:max-h-80 overflow-y-auto scrollbar-hide animate-fade-in-down"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Escape') {
-                          setIsServiceDropdownOpen(false);
-                          setHoveredServiceIndex(null);
-                        }
-                      }}
-                      tabIndex={-1}
-                    >
-                      <div className="py-2">
-                        {serviceCategories.map((category, categoryIdx) => (
-                          <div key={category.name}>
-                            <div className="px-3 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-800/50 sticky top-0">
-                              {category.name}
-                            </div>
-                            {category.services.map((service, serviceIdx) => {
-                              const index = categoryIdx * 100 + serviceIdx;
-                              const serviceValue = `${category.name} - ${service.title}`;
-                              const isSelected = formData.service === serviceValue;
-                              return (
-                                <button
-                                  key={serviceValue}
-                                  type="button"
-                                  onClick={() => {
-                                    setFormData(prev => ({ ...prev, service: serviceValue }));
-                                    setIsServiceDropdownOpen(false);
-                                    setHoveredServiceIndex(null);
-                                  }}
-                                  onMouseEnter={() => setHoveredServiceIndex(index)}
-                                  className={`w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm md:text-base transition-colors ${
-                                    isSelected 
-                                      ? 'bg-green-500/20 text-green-400' 
-                                      : hoveredServiceIndex === index
-                                      ? 'bg-gray-800 text-white'
-                                      : 'text-gray-300 hover:bg-gray-800/50'
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    {isSelected && <CheckCircle size={14} className="sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />}
-                                    <span className="truncate">{service.title}</span>
-                                  </div>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        ))}
-                        <div className="border-t border-gray-700 mt-2">
-                          <div className="px-3 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-800/50">
-                            Other
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setFormData(prev => ({ ...prev, service: 'General Inquiry' }));
-                              setIsServiceDropdownOpen(false);
-                              setHoveredServiceIndex(null);
-                            }}
-                            onMouseEnter={() => setHoveredServiceIndex(999)}
-                            className={`w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm md:text-base transition-colors ${
-                              formData.service === 'General Inquiry'
-                                ? 'bg-green-500/20 text-green-400' 
-                                : hoveredServiceIndex === 999
-                                ? 'bg-gray-800 text-white'
-                                : 'text-gray-300 hover:bg-gray-800/50'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2">
-                              {formData.service === 'General Inquiry' && <CheckCircle size={14} className="sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />}
-                              <span className="truncate">General Inquiry</span>
-                            </div>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <textarea
-                    name="message"
-                    value={formData.message}
-                    onChange={handleInputChange}
-                    rows={4}
-                    placeholder="Tell us about your project"
-                    className={`w-full bg-gray-900 border rounded-lg sm:rounded-xl px-4 py-3 sm:px-6 sm:py-4 text-sm sm:text-base focus:outline-none transition-colors resize-none ${
-                      formErrors.message 
-                        ? 'border-red-500 focus:border-red-500' 
-                        : 'border-gray-700'
-                    }`}
-                    onFocus={(e) => !formErrors.message && (e.currentTarget.style.borderColor = '#176641')}
-                    onBlur={(e) => !formErrors.message && (e.currentTarget.style.borderColor = '#374151')}
-                  />
-                  {formErrors.message && (
-                    <p className="text-red-400 text-xs sm:text-sm mt-2 flex items-center">
-                      <XCircle size={12} className="sm:w-3.5 sm:h-3.5 mr-1" />
-                      {formErrors.message}
-                    </p>
-                  )}
-                </div>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-gradient-theme py-3 sm:py-4 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                  style={{ boxShadow: '0 0 0 rgba(21, 102, 65, 0)' }}
-                  onMouseEnter={(e) => !isSubmitting && (e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(21, 102, 65, 0.5)')}
-                  onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 0 0 rgba(21, 102, 65, 0)'}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                      <span className="text-sm sm:text-base">Sending...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Send Message</span>
-                      <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" size={20} />
-                    </>
-                  )}
-                </button>
-              </form>
+              <ContactForm
+                serviceCategories={serviceCategories.map(c => ({ name: c.name, services: c.services.map(s => ({ title: s.title })) }))}
+                prefillService={location.state?.prefillService as string | undefined}
+                successInline={false}
+                accentColor="#176641"
+              />
             </div>
           </div>
         </div>
-
-        {/* Success Message Modal */}
-        {showSuccess && (
-          <div 
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowSuccess(false)}
-          >
-            <div 
-              className="bg-gray-900 rounded-2xl max-w-md w-full p-6 sm:p-8 border-2 shadow-2xl transform transition-all"
-              style={{ borderColor: 'rgba(21, 102, 65, 0.5)' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-theme flex items-center justify-center mb-4 sm:mb-6 animate-scale-in">
-                  <CheckCircle size={32} className="sm:w-10 sm:h-10 text-white" />
-                </div>
-                <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2 sm:mb-3">Message Sent!</h3>
-                <p className="text-gray-400 text-sm sm:text-base mb-4 sm:mb-6">
-                  Thank you for reaching out! We've received your message and will get back to you soon.
-                </p>
-                <button
-                  onClick={() => setShowSuccess(false)}
-                  className="px-6 py-3 rounded-xl font-semibold text-white transition-all hover:scale-105 bg-gradient-theme"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </section>
 
       {/* Footer */}
