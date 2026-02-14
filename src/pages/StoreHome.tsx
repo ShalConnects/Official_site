@@ -96,6 +96,12 @@ export default function StoreHome() {
           </div>
         </div>
 
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          <Link to="/download" className="inline-flex items-center gap-2 text-green-400 hover:text-green-300 hover:underline text-sm font-medium">
+            Already purchased? Get your download →
+          </Link>
+        </div>
+
         {/* Products Grid */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-8 sm:mb-10 md:mb-12 text-white px-2">Our Products</h2>

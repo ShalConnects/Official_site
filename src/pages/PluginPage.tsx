@@ -4,7 +4,7 @@ import PageLayout from '../components/PageLayout';
 import PageSidebar from '../components/PageSidebar';
 import BeforeAfterSlider from '../components/BeforeAfterSlider';
 import { useState, useEffect } from 'react';
-import { isStoreContext } from '../utils/storeUtils';
+import { isStoreContext, getStoreHomePath } from '../utils/storeUtils';
 import { getPrice } from '../data/productsPlugins';
 
 // Declare Paddle type
@@ -269,9 +269,8 @@ export default function PluginPage() {
 
   const price = getPrice(slug ?? '');
   const purchaseLabel = plugin.paidOnly ? (price ? `Buy - ${price}` : 'Buy') : (price ? `Buy Pro - ${price}` : 'Buy Pro Version');
-  const purchaseStepCopy = plugin.paidOnly
-    ? 'Click the "Buy" button above to purchase. After payment, you\'ll receive an email with the download link for the plugin ZIP file.'
-    : 'Click the "Buy Pro Version" button above to purchase. After payment, you\'ll receive an email with the download link for the Pro plugin ZIP file.';
+  const afterPaymentCopy = <>After payment, you&apos;ll receive a receipt by email. Use the Transaction ID on that receipt at the <Link to="/download" className="text-green-400 hover:underline">download page</Link> to download your plugin ZIP.</>;
+  const purchaseStepCopy = plugin.paidOnly ? <>Click the &quot;Buy&quot; button above to purchase. {afterPaymentCopy}</> : <>Click the &quot;Buy Pro Version&quot; button above to purchase. {afterPaymentCopy}</>;
   const downloadCtaCopy = plugin.paidOnly ? 'Download now and unlock all features.' : 'Download the Pro version now and unlock all premium features.';
 
   const scrollToContact = () => {
@@ -496,6 +495,9 @@ export default function PluginPage() {
           {/* Hero Section */}
           <section id="overview" className="py-8 sm:py-12 md:py-16 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Link to={getStoreHomePath()} className="inline-flex items-center gap-2 text-gray-400 hover:text-white text-sm font-medium mb-6">
+            <ArrowLeft size={16} /> Store
+          </Link>
           <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 md:gap-10 lg:gap-12 items-center">
             <div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-5 md:mb-6">

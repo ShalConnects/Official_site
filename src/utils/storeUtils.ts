@@ -21,3 +21,8 @@ export function isStoreContext(): boolean {
   return false;
 }
 
+/** Store home path: / on subdomain, /store on main site */
+export function getStoreHomePath(): string {
+  return isStoreContext() ? '/' : '/store';
+}
+
