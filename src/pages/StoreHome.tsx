@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Package, Image, Code, Palette, Zap, CheckCircle } from 'lucide-react';
 import PageLayout from '../components/PageLayout';
 import { isStoreContext } from '../utils/storeUtils';
+import { getPrice } from '../data/productsPlugins';
 
 // Check if we're on the store subdomain or store routes
 const isStoreSubdomain = isStoreContext();
@@ -15,6 +16,7 @@ interface Product {
   icon: typeof Package;
   slug: string;
   features: string[];
+  imagePath?: string;
 }
 
 const products: Product[] = [
@@ -23,7 +25,7 @@ const products: Product[] = [
     name: 'Variation Images Pro',
     category: 'plugin',
     description: 'Add unlimited custom images to WooCommerce product variations. Transform dropdown menus into beautiful visual swatches and galleries.',
-    price: '$24.99',
+    price: getPrice('variation-images-pro'),
     icon: Image,
     slug: 'variation-images-pro',
     features: [
@@ -32,6 +34,22 @@ const products: Product[] = [
       'Easy customization',
       'Page builder widgets'
     ]
+  },
+  {
+    id: 'notipress',
+    name: 'Notipress',
+    category: 'plugin',
+    description: 'Hide annoying WordPress admin notifications for a cleaner dashboard. Toggle all plugin notices or hide individual ones; core errors stay visible.',
+    price: getPrice('notipress'),
+    icon: Package,
+    slug: 'notipress',
+    features: [
+      'Hide all plugin notices',
+      'Hide individual notices (×)',
+      'Core errors always visible',
+      'Settings under Settings → Notipress'
+    ],
+    imagePath: '/images/plugin/notipress-preview.png'
   },
   // Add more products here as you create them
   // {
@@ -105,7 +123,7 @@ export default function StoreHome() {
                       style={{ background: `linear-gradient(135deg, ${categoryColor} 0%, ${categoryColor}dd 100%)` }}
                     >
                       <img 
-                        src="/images/plugin/preview.png" 
+                        src={product.imagePath || '/images/plugin/preview.png'} 
                         alt={product.name}
                         className="w-full h-full object-cover"
                         onError={(e) => {

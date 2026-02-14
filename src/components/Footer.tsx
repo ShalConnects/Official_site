@@ -53,6 +53,11 @@ export default function Footer() {
                     Variation Images Pro
                   </Link>
                 </li>
+                <li>
+                  <Link to="/store/notipress" className="text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-gray-800 rounded text-xs sm:text-sm transition-colors inline-block">
+                    Notipress
+                  </Link>
+                </li>
               </ul>
             </div>
 

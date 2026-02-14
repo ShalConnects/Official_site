@@ -1,87 +1,61 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight, Maximize } from 'lucide-react';
-
-interface ReviewImage {
-  id: string;
-  src: string;
-  alt: string;
-}
+import type { ReviewImage } from '../data/reviewImages';
+import { LANDING_MARQUEE_DURATION_SEC } from '../data/reviewImages';
 
 interface ReviewsMarqueeProps {
   images: ReviewImage[];
+  scrollDurationSec?: number;
 }
 
-// Constants
-const IMAGES_PER_COLUMN = 10;
-const TOTAL_IMAGES = 30;
 const COLUMNS = 3;
 
-export default function ReviewsMarquee({ images }: ReviewsMarqueeProps) {
+export default function ReviewsMarquee({ images, scrollDurationSec = LANDING_MARQUEE_DURATION_SEC }: ReviewsMarqueeProps) {
+  const totalImages = images.length;
+  const imagesPerColumn = Math.ceil(totalImages / COLUMNS);
   const [hoveredImage, setHoveredImage] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const overlayRef = useRef<HTMLDivElement | null>(null);
 
-  // Navigation functions - memoized for performance
   const handleNext = useCallback(() => {
-    setCurrentImageIndex((prev) => (prev + 1) % TOTAL_IMAGES);
-  }, []);
+    setCurrentImageIndex((prev) => (prev + 1) % totalImages);
+  }, [totalImages]);
 
   const handlePrevious = useCallback(() => {
-    setCurrentImageIndex((prev) => (prev - 1 + TOTAL_IMAGES) % TOTAL_IMAGES);
-  }, []);
+    setCurrentImageIndex((prev) => (prev - 1 + totalImages) % totalImages);
+  }, [totalImages]);
 
-  // Handle Escape key and arrow keys for navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!hoveredImage) return;
-      
-      if (e.key === 'Escape') {
-        setHoveredImage(null);
-      } else if (e.key === 'ArrowLeft') {
-        handlePrevious();
-      } else if (e.key === 'ArrowRight') {
-        handleNext();
-      }
+      if (e.key === 'Escape') setHoveredImage(null);
+      else if (e.key === 'ArrowLeft') handlePrevious();
+      else if (e.key === 'ArrowRight') handleNext();
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [hoveredImage]);
+  }, [hoveredImage, handleNext, handlePrevious]);
 
-  // Update hovered image when index changes
   useEffect(() => {
-    if (hoveredImage && images[currentImageIndex]) {
-      setHoveredImage(images[currentImageIndex].src);
-    }
+    if (hoveredImage && images[currentImageIndex]) setHoveredImage(images[currentImageIndex].src);
   }, [currentImageIndex, hoveredImage, images]);
 
-  // Prevent body scroll when full-screen is open
   useEffect(() => {
-    if (hoveredImage) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
+    document.body.style.overflow = hoveredImage ? 'hidden' : 'unset';
+    return () => { document.body.style.overflow = 'unset'; };
   }, [hoveredImage]);
 
-  // Validate image count
-  if (images.length < TOTAL_IMAGES) {
+  if (totalImages === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-400">
-          Loading reviews... ({images.length} of {TOTAL_IMAGES} images available)
-        </p>
+        <p className="text-gray-400">No review images available.</p>
       </div>
     );
   }
 
-  // Split images into columns
-  const column1Images = images.slice(0, IMAGES_PER_COLUMN);
-  const column2Images = images.slice(IMAGES_PER_COLUMN, IMAGES_PER_COLUMN * 2);
-  const column3Images = images.slice(IMAGES_PER_COLUMN * 2, TOTAL_IMAGES);
+  const column1Images = images.slice(0, imagesPerColumn);
+  const column2Images = images.slice(imagesPerColumn, imagesPerColumn * 2);
+  const column3Images = images.slice(imagesPerColumn * 2, totalImages);
 
   // Duplicate images for seamless infinite scroll
   const duplicateImages = (imgArray: ReviewImage[]) => [...imgArray, ...imgArray];
@@ -108,8 +82,7 @@ export default function ReviewsMarquee({ images }: ReviewsMarqueeProps) {
                style={{ background: 'linear-gradient(to top, rgba(17, 24, 39, 1) 0%, rgba(17, 24, 39, 0.95) 20%, rgba(17, 24, 39, 0.75) 50%, rgba(17, 24, 39, 0.4) 80%, transparent 100%)' }}></div>
           <div className="marquee-down">
             {col1Duplicated.map((image, idx) => {
-              // Calculate original index directly (O(1) instead of O(n))
-              const originalIndex = idx % IMAGES_PER_COLUMN;
+              const originalIndex = idx % imagesPerColumn;
               return (
                       <div
                         key={`col1-${image.id}-${idx}`}
@@ -151,8 +124,7 @@ export default function ReviewsMarquee({ images }: ReviewsMarqueeProps) {
                style={{ background: 'linear-gradient(to top, rgba(17, 24, 39, 1) 0%, rgba(17, 24, 39, 0.95) 20%, rgba(17, 24, 39, 0.75) 50%, rgba(17, 24, 39, 0.4) 80%, transparent 100%)' }}></div>
           <div className="marquee-up">
             {col2Duplicated.map((image, idx) => {
-              // Calculate original index directly (O(1) instead of O(n))
-              const originalIndex = (idx % IMAGES_PER_COLUMN) + IMAGES_PER_COLUMN;
+              const originalIndex = (idx % imagesPerColumn) + imagesPerColumn;
               return (
                       <div
                         key={`col2-${image.id}-${idx}`}
@@ -194,8 +166,7 @@ export default function ReviewsMarquee({ images }: ReviewsMarqueeProps) {
                style={{ background: 'linear-gradient(to top, rgba(17, 24, 39, 1) 0%, rgba(17, 24, 39, 0.95) 20%, rgba(17, 24, 39, 0.75) 50%, rgba(17, 24, 39, 0.4) 80%, transparent 100%)' }}></div>
           <div className="marquee-down">
             {col3Duplicated.map((image, idx) => {
-              // Calculate original index directly (O(1) instead of O(n))
-              const originalIndex = (idx % IMAGES_PER_COLUMN) + (IMAGES_PER_COLUMN * 2);
+              const originalIndex = (idx % imagesPerColumn) + imagesPerColumn * 2;
               return (
                       <div
                         key={`col3-${image.id}-${idx}`}
@@ -230,7 +201,7 @@ export default function ReviewsMarquee({ images }: ReviewsMarqueeProps) {
 
       {/* Mobile/Tablet: Static grid fallback */}
       <div className="lg:hidden columns-1 sm:columns-2 gap-3 sm:gap-4">
-        {images.slice(0, TOTAL_IMAGES).map((image, index) => (
+        {images.map((image, index) => (
           <div
             key={image.id}
             className="mb-3 sm:mb-4 break-inside-avoid group relative cursor-pointer"
@@ -299,11 +270,11 @@ export default function ReviewsMarquee({ images }: ReviewsMarqueeProps) {
 
           {/* Image counter */}
           <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-10 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5 sm:px-4 sm:py-2 text-white text-xs sm:text-sm">
-            {currentImageIndex + 1} / {TOTAL_IMAGES}
+            {currentImageIndex + 1} / {totalImages}
           </div>
 
-          {/* Full-size image */}
-          <div className="max-w-[95vw] sm:max-w-[90vw] max-h-[85vh] sm:max-h-[90vh] flex items-center justify-center p-2 sm:p-4">
+          {/* Full-size image - stopPropagation so clicking image doesn't close */}
+          <div className="max-w-[95vw] sm:max-w-[90vw] max-h-[85vh] sm:max-h-[90vh] flex items-center justify-center p-2 sm:p-4" onClick={(e) => e.stopPropagation()}>
             <img
               src={hoveredImage}
               alt="Client review full screen"
@@ -315,7 +286,7 @@ export default function ReviewsMarquee({ images }: ReviewsMarqueeProps) {
 
       <style>{`
         .marquee-down {
-          animation: scrollDown 40s linear infinite;
+          animation: scrollDown ${scrollDurationSec}s linear infinite;
           display: flex;
           flex-direction: column;
           will-change: transform;
@@ -324,7 +295,7 @@ export default function ReviewsMarquee({ images }: ReviewsMarqueeProps) {
         }
 
         .marquee-up {
-          animation: scrollUp 40s linear infinite;
+          animation: scrollUp ${scrollDurationSec}s linear infinite;
           display: flex;
           flex-direction: column;
           will-change: transform;

@@ -9,6 +9,7 @@ if (!PADDLE_API_KEY) {
   console.error('PADDLE_API_KEY environment variable is not set');
 }
 const PADDLE_API_URL = 'https://api.paddle.com';
+const { getProductFromTransaction } = require('./lib/product-config');
 
 /**
  * Vercel Serverless Function
@@ -126,8 +127,8 @@ export default async function handler(req, res) {
     const allowedStatuses = ['completed', 'pending'];
     
     if (allowedStatuses.includes(transactionStatus)) {
-      // Generate download token (in production, use JWT or signed token)
       const downloadToken = Buffer.from(`${transactionId}:${Date.now()}`).toString('base64');
+      const product = getProductFromTransaction(transaction);
 
       return res.status(200).json({
         valid: true,
@@ -139,6 +140,7 @@ export default async function handler(req, res) {
           created_at: transaction.created_at || transaction.created || new Date().toISOString(),
         },
         downloadToken,
+        productSlug: product ? product.slug : null,
       });
     } else {
       // Return transaction info even if status is not allowed

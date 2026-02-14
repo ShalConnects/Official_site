@@ -26,6 +26,7 @@ export default function DownloadPage() {
   const [error, setError] = useState<string | null>(null);
   const [transaction, setTransaction] = useState<TransactionData | null>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [productSlug, setProductSlug] = useState<string | null>(null);
   const [manualTransactionId, setManualTransactionId] = useState('');
   const [showManualInput, setShowManualInput] = useState(false);
 
@@ -118,7 +119,7 @@ export default function DownloadPage() {
       if (data.valid && data.transaction) {
         setTransaction(data.transaction);
         setVerified(true);
-        // Generate secure download link
+        setProductSlug(data.productSlug || null);
         setDownloadUrl(`/api/download?transaction=${txnId}&token=${data.downloadToken}`);
       } else {
         // Show transaction status even if not completed
@@ -221,7 +222,9 @@ export default function DownloadPage() {
 
             <div className="flex flex-wrap justify-center gap-4">
               <Link
-                to={isStoreSubdomain ? "/variation-images-pro" : "/services/wordpress/plugins/variation-images-pro"}
+                to={productSlug
+                  ? (isStoreSubdomain ? `/${productSlug}` : `/services/wordpress/plugins/${productSlug}`)
+                  : (isStoreSubdomain ? '/variation-images-pro' : '/services/wordpress/plugins/variation-images-pro')}
                 className="px-6 py-3 rounded-lg font-medium text-white transition-all hover:scale-105 flex items-center gap-2"
                 style={{ backgroundColor: '#176641' }}
               >
@@ -315,7 +318,9 @@ export default function DownloadPage() {
 
               <div className="pt-4">
                 <Link
-                  to={isStoreSubdomain ? "/variation-images-pro" : "/services/wordpress/plugins/variation-images-pro"}
+                  to={productSlug
+                    ? (isStoreSubdomain ? `/${productSlug}` : `/services/wordpress/plugins/${productSlug}`)
+                    : (isStoreSubdomain ? '/variation-images-pro' : '/services/wordpress/plugins/variation-images-pro')}
                   className="text-center block text-gray-400 hover:text-gray-300 transition-colors text-sm"
                 >
                   ← Back to Plugin Page

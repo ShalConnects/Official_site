@@ -48,6 +48,8 @@ export default function Breadcrumbs() {
         label = 'Plugins';
       } else if (path === 'variation-images-pro') {
         label = 'Variation Images Pro';
+      } else if (path === 'notipress') {
+        label = 'Notipress';
       }
 
       breadcrumbs.push({

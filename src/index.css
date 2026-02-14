@@ -2,6 +2,135 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================
+   ZERO-TOUCH THEME SYSTEM (Maximum DRY!)
+   ==========================================
+   These CSS overrides automatically make ALL existing dark-mode classes
+   theme-aware WITHOUT changing any component files!
+   
+   How it works:
+   1. Tailwind generates: .bg-gray-900 { background-color: rgb(17 24 39) }
+   2. Our override changes it to: .bg-gray-900 { background-color: var(--color-bg-primary) }
+   3. Now bg-gray-900 automatically adapts to light/dark theme!
+   
+   Result: ZERO file changes, MAXIMUM DRY!
+   ========================================== */
+
+@layer utilities {
+  /* Background Colors - Auto-adapt to theme */
+  .bg-gray-900 {
+    background-color: rgb(var(--color-bg-primary) / var(--tw-bg-opacity, 1)) !important;
+  }
+  .bg-gray-900\/95 {
+    --tw-bg-opacity: 0.95;
+    background-color: rgb(var(--color-bg-primary) / var(--tw-bg-opacity)) !important;
+  }
+  .bg-gray-900\/98 {
+    --tw-bg-opacity: 0.98;
+    background-color: rgb(var(--color-bg-primary) / var(--tw-bg-opacity)) !important;
+  }
+  .bg-gray-900\/90 {
+    --tw-bg-opacity: 0.90;
+    background-color: rgb(var(--color-bg-primary) / var(--tw-bg-opacity)) !important;
+  }
+  .bg-gray-900\/80 {
+    --tw-bg-opacity: 0.80;
+    background-color: rgb(var(--color-bg-primary) / var(--tw-bg-opacity)) !important;
+  }
+  
+  .bg-gray-800 {
+    background-color: rgb(var(--color-bg-secondary) / var(--tw-bg-opacity, 1)) !important;
+  }
+  .bg-gray-800\/50 {
+    --tw-bg-opacity: 0.50;
+    background-color: rgb(var(--color-bg-secondary) / var(--tw-bg-opacity)) !important;
+  }
+  .bg-gray-800\/70 {
+    --tw-bg-opacity: 0.70;
+    background-color: rgb(var(--color-bg-secondary) / var(--tw-bg-opacity)) !important;
+  }
+  
+  .bg-gray-700 {
+    background-color: rgb(var(--color-bg-tertiary) / var(--tw-bg-opacity, 1)) !important;
+  }
+  .bg-gray-700\/50 {
+    --tw-bg-opacity: 0.50;
+    background-color: rgb(var(--color-bg-tertiary) / var(--tw-bg-opacity)) !important;
+  }
+  
+  /* Text Colors - Auto-adapt to theme */
+  .text-white {
+    color: rgb(var(--color-text-primary) / var(--tw-text-opacity, 1)) !important;
+  }
+  .text-gray-300 {
+    color: rgb(var(--color-text-secondary) / var(--tw-text-opacity, 1)) !important;
+  }
+  .text-gray-400 {
+    color: rgb(var(--color-text-tertiary) / var(--tw-text-opacity, 1)) !important;
+  }
+  .text-gray-500 {
+    color: rgb(var(--color-text-tertiary) / var(--tw-text-opacity, 1)) !important;
+  }
+  
+  /* Border Colors - Auto-adapt to theme */
+  .border-gray-800 {
+    border-color: rgb(var(--color-border-primary) / var(--tw-border-opacity, 1)) !important;
+  }
+  .border-gray-700 {
+    border-color: rgb(var(--color-border-primary) / var(--tw-border-opacity, 1)) !important;
+  }
+  .border-gray-800\/50 {
+    --tw-border-opacity: 0.50;
+    border-color: rgb(var(--color-border-primary) / var(--tw-border-opacity)) !important;
+  }
+  .border-gray-700\/50 {
+    --tw-border-opacity: 0.50;
+    border-color: rgb(var(--color-border-primary) / var(--tw-border-opacity)) !important;
+  }
+  .border-gray-600\/50 {
+    --tw-border-opacity: 0.50;
+    border-color: rgb(var(--color-border-secondary) / var(--tw-border-opacity)) !important;
+  }
+  
+  /* Hover States - Auto-adapt to theme */
+  .hover\:bg-gray-800\/50:hover {
+    --tw-bg-opacity: 0.50;
+    background-color: rgb(var(--color-hover-bg) / var(--tw-bg-opacity)) !important;
+  }
+  .hover\:bg-gray-800:hover {
+    background-color: rgb(var(--color-hover-bg) / var(--tw-bg-opacity, 1)) !important;
+  }
+  .hover\:bg-gray-700\/50:hover {
+    --tw-bg-opacity: 0.50;
+    background-color: rgb(var(--color-hover-bg) / var(--tw-bg-opacity)) !important;
+  }
+  .hover\:text-white:hover {
+    color: rgb(var(--color-text-primary) / var(--tw-text-opacity, 1)) !important;
+  }
+  
+  /* Additional color overrides for complete coverage */
+  .bg-gray-600 {
+    background-color: rgb(var(--color-bg-tertiary) / var(--tw-bg-opacity, 1)) !important;
+  }
+  .text-gray-600 {
+    color: rgb(var(--color-text-secondary) / var(--tw-text-opacity, 1)) !important;
+  }
+  .text-gray-200 {
+    color: rgb(var(--color-text-secondary) / var(--tw-text-opacity, 1)) !important;
+  }
+  .border-gray-600 {
+    border-color: rgb(var(--color-border-secondary) / var(--tw-border-opacity, 1)) !important;
+  }
+  
+  /* Backdrop overlays - Theme-aware */
+  .bg-black\/60 {
+    background-color: rgba(var(--color-text-primary) / 0.6) !important;
+  }
+  .bg-black\/80 {
+    background-color: rgba(var(--color-text-primary) / 0.8) !important;
+  }
+}
+
 /* Print Styles for Blog Articles */
 @media print {
   /* Hide navigation, sidebars, and non-essential elements */
@@ -185,30 +314,49 @@ html {
   display: none;  /* Chrome, Safari and Opera */
 }
 
-/* Custom dark scrollbar styling */
+/* Long screenshot inside-scroll (Work page + WorkSlider) - Theme-aware */
+.work-card-scroll {
+  scroll-behavior: smooth;
+}
+.work-card-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.work-card-scroll::-webkit-scrollbar-track {
+  background: rgba(var(--color-text-primary) / 0.05);
+  border-radius: 3px;
+}
+.work-card-scroll::-webkit-scrollbar-thumb {
+  background: rgba(var(--color-text-primary) / 0.2);
+  border-radius: 3px;
+}
+.work-card-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--color-text-primary) / 0.3);
+}
+
+/* Custom scrollbar styling - Theme-aware */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #1f2937; /* gray-800 */
+  background: rgb(var(--color-bg-secondary));
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #4b5563; /* gray-600 */
+  background: rgb(var(--color-border-secondary));
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #6b7280; /* gray-500 */
+  background: rgb(var(--color-text-tertiary));
 }
 
-/* Firefox scrollbar */
+/* Firefox scrollbar - Theme-aware */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #4b5563 #1f2937;
+  scrollbar-color: rgb(var(--color-border-secondary)) rgb(var(--color-bg-secondary));
 }
 
 /* Safe area insets for devices with notches/home indicators */
@@ -237,6 +385,32 @@ html {
   --color-green-dark: #0f4a2a;
   --color-orange-light: #e67a2e;
   --color-orange-dark: #b85218;
+}
+
+/* Theme Variables - Light Mode (Soft Dark - maintains brand aesthetic) */
+:root.light {
+  --color-bg-primary: 30 41 59; /* gray-800 - soft dark background */
+  --color-bg-secondary: 51 65 85; /* gray-700 */
+  --color-bg-tertiary: 71 85 105; /* gray-600 */
+  --color-border-primary: 100 116 139; /* gray-500 */
+  --color-border-secondary: 148 163 184; /* gray-400 */
+  --color-text-primary: 248 250 252; /* gray-50 - light text */
+  --color-text-secondary: 226 232 240; /* gray-200 */
+  --color-text-tertiary: 203 213 225; /* gray-300 */
+  --color-hover-bg: 71 85 105; /* gray-600 */
+}
+
+/* Theme Variables - Dark Mode (Current) */
+:root.dark {
+  --color-bg-primary: 17 24 39; /* gray-900 */
+  --color-bg-secondary: 31 41 55; /* gray-800 */
+  --color-bg-tertiary: 55 65 81; /* gray-700 */
+  --color-border-primary: 55 65 81; /* gray-700 */
+  --color-border-secondary: 75 85 99; /* gray-600 */
+  --color-text-primary: 255 255 255; /* white */
+  --color-text-secondary: 209 213 219; /* gray-300 */
+  --color-text-tertiary: 156 163 175; /* gray-400 */
+  --color-hover-bg: 55 65 81; /* gray-700 */
 }
 
 /* Custom Gradient Utilities */

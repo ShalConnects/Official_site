@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { X, Zap, Target, TrendingUp, Clock, CheckCircle, Star, Quote, ExternalLink, XCircle, ChevronDown, ChevronLeft, ChevronRight, Palette, Code, Wrench, FileCode, Layout, Package, Store, List, Image, Smartphone, Globe, Share2, FileText, Layers, Home, Briefcase, MoreHorizontal, ArrowUp, ArrowRight, Mail, Search, Workflow, Rocket, Wand2, Activity, Key, Link2, QrCode, User, Heart } from 'lucide-react';
 import { SiWordpress, SiShopify, SiWix, SiEbay, SiAmazon, SiWalmart, SiAndroid, SiLinkedin, SiQuora, SiX, SiWhatsapp, SiYoutube } from 'react-icons/si';
@@ -9,9 +9,13 @@ import ReviewsMarquee from '../components/ReviewsMarquee';
 import { ViewAllLink } from '../components/ViewAllLink';
 import { TestimonialSlider } from '../components/TestimonialSlider';
 import ContactForm from '../components/ContactForm';
+import FloatingActions from '../components/FloatingActions';
 import { brandImagesFirstHalf, brandImagesSecondHalf } from '../data/brands';
-import { workPortfolio, shuffleArray, getFeaturedWork } from '../data/workPortfolio';
+import { workPortfolio, shuffleArray } from '../data/workPortfolio';
 import { testimonials } from '../data/testimonials';
+import { serviceCategories } from '../data/serviceCategories';
+import { getRandomReviewImages, LANDING_REVIEW_COUNT } from '../data/reviewImages';
+import { usePageScrolling } from '../components/LongScreenshotScroll';
 
 // Type definitions
 interface Particle {
@@ -106,6 +110,7 @@ export default function LandingPage() {
   const [isWidgetHovered, setIsWidgetHovered] = useState(false);
   const [imageLoadError, setImageLoadError] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const isPageScrolling = usePageScrolling();
 
   const [formData, setFormData] = useState<FormData>({ name: '', email: '', message: '', service: '' });
   const [formErrors, setFormErrors] = useState<FormErrors>({});
@@ -120,10 +125,8 @@ export default function LandingPage() {
   const [selectedProcessStep, setSelectedProcessStep] = useState<number | null>(null);
   const [activeProcessTab, setActiveProcessTab] = useState<'subSteps' | 'deliverables' | 'questions'>('subSteps');
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
-  const landingWorkImages = useMemo(() => {
-    const featured = getFeaturedWork();
-    return featured.length > 0 ? featured : shuffleArray(workPortfolio).slice(0, 10);
-  }, []);
+  // Random 15-21 items, shuffled once per load (stable across re-renders)
+  const landingWorkImages = useMemo(() => shuffleArray(workPortfolio).slice(0, Math.floor(Math.random() * 7) + 15), []);
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const serviceCardRefs = useRef<Record<string, HTMLElement | null>>({});
   const serviceDropdownRef = useRef<HTMLDivElement>(null);
@@ -533,176 +536,6 @@ export default function LandingPage() {
     }
   };
 
-  // Data arrays
-  const serviceCategories = [
-    {
-      name: 'Platforms',
-      icon: Zap,
-      color: '#176641', // Brand Green
-      services: [
-        { 
-          icon: SiWordpress, 
-          title: 'WordPress', 
-          desc: 'Complete WordPress solutions from design to maintenance',
-          startingPrice: '$500',
-          subServices: [
-            { icon: Palette, label: 'WordPress Site Design', desc: 'Custom designs tailored to your brand' },
-            { icon: Layout, label: 'Custom Theme', desc: 'Unique themes built from scratch' },
-            { icon: Code, label: 'Making Plugins', desc: 'Custom plugin development' },
-            { icon: Wrench, label: 'Site Maintenance', desc: 'Ongoing support & updates' },
-            { icon: FileCode, label: 'Custom Script', desc: 'Tailored functionality solutions' }
-          ]
-        },
-        { 
-          icon: SiShopify, 
-          title: 'Shopify', 
-          desc: 'Professional Shopify store development and customization',
-          startingPrice: '$800',
-          subServices: [
-            { icon: Palette, label: 'Site Design', desc: 'Beautiful, conversion-focused designs' },
-            { icon: Layout, label: 'Custom Theme', desc: 'Branded themes for your store' },
-            { icon: Package, label: 'Shopify App', desc: 'Custom app development' }
-          ]
-        },
-        { 
-          icon: SiWix, 
-          title: 'Wix', 
-          desc: 'Professional Wix website design and customization',
-          startingPrice: '$400',
-          subServices: [
-            { icon: Palette, label: 'Wix Site Design', desc: 'Custom Wix website designs' },
-            { icon: Layout, label: 'Wix Theme', desc: 'Custom Wix themes and templates' },
-            { icon: Package, label: 'Wix App', desc: 'Custom Wix app development' }
-          ]
-        }
-      ]
-    },
-    {
-      name: 'E-commerce',
-      icon: TrendingUp,
-      color: '#da651e', // Orange
-      services: [
-        { 
-          icon: SiEbay, 
-          title: 'eBay', 
-          desc: 'Complete eBay store management and optimization',
-          startingPrice: '$300',
-          subServices: [
-            { icon: Store, label: 'eBay Store Management', desc: 'Complete store optimization and dropshipping setup and automation tools' },
-            { icon: List, label: 'eBay Listing', desc: 'Professional product listings' },
-            { icon: Layout, label: 'eBay Template', desc: 'Custom store templates' }
-          ]
-        },
-        { 
-          icon: SiAmazon, 
-          title: 'Amazon', 
-          desc: 'Amazon store management and enhanced content creation',
-          startingPrice: '$350',
-          subServices: [
-            { icon: Store, label: 'Amazon Store Management', desc: 'Full store optimization' },
-            { icon: List, label: 'Amazon Listing', desc: 'Optimized product listings' },
-            { icon: Image, label: 'Amazon Graphics & A+ Content', desc: 'Enhanced visual content' }
-          ]
-        },
-        { 
-          icon: SiWalmart, 
-          title: 'Walmart', 
-          desc: 'Complete Walmart marketplace management and optimization',
-          startingPrice: '$300',
-          subServices: [
-            { icon: Store, label: 'Walmart Store Management', desc: 'Complete store optimization' },
-            { icon: List, label: 'Walmart Listing', desc: 'Professional product listings' }
-          ]
-        }
-      ]
-    },
-    {
-      name: 'Development',
-      icon: Target,
-      color: '#3b82f6', // Blue
-      services: [
-        { 
-          icon: Code, 
-          title: 'Custom Site', 
-          desc: 'Bespoke web applications built with modern technologies',
-          startingPrice: '$1,500',
-          subServices: [
-            { icon: Globe, label: 'Custom Build Site', desc: 'React, Next.js & modern frameworks' },
-            { icon: Layout, label: 'Frontend Development', desc: 'React, Vue, Angular interfaces' },
-            { icon: Code, label: 'Backend Development', desc: 'Server-side APIs and logic' },
-            { icon: FileCode, label: 'API Development', desc: 'RESTful APIs and integrations' },
-            { icon: Wrench, label: 'Maintenance & Support', desc: 'Ongoing updates and support' }
-          ]
-        },
-        { 
-          icon: SiAndroid, 
-          title: 'Android App', 
-          desc: 'Mobile app development from web conversion to native apps',
-          startingPrice: '$2,000',
-          subServices: [
-            { icon: Smartphone, label: 'Web to App', desc: 'Convert your website to app' },
-            { icon: Code, label: 'Scratch to App', desc: 'Native app development' },
-            { icon: Wrench, label: 'App Maintenance', desc: 'Ongoing support and updates' },
-            { icon: Palette, label: 'App UI/UX Design', desc: 'Interface design services' }
-          ]
-        }
-      ]
-    },
-    {
-      name: 'Design',
-      icon: Palette,
-      color: '#a855f7', // Purple
-      services: [
-        { 
-          icon: Palette, 
-          title: 'Brand Identity', 
-          desc: 'Complete branding packages for your business',
-          startingPrice: '$600',
-          subServices: [
-            { icon: Palette, label: 'Logo Design', desc: 'Custom logo creation' },
-            { icon: Image, label: 'Banner Design', desc: 'Professional banner graphics' },
-            { icon: Target, label: 'Brand Guidelines', desc: 'Complete brand style guides' },
-            { icon: Layout, label: 'Color & Typography', desc: 'Brand color palettes and fonts' },
-            { icon: Package, label: 'Brand Assets', desc: 'Complete brand asset packages' }
-          ]
-        },
-        { 
-          icon: Share2, 
-          title: 'Social Media Graphics', 
-          desc: 'All social media assets and graphics',
-          startingPrice: '$200',
-          subServices: [
-            { icon: Image, label: 'Social Posts', desc: 'Custom social media posts' },
-            { icon: Layout, label: 'Stories & Covers', desc: 'Social stories and cover graphics' },
-            { icon: TrendingUp, label: 'Social Ads', desc: 'Social media advertising graphics' }
-          ]
-        },
-        { 
-          icon: FileText, 
-          title: 'Print Design', 
-          desc: 'Business cards, flyers, brochures and more',
-          startingPrice: '$150',
-          subServices: [
-            { icon: Layout, label: 'Business Cards', desc: 'Professional business card design' },
-            { icon: Image, label: 'Flyers & Brochures', desc: 'Marketing flyers and brochures' },
-            { icon: Package, label: 'Posters & Banners', desc: 'Print posters and banners' }
-          ]
-        },
-        { 
-          icon: Layers, 
-          title: 'Web Graphics', 
-          desc: 'Icons, illustrations, and UI elements',
-          startingPrice: '$250',
-          subServices: [
-            { icon: Code, label: 'Icon Design', desc: 'Custom icon sets' },
-            { icon: Image, label: 'Illustrations', desc: 'Custom illustrations and graphics' },
-            { icon: Layout, label: 'UI Elements', desc: 'Web interface elements' }
-          ]
-        }
-      ]
-    }
-  ];
-
   // Process steps data
   const processSteps = [
     {
@@ -956,36 +789,8 @@ export default function LandingPage() {
   };
 
 
-  // Generate review images array
-  // This will dynamically load all review screenshots from the reviews folder
-  // Images should be placed in public/images/reviews/ directory
-  // Using first 30 images for the marquee: Screenshot_21 through Screenshot_48 (28 images) + Screenshot_100-101 (2 images) = 30 total
-  const generateReviewImages = (): Array<{ id: string; src: string; alt: string }> => {
-    const images: Array<{ id: string; src: string; alt: string }> = [];
-    
-    // First range: Screenshot_21 through Screenshot_48 (28 images)
-    for (let i = 21; i <= 48; i++) {
-      images.push({
-        id: `review-${i}`,
-        src: `/images/reviews/Screenshot_${i}.png`,
-        alt: `Client Review ${i}`
-      });
-    }
-    
-    // Add Screenshot_100 and Screenshot_101 to complete 30 images
-    for (let i = 100; i <= 101; i++) {
-      images.push({
-        id: `review-${i}`,
-        src: `/images/reviews/Screenshot_${i}.png`,
-        alt: `Client Review ${i}`
-      });
-    }
-    
-    // Return only first 30 images
-    return images.slice(0, 30);
-  };
-
-  const reviewImages = generateReviewImages();
+  // Random 30 from full review set (1–128) on each page load
+  const reviewImages = useMemo(() => getRandomReviewImages(LANDING_REVIEW_COUNT), []);
 
   // All services (flattened from categories)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -1977,33 +1782,35 @@ export default function LandingPage() {
       {workPortfolio.length > 0 && (
         <section 
           id="work-showcase" 
-          className="min-h-screen flex flex-col relative"
+          className="flex flex-col relative py-10 sm:py-12 md:py-14"
           style={{ backgroundColor: 'rgba(139, 92, 246, 0.05)' }}
         >
-          <div className="flex flex-col flex-1 w-full">
-            <div className={`flex-shrink-0 text-center py-8 sm:py-10 md:py-12 px-2 sm:px-4 transition-all duration-1000 ${
+          <div className="flex flex-col w-full">
+            <div className={`flex-shrink-0 text-center pb-7 sm:pb-8 md:pb-10 px-2 sm:px-4 transition-all duration-1000 ${
               visibleSections.has('work') 
                 ? 'opacity-100 translate-y-0' 
                 : 'opacity-0 translate-y-10'
             }`}>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 px-2">Our Latest Work</h2>
-              <p className="text-base sm:text-lg md:text-xl text-gray-400 px-2">We've recently worked on some amazing projects</p>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4">Our Latest Work</h2>
+              <p className="text-base sm:text-lg md:text-xl text-gray-400 max-w-3xl mx-auto">We've recently worked on some amazing projects</p>
             </div>
 
-            <div className={`flex-1 min-h-0 flex flex-col justify-center px-0 transition-all duration-1000 ${
+            <div className={`flex flex-col justify-center px-0 transition-all duration-1000 ${
               visibleSections.has('work') 
                 ? 'opacity-100 translate-y-0' 
                 : 'opacity-0 translate-y-10'
             }`}>
-              <WorkSlider 
-                images={landingWorkImages} 
+              <WorkSlider
+                images={landingWorkImages}
                 showServiceMarquee={false}
-                speed={20}
                 compact={true}
+                arrows
+                autoPlayIntervalMs={5000}
+                isPageScrolling={isPageScrolling}
               />
             </div>
 
-            <div className={`flex-shrink-0 text-center py-8 sm:py-10 transition-all duration-1000 ${
+            <div className={`flex-shrink-0 text-center pt-8 sm:pt-10 pb-0 transition-all duration-1000 ${
               visibleSections.has('work') 
                 ? 'opacity-100 translate-y-0' 
                 : 'opacity-0 translate-y-10'
@@ -2862,57 +2669,24 @@ export default function LandingPage() {
               </div>
 
               {/* Image Side - Right (50% width on desktop, full width on mobile) */}
-              <div className="relative w-full lg:w-1/2 h-48 xs:h-56 sm:h-64 md:h-80 lg:h-auto lg:min-h-[500px] overflow-hidden group order-first lg:order-last flex items-center justify-center lg:items-stretch lg:justify-stretch">
-                {/* Mobile: Circular Image Container */}
-                <div className="lg:hidden w-40 h-40 xs:w-48 xs:h-48 sm:w-56 sm:h-56 rounded-full overflow-hidden border-4 border-gray-700/50 shadow-xl relative">
+              <div className="relative w-full lg:w-1/2 flex items-center justify-center py-8 lg:py-0 order-first lg:order-last">
+                {/* Circular Profile Image Container */}
+                <div className="relative w-40 h-40 xs:w-48 xs:h-48 sm:w-56 sm:h-56 lg:w-80 lg:h-80 xl:w-96 xl:h-96 rounded-full overflow-hidden border-4 lg:border-[6px] border-gray-700/50 shadow-2xl group">
                   <img 
-                    src="/images/profile.png" 
-                    alt="Shalauddin Kader"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      const fallback = target.parentElement?.querySelector('.fallback-bg-mobile');
-                      if (fallback) {
-                        (fallback as HTMLElement).style.display = 'flex';
-                      }
-                    }}
-                  />
-                  {/* Fallback for mobile */}
-                  <div className="fallback-bg-mobile hidden absolute inset-0 w-full h-full items-center justify-center bg-gradient-to-br from-green-500/40 via-orange-500/30 to-green-500/40 rounded-full">
-                    <User size={48} className="text-white opacity-90" />
-                  </div>
-                  {/* Mobile border glow */}
-                  <div className="absolute inset-0 rounded-full border-2 border-green-500/30 animate-pulse-border-mobile"></div>
-                </div>
-
-                {/* Desktop: Full Image */}
-                <div className="hidden lg:block absolute inset-0 w-full h-full">
-                  <img 
-                    src="/images/profile.png" 
+                    src="/images/profile.jpg" 
                     alt="Shalauddin Kader"
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.style.display = 'none';
                       const fallback = target.parentElement?.querySelector('.fallback-bg');
-                      if (fallback) {
-                        (fallback as HTMLElement).style.display = 'flex';
-                      }
+                      if (fallback) (fallback as HTMLElement).style.display = 'flex';
                     }}
                   />
-                  {/* Fallback Gradient Background */}
-                  <div className="fallback-bg hidden absolute inset-0 w-full h-full items-center justify-center bg-gradient-to-br from-green-500/40 via-orange-500/30 to-green-500/40">
-                    <div className="w-32 h-32 rounded-full bg-gradient-to-br from-green-500 to-orange-500 flex items-center justify-center border-4 border-white/30 shadow-2xl">
-                      <User size={64} className="text-white opacity-90" />
-                    </div>
+                  <div className="fallback-bg hidden absolute inset-0 items-center justify-center bg-gradient-to-br from-green-500/40 via-orange-500/30 to-green-500/40">
+                    <User className="w-12 h-12 sm:w-16 sm:h-16 lg:w-24 lg:h-24 text-white opacity-90" />
                   </div>
-                  {/* Subtle gradient overlay for depth */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-gray-900/20 via-transparent to-gray-900/40"></div>
-                  {/* Decorative gradient accent bar */}
-                  <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gradient-to-r from-green-500 via-orange-500 to-green-500 shadow-lg"></div>
-                  {/* Corner accent */}
-                  <div className="absolute top-4 right-4 w-16 h-16 bg-gradient-to-br from-green-500/20 to-orange-500/20 rounded-full blur-2xl"></div>
+                  <div className="absolute inset-0 rounded-full border-2 border-green-500/30 animate-pulse-border-mobile"></div>
                 </div>
               </div>
             </div>
@@ -3354,89 +3128,12 @@ export default function LandingPage() {
         </div>
       )}
 
-      {/* Back to Top Button */}
-      {showBackToTop && (() => {
-        // Interpolate color from orange (#da651e) to green (#176641) based on scroll progress
-        const interpolateColor = (progress: number) => {
-          // Orange: #da651e (218, 101, 30)
-          // Green: #176641 (23, 102, 65)
-          const orange = { r: 218, g: 101, b: 30 };
-          const green = { r: 23, g: 102, b: 65 };
-          
-          const r = Math.round(orange.r + (green.r - orange.r) * (progress / 100));
-          const g = Math.round(orange.g + (green.g - orange.g) * (progress / 100));
-          const b = Math.round(orange.b + (green.b - orange.b) * (progress / 100));
-          
-          return `rgb(${r}, ${g}, ${b})`;
-        };
-        
-        const progressColor = interpolateColor(scrollProgress);
-        
-        return (
-          <div 
-            className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-[60] transition-all duration-300 group"
-            style={{ 
-              width: '48px', 
-              height: '48px',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
-          >
-            {/* Circular Progress Border */}
-            <svg
-              className="absolute inset-0 -rotate-90"
-              width="48"
-              height="48"
-              style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2))' }}
-            >
-              {/* Background circle */}
-              <circle
-                cx="24"
-                cy="24"
-                r="22"
-                fill="none"
-                stroke="rgba(255, 255, 255, 0.1)"
-                strokeWidth="2"
-              />
-              {/* Progress circle */}
-              <circle
-                cx="24"
-                cy="24"
-                r="22"
-                fill="none"
-                stroke={progressColor}
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeDasharray={`${2 * Math.PI * 22}`}
-                strokeDashoffset={`${2 * Math.PI * 22 * (1 - scrollProgress / 100)}`}
-                style={{ transition: 'stroke-dashoffset 0.1s ease-out, stroke 0.2s ease-out' }}
-              />
-            </svg>
-            
-            {/* Button */}
-            <button
-              onClick={() => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className="absolute inset-0 m-auto bg-gradient-theme rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center"
-              style={{ 
-                width: '40px', 
-                height: '40px',
-                padding: '8px',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
-              }}
-              aria-label="Back to top"
-              title="Back to top"
-            >
-              <ArrowUp size={20} className="text-white" />
-            </button>
-          </div>
-        );
-      })()}
+      {/* Floating Actions (Theme Toggle + Back to Top) */}
+      <FloatingActions 
+        show={showBackToTop}
+        onScrollToTop={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        scrollProgress={scrollProgress}
+      />
 
     </div>
   );

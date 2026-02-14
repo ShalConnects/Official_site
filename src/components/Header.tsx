@@ -35,7 +35,7 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800">
+    <header className="sticky top-0 z-50 bg-theme-bg-primary/95 backdrop-blur-sm border-b border-theme-border-primary">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -57,7 +57,7 @@ export default function Header() {
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive(item.path)
                       ? 'text-orange-500 bg-orange-500/10'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                      : 'text-theme-text-tertiary hover:text-theme-text-primary hover:bg-theme-hover/50'
                   }`}
                 >
                   {Icon ? <Icon size={18} className="inline-block mr-2" /> : null}
@@ -71,7 +71,7 @@ export default function Header() {
                 href={item.path}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800/50 transition-colors flex items-center gap-2"
+                className="px-4 py-2 rounded-lg text-sm font-medium text-theme-text-tertiary hover:text-theme-text-primary hover:bg-theme-hover/50 transition-colors flex items-center gap-2"
               >
                 {item.label}
                 {item.external && <ExternalLink size={14} />}
@@ -82,7 +82,7 @@ export default function Header() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 text-gray-400 hover:text-white transition-colors"
+            className="md:hidden p-2 text-theme-text-tertiary hover:text-theme-text-primary transition-colors"
             aria-label="Menu"
           >
             {isMenuOpen ? <X size={24} /> : <MoreHorizontal size={24} />}
@@ -97,7 +97,7 @@ export default function Header() {
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
             onClick={() => setIsMenuOpen(false)}
           />
-          <div className="absolute top-full left-0 right-0 bg-gray-900/98 backdrop-blur-md z-40 border-b border-gray-800 md:hidden">
+          <div className="absolute top-full left-0 right-0 bg-theme-bg-primary/98 backdrop-blur-md z-40 border-b border-theme-border-primary md:hidden">
             <div className="max-w-7xl mx-auto px-4 py-4">
               <nav className="flex flex-col gap-1">
                 {mainNavItems.map((item) => {
@@ -110,7 +110,7 @@ export default function Header() {
                       className={`flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors ${
                         isActive(item.path)
                           ? 'text-orange-500 bg-orange-500/10'
-                          : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                          : 'text-theme-text-tertiary hover:text-theme-text-primary hover:bg-theme-hover/50'
                       }`}
                     >
                       {Icon && <Icon size={20} />}
@@ -118,7 +118,7 @@ export default function Header() {
                     </Link>
                   );
                 })}
-                <div className="mt-2 pt-2 border-t border-gray-800">
+                <div className="mt-2 pt-2 border-t border-theme-border-primary">
                   {moreNavItems.map((item) => (
                     <a
                       key={item.path}
@@ -126,7 +126,7 @@ export default function Header() {
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium text-gray-400 hover:text-white hover:bg-gray-800/50 transition-colors"
+                      className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium text-theme-text-tertiary hover:text-theme-text-primary hover:bg-theme-hover/50 transition-colors"
                     >
                       {item.label}
                       {item.external && <ExternalLink size={16} />}

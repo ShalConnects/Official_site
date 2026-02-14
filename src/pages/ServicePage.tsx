@@ -1,14 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, Zap, Shield, Clock, Users, TrendingUp, ChevronDown, ChevronUp, Star, ExternalLink, Mail, Share2, Download, ShoppingCart, X } from 'lucide-react';
 import { SiWhatsapp } from 'react-icons/si';
 import PageLayout from '../components/PageLayout';
-import WorkSlider from '../components/WorkSlider';
+import WorkMarquee from '../components/WorkMarquee';
 import ContactForm from '../components/ContactForm';
-import { getWorkByService } from '../data/workPortfolio';
+import { getWorkByService, shuffleArray } from '../data/workPortfolio';
 import { getProductsByService } from '../data/productsPlugins';
 import { testimonials } from '../data/testimonials';
 import { TestimonialSlider } from '../components/TestimonialSlider';
+import { IdealClientSection } from '../components/IdealClientSection';
+import { SectionSeparator } from '../components/SectionSeparator';
+import { usePageScrolling } from '../components/LongScreenshotScroll';
 
 interface SubService {
   icon: React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }>;
@@ -22,6 +25,7 @@ interface Service {
   desc: string;
   startingPrice?: string;
   subServices: SubService[];
+  idealClient?: string[];
 }
 
 interface ServiceCategory {
@@ -35,12 +39,70 @@ interface ServicePageProps {
   serviceCategories: ServiceCategory[];
 }
 
+/** Single source of truth for sub-service pricing; used by section and for hero "Starting at". */
+function getSubServicePrice(serviceTitle: string, label: string): string {
+  if (serviceTitle === 'WordPress') {
+    if (label.includes('Site Design')) return '$200';
+    if (label.includes('Custom Theme')) return '$250';
+    if (label.includes('Making Plugins') || label.includes('Plugins')) return '$50';
+    if (label.includes('Site Maintenance')) return '$20';
+    if (label.includes('Custom Script')) return '$30';
+    return '$100';
+  }
+  if (serviceTitle === 'Shopify') {
+    if (label.includes('Site Design')) return '$150';
+    if (label.includes('Custom Theme')) return '$200';
+    if (label.includes('Shopify App')) return '$50';
+    return '$150';
+  }
+  if (serviceTitle === 'Wix') {
+    if (label.includes('Site Design')) return '$100';
+    if (label.includes('Wix Theme') || label.includes('Theme')) return '$120';
+    if (label.includes('Wix App') || label.includes('App')) return '$50';
+    return '$100';
+  }
+  if (['eBay', 'Amazon', 'Walmart'].includes(serviceTitle)) {
+    if (label.includes('Store Management') || label.includes('Management')) return '$100';
+    if (label.includes('Listing')) return '$10';
+    if (label.includes('Template') || label.includes('Redesign')) return '$40';
+    if (label.includes('Graphics') || label.includes('A+ Content')) return '$100';
+    return '$150';
+  }
+  if (serviceTitle === 'Android App') {
+    if (label.includes('Web to App')) return '$50';
+    if (label.includes('Scratch to App')) return '$100';
+    if (label.includes('Maintenance')) return '$20';
+    if (label.includes('UI/UX Design')) return '$100';
+    return '$500';
+  }
+  if (['Brand Identity', 'Social Media Graphics', 'Print Design', 'Web Graphics'].includes(serviceTitle)) {
+    if (label.includes('Logo')) return '$10';
+    if (label.includes('Banner')) return '$15';
+    if (label.includes('Brand Guidelines') || label.includes('Guidelines')) return '$100';
+    if (label.includes('Color') || label.includes('Typography')) return '$20';
+    if (label.includes('Brand Assets') || label.includes('Assets')) return '$200';
+    if (label.includes('Social Posts') || label.includes('Posts')) return '$10';
+    if (label.includes('Stories') || label.includes('Covers')) return '$25';
+    if (label.includes('Social Ads') || label.includes('Ads')) return '$25';
+    if (label.includes('Business Cards')) return '$10';
+    if (label.includes('Flyers') || label.includes('Brochures')) return '$25';
+    if (label.includes('Posters') || label.includes('Banners')) return '$15';
+    if (label.includes('Icon Design') || label.includes('Icon')) return '$20';
+    if (label.includes('Illustrations')) return '$30';
+    if (label.includes('UI Elements') || label.includes('UI Element')) return '$30';
+    if (label.includes('Web Graphics') || label.includes('Graphics')) return '$60';
+    return '$100';
+  }
+  return '$100';
+}
+
 export default function ServicePage({ serviceCategories }: ServicePageProps) {
   const { serviceSlug } = useParams<{ serviceSlug: string }>();
   const navigate = useNavigate();
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   const [isActionsExpanded, setIsActionsExpanded] = useState<boolean>(false);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
+  const isPageScrolling = usePageScrolling();
   
   // Find the service across all categories
   let foundService: Service | null = null;
@@ -60,8 +122,7 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
   // Compute page title
   const pageTitle = foundService ? foundService.title : 'Service';
 
-  // Get work images for this service
-  const serviceWorkImages = foundService ? getWorkByService(foundService.title) : [];
+  const serviceWorkImages = useMemo(() => foundService ? shuffleArray(getWorkByService(foundService.title)) : [], [foundService?.title]);
   // Get products/plugins for this service (service page shows only these; empty state when none)
   const serviceProducts = foundService ? getProductsByService(foundService.title) : [];
 
@@ -89,6 +150,9 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
   const scrollToContact = () => {
     setShowQuoteModal(true);
   };
+
+  const nums = foundService.subServices?.map(s => parseInt(getSubServicePrice(foundService.title, s.label).replace(/[$,]/g, ''), 10)).filter((n): n is number => !isNaN(n)) ?? [];
+  const displayStartingPrice = nums.length ? `$${Math.min(...nums)}` : foundService.startingPrice;
 
   const scrollToTop = () => {
     window.scrollTo({
@@ -203,10 +267,10 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
                     <Star size={18} className="text-yellow-400 fill-yellow-400" />
                     <span><span className="font-semibold text-white">98%</span> Satisfaction Rate</span>
                   </div>
-                  {foundService.startingPrice && (
+                  {displayStartingPrice && (
                     <div className="flex items-center gap-2">
                       <TrendingUp size={18} style={{ color: foundCategory.color }} />
-                      <span>Starting at <span className="font-semibold text-white">{foundService.startingPrice}</span></span>
+                      <span>Starting at <span className="font-semibold text-white">{displayStartingPrice}</span></span>
                     </div>
                   )}
                 </div>
@@ -236,99 +300,80 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
               <div className="flex flex-col items-center text-center gap-2">
                 <div 
                   className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-3" 
-                  style={{ 
-                    backgroundColor: foundCategory.color + '20',
-                    boxShadow: `0 4px 12px -2px ${foundCategory.color}30`
-                  }}
+                  style={{ backgroundColor: '#da651e20' }}
                 >
-                  <Zap size={16} className="sm:w-4 sm:h-4" style={{ color: foundCategory.color }} />
+                  <Zap size={16} className="sm:w-4 sm:h-4" style={{ color: '#da651e' }} />
                 </div>
                 <h3 className="text-sm sm:text-base font-bold text-white">Fast & Efficient</h3>
-                <p className="text-xs text-gray-400">We deliver on time so you can launch sooner.</p>
               </div>
             </div>
             <div className="bg-gray-800/60 backdrop-blur-sm p-3 sm:p-4 rounded-lg border border-gray-700/50 hover:border-gray-600/70 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl group flex-1 min-w-[150px] sm:min-w-[180px] lg:max-w-none">
               <div className="flex flex-col items-center text-center gap-2">
                 <div 
                   className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-3" 
-                  style={{ 
-                    backgroundColor: foundCategory.color + '20',
-                    boxShadow: `0 4px 12px -2px ${foundCategory.color}30`
-                  }}
+                  style={{ backgroundColor: '#da651e20' }}
                 >
-                  <Shield size={16} className="sm:w-4 sm:h-4" style={{ color: foundCategory.color }} />
+                  <Shield size={16} className="sm:w-4 sm:h-4" style={{ color: '#da651e' }} />
                 </div>
                 <h3 className="text-sm sm:text-base font-bold text-white">Secure & Reliable</h3>
-                <p className="text-xs text-gray-400">Your data and projects are safe with us.</p>
               </div>
             </div>
             <div className="bg-gray-800/60 backdrop-blur-sm p-3 sm:p-4 rounded-lg border border-gray-700/50 hover:border-gray-600/70 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl group flex-1 min-w-[150px] sm:min-w-[180px] lg:max-w-none">
               <div className="flex flex-col items-center text-center gap-2">
                 <div 
                   className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-3" 
-                  style={{ 
-                    backgroundColor: foundCategory.color + '20',
-                    boxShadow: `0 4px 12px -2px ${foundCategory.color}30`
-                  }}
+                  style={{ backgroundColor: '#da651e20' }}
                 >
-                  <Clock size={16} className="sm:w-4 sm:h-4" style={{ color: foundCategory.color }} />
+                  <Clock size={16} className="sm:w-4 sm:h-4" style={{ color: '#da651e' }} />
                 </div>
                 <h3 className="text-sm sm:text-base font-bold text-white">Ongoing Support</h3>
-                <p className="text-xs text-gray-400">We're here after delivery for updates and help.</p>
               </div>
             </div>
             <div className="bg-gray-800/60 backdrop-blur-sm p-3 sm:p-4 rounded-lg border border-gray-700/50 hover:border-gray-600/70 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl group flex-1 min-w-[150px] sm:min-w-[180px] lg:max-w-none">
               <div className="flex flex-col items-center text-center gap-2">
                 <div 
                   className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-3" 
-                  style={{ 
-                    backgroundColor: foundCategory.color + '20',
-                    boxShadow: `0 4px 12px -2px ${foundCategory.color}30`
-                  }}
+                  style={{ backgroundColor: '#da651e20' }}
                 >
-                  <Users size={16} className="sm:w-4 sm:h-4" style={{ color: foundCategory.color }} />
+                  <Users size={16} className="sm:w-4 sm:h-4" style={{ color: '#da651e' }} />
                 </div>
                 <h3 className="text-sm sm:text-base font-bold text-white">Expert Team</h3>
-                <p className="text-xs text-gray-400">Skilled professionals who know your platform.</p>
               </div>
             </div>
             <div className="bg-gray-800/60 backdrop-blur-sm p-3 sm:p-4 rounded-lg border border-gray-700/50 hover:border-gray-600/70 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl group flex-1 min-w-[150px] sm:min-w-[180px] lg:max-w-none">
               <div className="flex flex-col items-center text-center gap-2">
                 <div 
                   className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-3" 
-                  style={{ 
-                    backgroundColor: foundCategory.color + '20',
-                    boxShadow: `0 4px 12px -2px ${foundCategory.color}30`
-                  }}
+                  style={{ backgroundColor: '#da651e20' }}
                 >
-                  <TrendingUp size={16} className="sm:w-4 sm:h-4" style={{ color: foundCategory.color }} />
+                  <TrendingUp size={16} className="sm:w-4 sm:h-4" style={{ color: '#da651e' }} />
                 </div>
                 <h3 className="text-sm sm:text-base font-bold text-white">Scalable Solutions</h3>
-                <p className="text-xs text-gray-400">Built to grow with your business.</p>
               </div>
             </div>
             <div className="bg-gray-800/60 backdrop-blur-sm p-3 sm:p-4 rounded-lg border border-gray-700/50 hover:border-gray-600/70 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl group flex-1 min-w-[150px] sm:min-w-[180px] lg:max-w-none">
               <div className="flex flex-col items-center text-center gap-2">
                 <div 
                   className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-3" 
-                  style={{ 
-                    backgroundColor: foundCategory.color + '20',
-                    boxShadow: `0 4px 12px -2px ${foundCategory.color}30`
-                  }}
+                  style={{ backgroundColor: '#da651e20' }}
                 >
-                  <CheckCircle size={16} className="sm:w-4 sm:h-4" style={{ color: foundCategory.color }} />
+                  <CheckCircle size={16} className="sm:w-4 sm:h-4" style={{ color: '#da651e' }} />
                 </div>
                 <h3 className="text-sm sm:text-base font-bold text-white">Quality Guaranteed</h3>
-                <p className="text-xs text-gray-400">We stand behind our work with clear standards.</p>
               </div>
             </div>
               </div>
             </div>
           </section>
 
+          {foundService.idealClient && foundService.idealClient.length > 0 && (
+            <IdealClientSection serviceTitle={foundService.title} points={foundService.idealClient} color={foundCategory.color} />
+          )}
+
           {/* Services & Pricing Section */}
           {foundService.subServices && foundService.subServices.length > 0 ? (
             <>
+            <SectionSeparator variant="subtle" />
             <section id="services" className="py-12 sm:py-16 md:py-20 relative bg-gray-800/30">
               {/* Section Divider */}
               <div className="absolute top-0 left-0 right-0 h-px opacity-20" style={{ 
@@ -349,72 +394,7 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
                 {foundService.subServices && foundService.subServices.length > 0 && (
                   <>
                     <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 md:gap-6 mb-12 sm:mb-16">
-                      {foundService.subServices.map((subService, subIdx) => {
-                        // Generic pricing function based on service type and label
-                        const getPrice = (serviceTitle: string, label: string) => {
-                          // WordPress specific pricing
-                          if (serviceTitle === 'WordPress') {
-                            if (label.includes('Site Design')) return '$100';
-                            if (label.includes('Custom Theme')) return '$120';
-                            if (label.includes('Making Plugins') || label.includes('Plugins')) return '$30';
-                            if (label.includes('Site Maintenance')) return '$10';
-                            if (label.includes('Custom Script')) return '$20';
-                            return '$100';
-                          }
-                          // Shopify specific pricing
-                          if (serviceTitle === 'Shopify') {
-                            if (label.includes('Site Design')) return '$150';
-                            if (label.includes('Custom Theme')) return '$200';
-                            if (label.includes('Shopify App')) return '$50';
-                            return '$150';
-                          }
-                          // Wix specific pricing
-                          if (serviceTitle === 'Wix') {
-                            if (label.includes('Site Design')) return '$100';
-                            if (label.includes('Wix Theme') || label.includes('Theme')) return '$120';
-                            if (label.includes('Wix App') || label.includes('App')) return '$50';
-                            return '$100';
-                          }
-                          // E-commerce platforms (eBay, Amazon, Walmart)
-                          if (['eBay', 'Amazon', 'Walmart'].includes(serviceTitle)) {
-                            if (label.includes('Store Management') || label.includes('Management')) return '$100';
-                            if (label.includes('Listing')) return '$10';
-                            if (label.includes('Template') || label.includes('Redesign')) return '$40';
-                            if (label.includes('Graphics') || label.includes('A+ Content')) return '$100';
-                            return '$150';
-                          }
-                          // Android App
-                          if (serviceTitle === 'Android App') {
-                            if (label.includes('Web to App')) return '$50';
-                            if (label.includes('Scratch to App')) return '$100';
-                            if (label.includes('Maintenance')) return '$20';
-                            if (label.includes('UI/UX Design')) return '$100';
-                            return '$500';
-                          }
-                          // Design services
-                          if (['Brand Identity', 'Social Media Graphics', 'Print Design', 'Web Graphics'].includes(serviceTitle)) {
-                            if (label.includes('Logo')) return '$10';
-                            if (label.includes('Banner')) return '$15';
-                            if (label.includes('Brand Guidelines') || label.includes('Guidelines')) return '$100';
-                            if (label.includes('Color') || label.includes('Typography')) return '$20';
-                            if (label.includes('Brand Assets') || label.includes('Assets')) return '$200';
-                            if (label.includes('Social Posts') || label.includes('Posts')) return '$10';
-                            if (label.includes('Stories') || label.includes('Covers')) return '$25';
-                            if (label.includes('Social Ads') || label.includes('Ads')) return '$25';
-                            if (label.includes('Business Cards')) return '$10';
-                            if (label.includes('Flyers') || label.includes('Brochures')) return '$25';
-                            if (label.includes('Posters') || label.includes('Banners')) return '$15';
-                            if (label.includes('Icon Design') || label.includes('Icon')) return '$20';
-                            if (label.includes('Illustrations')) return '$30';
-                            if (label.includes('UI Elements') || label.includes('UI Element')) return '$30';
-                            if (label.includes('Web Graphics') || label.includes('Graphics')) return '$60';
-                            return '$100';
-                          }
-                          // Default fallback
-                          return '$100';
-                        };
-                        
-                        return (
+                      {foundService.subServices.map((subService, subIdx) => (
                         <div
                           key={subIdx}
                           className="bg-gray-800/60 backdrop-blur-sm p-5 sm:p-6 md:p-7 rounded-xl border border-gray-700/50 hover:border-gray-600/70 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl flex flex-col group relative overflow-hidden"
@@ -459,13 +439,12 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
                                   WebkitTextFillColor: 'transparent'
                                 }}
                               >
-                                {getPrice(foundService.title, subService.label)}
+                                {getSubServicePrice(foundService.title, subService.label)}
                               </div>
                             </div>
                           </div>
                         </div>
-                        );
-                      })}
+                      ))}
                     </div>
                     
                     {/* Common Get Quote Button */}
@@ -645,90 +624,18 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
             </div>
           </section>
 
-          {/* Work Showcase - full screen (same as landing), shown on all service pages */}
-          <section
-            id="work-showcase"
-            className="min-h-screen flex flex-col relative"
-            style={{ backgroundColor: 'rgba(139, 92, 246, 0.05)' }}
-          >
-            <div className="flex flex-col flex-1 w-full">
-              <div className="flex-shrink-0 text-center py-8 sm:py-10 md:py-12 px-2 sm:px-4">
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 px-2 text-white">
-                  Our {foundService.title} Work
-                </h2>
-                <p className="text-base sm:text-lg md:text-xl text-gray-400 px-2">
-                  {serviceWorkImages.length > 0
-                    ? `Explore our portfolio of ${foundService.title} projects.`
-                    : `See how we've delivered for clients with ${foundService.title}.`}
-                </p>
-              </div>
-              <div className="flex-1 min-h-0 flex flex-col justify-center px-0">
-                {serviceWorkImages.length > 0 ? (
-                  <WorkSlider
-                    images={serviceWorkImages}
-                    showServiceMarquee={false}
-                    speed={20}
-                    compact={true}
-                  />
-                ) : (
-                  <div className="text-center py-12 px-4">
-                    <p className="text-gray-400 mb-6 max-w-md mx-auto">
-                      No {foundService.title} projects in our portfolio yet. Check out our other work below.
-                    </p>
-                    <Link
-                      to="/work"
-                      className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-white border border-gray-600 transition-colors"
-                      style={{ backgroundColor: foundCategory.color + '20' }}
-                    >
-                      View all work
-                      <ExternalLink size={18} />
-                    </Link>
-                  </div>
-                )}
-              </div>
-              {serviceWorkImages.length > 0 && (
-                <div className="flex-shrink-0 text-center py-8 sm:py-10">
-                  <Link
-                    to={`/work?service=${encodeURIComponent(foundService.title)}`}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-white border border-gray-600 transition-colors"
-                    style={{ backgroundColor: foundCategory.color + '20' }}
-                  >
-                    View all {foundService.title} work
-                    <ExternalLink size={18} />
-                  </Link>
-                </div>
-              )}
-            </div>
-          </section>
-
-          {/* Work Portfolio Slider Section */}
           {serviceWorkImages.length > 0 && (
-            <section id="portfolio" className="py-12 sm:py-16 md:py-20 relative bg-gray-800/30">
-              {/* Section Divider */}
-              <div className="absolute top-0 left-0 right-0 h-px opacity-20" style={{ 
-                background: `linear-gradient(to right, transparent, ${foundCategory.color}50, transparent)`
-              }}></div>
-              
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:pr-8">
-                <div className="text-center mb-10 sm:mb-12 md:mb-16">
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-white">
-                    Our {foundService.title} Work
-                  </h2>
-                  <p className="text-center text-gray-400 max-w-2xl mx-auto text-sm sm:text-base">
-                    Explore our portfolio of {foundService.title} projects and see the quality of our work.
-                  </p>
+            <section id="work-showcase" className="flex flex-col relative py-10 sm:py-12 md:py-14" style={{ backgroundColor: 'rgba(139, 92, 246, 0.05)' }}>
+              <div className="flex flex-col w-full">
+                <div className="flex-shrink-0 text-center pb-7 sm:pb-8 md:pb-10 px-2 sm:px-4">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 text-white">Our {foundService.title} Work</h2>
+                  <p className="text-base sm:text-lg md:text-xl text-gray-400 max-w-3xl mx-auto">Explore our portfolio of {foundService.title} projects.</p>
                 </div>
-                <WorkSlider 
-                  images={serviceWorkImages} 
-                  showServiceMarquee={false}
-                  speed={20}
-                />
-                <div className="text-center mt-8 sm:mt-10">
-                  <Link
-                    to={`/work?service=${encodeURIComponent(foundService.title)}`}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-white border border-gray-600 hover:border-gray-500 transition-colors"
-                    style={{ backgroundColor: foundCategory.color + '20' }}
-                  >
+                <div className="flex flex-col justify-center px-0">
+                  <WorkMarquee images={serviceWorkImages} isPageScrolling={isPageScrolling} />
+                </div>
+                <div className="flex-shrink-0 text-center pt-8 sm:pt-10 pb-0">
+                  <Link to={`/work?service=${encodeURIComponent(foundService.title)}`} className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-white border border-gray-600 transition-colors" style={{ backgroundColor: foundCategory.color + '20' }}>
                     View all {foundService.title} work
                     <ExternalLink size={18} />
                   </Link>
@@ -737,31 +644,19 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
             </section>
           )}
 
-          {/* Our Products & Plugins Section - filtered by service; empty state when none */}
+          {serviceProducts.length > 0 && (
           <section id="products" className="py-12 sm:py-16 md:py-20 relative">
-            {/* Section Divider */}
-            <div className="absolute top-0 left-0 right-0 h-px opacity-20" style={{ 
-              background: `linear-gradient(to right, transparent, ${foundCategory.color}50, transparent)`
-            }}></div>
-            
+            <div className="absolute top-0 left-0 right-0 h-px opacity-20" style={{ background: `linear-gradient(to right, transparent, ${foundCategory.color}50, transparent)` }} />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:pr-8">
               <div className="text-center mb-10 sm:mb-12 md:mb-16">
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white" style={{ marginBottom: '0' }}>
-                  {['WordPress', 'Shopify'].includes(foundService.title)
-                    ? `Our ${foundService.title} Products & Plugins`
-                    : `Our ${foundService.title} Products`}
+                  {['WordPress', 'Shopify'].includes(foundService.title) ? `Our ${foundService.title} Products & Plugins` : `Our ${foundService.title} Products`}
                 </h2>
                 <p className="text-center text-gray-400 max-w-2xl mx-auto text-sm sm:text-base">
-                  {serviceProducts.length > 0
-                    ? `Discover the ${foundService.title} products and solutions we've created to help businesses enhance their services.`
-                    : ['WordPress', 'Shopify'].includes(foundService.title)
-                      ? `Products and plugins we've built for ${foundService.title}.`
-                      : `Products and solutions we've built for ${foundService.title}.`}
+                  Discover the {foundService.title} products and solutions we've created to help businesses enhance their services.
                 </p>
               </div>
-              {serviceProducts.length > 0 ? (
-                <>
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {serviceProducts.map((product) => (
                       <div
                         key={product.id}
@@ -862,26 +757,9 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
                       <ExternalLink size={18} className="sm:w-5 sm:h-5" />
                     </a>
                   </div>
-                </>
-              ) : (
-                <div className="text-center py-12 px-4">
-                  <p className="text-gray-400 mb-6 max-w-md mx-auto">
-                    No {foundService.title} products in our portfolio yet. Check out our other products below.
-                  </p>
-                  <a
-                    href="https://store.shalconnects.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-white border border-gray-600 transition-colors"
-                    style={{ backgroundColor: foundCategory.color + '20' }}
-                  >
-                    View all products
-                    <ExternalLink size={18} />
-                  </a>
-                </div>
-              )}
             </div>
           </section>
+          )}
 
           {/* FAQ Section */}
           <section id="faq" className="py-12 sm:py-16 md:py-20 relative bg-gray-800/30">

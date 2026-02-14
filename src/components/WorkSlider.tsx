@@ -1,12 +1,70 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { WorkImage } from '../data/workPortfolio';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { WorkImage, getUniqueServices } from '../data/workPortfolio';
+import LazyImage from './LazyImage';
+import SmartWorkImage from './SmartWorkImage';
+import { useSwipeGesture } from '../hooks/useSwipeGesture';
+import ErrorBoundary from './ErrorBoundary';
+
+const CARD_HEIGHT = { compact: 'h-[200px] sm:h-[220px] md:h-[260px] lg:h-[280px]', full: 'h-[300px] sm:h-[400px] md:h-[500px]' } as const;
+const CARD_WIDTH = { compact: 'w-[260px] sm:w-[300px] md:w-[340px] lg:w-[380px]', full: 'w-[400px] sm:w-[500px] md:w-[600px]' } as const;
+
+function WorkCard({ work, compact, isPageScrolling }: { work: WorkImage; compact: boolean; isPageScrolling?: boolean }) {
+  const isMulti = work.images && work.images.length > 1;
+  const size = compact ? 'compact' : 'full';
+  
+  const ServiceBadge = work.services.length > 0 ? (
+    <div className="absolute top-4 left-4 z-10">
+      <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-900/90 backdrop-blur-sm border border-gray-700/50 text-white">
+        {work.services[0]}
+      </span>
+    </div>
+  ) : null;
+
+  return (
+    <div className="relative bg-gray-900 rounded-xl overflow-hidden border border-gray-700/50">
+      {isMulti ? (
+        <div className={`grid grid-cols-2 gap-2 p-2 ${CARD_HEIGHT[size]}`}>
+          {work.images!.map((img, i) => (
+            <div key={i} className="relative flex items-center justify-center bg-gray-800 rounded overflow-hidden">
+              <LazyImage src={img} alt={`${work.title} ${i + 1}`} className="w-full h-full object-contain p-1 sm:p-2" priority={i === 0} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <SmartWorkImage
+          src={work.image}
+          alt={work.title}
+          heightClass={CARD_HEIGHT[size]}
+          isPageScrolling={isPageScrolling}
+          forceLongScroll={work.longScreenshot}
+        >
+          {ServiceBadge}
+        </SmartWorkImage>
+      )}
+      <div className="px-4 py-3 bg-gray-800/80 border-t border-gray-700/50">
+        {work.clientName && <p className="text-xs text-gray-400 truncate">{work.clientName}</p>}
+        <h3 className="text-sm font-semibold text-white truncate">{work.title}</h3>
+      </div>
+    </div>
+  );
+}
+
+const CARDS_PER_PAGE = 3;
 
 interface WorkSliderProps {
   images: WorkImage[];
   showServiceMarquee?: boolean;
   className?: string;
-  speed?: number; // Animation speed in seconds (lower = faster)
-  compact?: boolean; // Smaller cards so more slides fit in viewport (e.g. landing page)
+  speed?: number;
+  compact?: boolean;
+  /** Arrow mode: show 3 cards per page, step by 3, infinite loop. */
+  arrows?: boolean;
+  /** When arrows: auto-advance every N ms; pause on hover; respects reduced-motion. 0 = off. */
+  autoPlayIntervalMs?: number;
+  isPageScrolling?: boolean;
+  /** Pause marquee on hover */
+  pauseMarqueeOnHover?: boolean;
 }
 
 export default function WorkSlider({
@@ -14,212 +72,50 @@ export default function WorkSlider({
   showServiceMarquee = true,
   className = '',
   speed = 20,
-  compact = false
+  compact = false,
+  arrows = false,
+  autoPlayIntervalMs = 0,
+  isPageScrolling = false,
+  pauseMarqueeOnHover = true
 }: WorkSliderProps) {
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const marqueeRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
+  const sliderRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
-  const dragStartX = useRef(0);
-  const dragScrollLeft = useRef(0);
-  const momentumRef = useRef<number | null>(null);
-  const autoScrollRef = useRef<number | null>(null);
-  const hasDragged = useRef(false);
+  const [pageIndex, setPageIndex] = useState(0);
 
-  // Get unique services for marquee
-  const uniqueServices = React.useMemo(() => {
-    const services = new Set<string>();
-    images.forEach(work => {
-      work.services.forEach(service => services.add(service));
+  const uniqueServices = useMemo(() => getUniqueServices(images), [images]);
+  const totalPages = Math.max(1, Math.ceil(images.length / CARDS_PER_PAGE));
+  const safePage = totalPages > 0 ? pageIndex % totalPages : 0;
+  const pages = useMemo(
+    () =>
+      Array.from({ length: totalPages }, (_, i) =>
+        images.slice(i * CARDS_PER_PAGE, i * CARDS_PER_PAGE + CARDS_PER_PAGE)
+      ),
+    [images, totalPages]
+  );
+
+  // Navigation with normalized page index
+  const go = (delta: number) => {
+    setPageIndex((p) => {
+      const next = p + delta;
+      return ((next % totalPages) + totalPages) % totalPages;
     });
-    return Array.from(services);
-  }, [images]);
-
-  // Duplicate images for seamless infinite scroll
-  const duplicatedImages = React.useMemo(() => {
-    if (images.length === 0) return [];
-    // Duplicate 3 times for smooth infinite scroll
-    return [...images, ...images, ...images];
-  }, [images]);
-
-  // Mouse drag handlers
-  const handleMouseDown = (e: React.MouseEvent) => {
-    const carousel = carouselRef.current;
-    if (!carousel) return;
-
-    setIsDragging(true);
-    setIsPaused(true);
-    hasDragged.current = false;
-    dragStartX.current = e.pageX - carousel.offsetLeft;
-    dragScrollLeft.current = carousel.scrollLeft;
-    carousel.style.cursor = 'grabbing';
-    carousel.style.userSelect = 'none';
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    e.preventDefault();
+  // Swipe gesture support for mobile
+  useSwipeGesture(sliderRef, {
+    onSwipeLeft: () => go(1),
+    onSwipeRight: () => go(-1),
+  });
 
-    const carousel = carouselRef.current;
-    if (!carousel) return;
-
-    const x = e.pageX - carousel.offsetLeft;
-    const walk = (x - dragStartX.current) * 1.5; // Scroll speed multiplier
-    
-    // Check if user actually dragged (moved more than 5px)
-    if (Math.abs(walk) > 5) {
-      hasDragged.current = true;
-    }
-    
-    carousel.scrollLeft = dragScrollLeft.current - walk;
-  };
-
-  const handleMouseUp = () => {
-    if (!isDragging) return;
-
-    setIsDragging(false);
-    const carousel = carouselRef.current;
-    if (carousel) {
-      carousel.style.cursor = 'grab';
-      carousel.style.userSelect = '';
-    }
-
-    // Reset drag flag after a short delay to allow click events
-    setTimeout(() => {
-      hasDragged.current = false;
-    }, 100);
-
-    // Resume auto-scroll after a short delay
-    setTimeout(() => {
-      setIsPaused(false);
-    }, 2000); // 2 second delay before resuming
-  };
-
-  const handleMouseLeave = () => {
-    if (isDragging) {
-      setIsDragging(false);
-      hasDragged.current = false;
-      const carousel = carouselRef.current;
-      if (carousel) {
-        carousel.style.cursor = 'grab';
-        carousel.style.userSelect = '';
-      }
-      setTimeout(() => {
-        setIsPaused(false);
-      }, 2000);
-    }
-  };
-
-  // Touch handlers for mobile
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const carousel = carouselRef.current;
-    if (!carousel) return;
-
-    setIsDragging(true);
-    setIsPaused(true);
-    dragStartX.current = e.touches[0].pageX - carousel.offsetLeft;
-    dragScrollLeft.current = carousel.scrollLeft;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return;
-
-    const carousel = carouselRef.current;
-    if (!carousel) return;
-
-    const x = e.touches[0].pageX - carousel.offsetLeft;
-    const walk = (x - dragStartX.current) * 1.5;
-    carousel.scrollLeft = dragScrollLeft.current - walk;
-  };
-
-  const handleTouchEnd = () => {
-    if (!isDragging) return;
-    setIsDragging(false);
-
-    // Add momentum scrolling
-    const carousel = carouselRef.current;
-    if (!carousel) return;
-
-    const startScrollLeft = carousel.scrollLeft;
-    const startTime = Date.now();
-    const duration = 300; // 300ms momentum
-    const startVelocity = 0.5; // Initial velocity
-
-    const momentumScroll = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      
-      // Easing function (ease-out)
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-      const currentScroll = startScrollLeft + (startVelocity * easeOut * 500);
-
-      carousel.scrollLeft = currentScroll;
-
-      if (progress < 1) {
-        momentumRef.current = requestAnimationFrame(momentumScroll);
-      } else {
-        // Resume auto-scroll after momentum
-        setTimeout(() => {
-          setIsPaused(false);
-        }, 1000);
-      }
-    };
-
-    momentumRef.current = requestAnimationFrame(momentumScroll);
-  };
-
-  // Auto-scroll with pause support
+  // Auto-advance with optimized interval (5s default, respects reduced-motion)
   useEffect(() => {
-    const carousel = carouselRef.current;
-    if (!carousel || images.length === 0) return;
-
-    const scrollSpeed = 0.5; // pixels per frame
-
-    const autoScroll = () => {
-      if (!isPaused && !isDragging) {
-        carousel.scrollLeft += scrollSpeed;
-        
-        // Reset to middle section for infinite scroll
-        const scrollWidth = carousel.scrollWidth / 3;
-        if (carousel.scrollLeft >= scrollWidth * 2) {
-          carousel.scrollLeft = scrollWidth;
-        }
-      }
-      autoScrollRef.current = requestAnimationFrame(autoScroll);
-    };
-
-    // Pause on hover (but not when dragging)
-    const handleMouseEnter = () => {
-      if (!isDragging) {
-        setIsPaused(true);
-      }
-    };
-    const handleMouseLeave = () => {
-      if (!isDragging) {
-        setIsPaused(false);
-      }
-    };
-
-    carousel.addEventListener('mouseenter', handleMouseEnter);
-    carousel.addEventListener('mouseleave', handleMouseLeave);
-
-    // Set initial cursor
-    carousel.style.cursor = 'grab';
-
-    // Start auto-scroll
-    autoScrollRef.current = requestAnimationFrame(autoScroll);
-
-    return () => {
-      if (autoScrollRef.current) {
-        cancelAnimationFrame(autoScrollRef.current);
-      }
-      if (momentumRef.current) {
-        cancelAnimationFrame(momentumRef.current);
-      }
-      carousel.removeEventListener('mouseenter', handleMouseEnter);
-      carousel.removeEventListener('mouseleave', handleMouseLeave);
-    };
-  }, [images.length, isPaused, isDragging]);
+    if (!arrows || autoPlayIntervalMs <= 0 || totalPages <= 1) return;
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const id = setInterval(() => {
+      if (!isPaused && !isPageScrolling) go(1);
+    }, autoPlayIntervalMs);
+    return () => clearInterval(id);
+  }, [arrows, autoPlayIntervalMs, totalPages, isPaused, isPageScrolling]);
 
   if (images.length === 0) {
     return (
@@ -232,147 +128,119 @@ export default function WorkSlider({
     );
   }
 
+  // Keyboard navigation (accessibility)
+  useEffect(() => {
+    if (!arrows) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') go(-1);
+      else if (e.key === 'ArrowRight') go(1);
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [arrows, totalPages]);
+
+  const slidePercent = totalPages > 1 ? (safePage * 100) / totalPages : 0;
+
   return (
-    <div className={`w-full ${className}`}>
-      {/* Service Marquee Text */}
-      {showServiceMarquee && uniqueServices.length > 0 && (
-        <div className="relative overflow-hidden mb-8 py-4 bg-gray-900/50 rounded-lg border border-gray-700/50">
-          <div className="flex">
-            {/* First marquee - left to right */}
-            <div
-              ref={marqueeRef}
-              className="flex items-center gap-4 whitespace-nowrap"
-              style={{
-                animation: `marqueeScroll ${speed}s infinite linear`
-              }}
-            >
-              {uniqueServices.map((service, idx) => (
-                <React.Fragment key={`marquee-1-${idx}`}>
-                  <div className="px-4 py-2 rounded-full bg-gray-800/50 border border-gray-700/50 text-white text-sm font-medium">
-                    {service}
-                  </div>
-                  <div className="w-1 h-1 rounded-full bg-gray-600"></div>
-                </React.Fragment>
-              ))}
-            </div>
-            {/* Duplicate for seamless loop */}
-            <div
-              className="flex items-center gap-4 whitespace-nowrap"
-              style={{
-                animation: `marqueeScroll ${speed}s infinite linear`
-              }}
-            >
-              {uniqueServices.map((service, idx) => (
-                <React.Fragment key={`marquee-2-${idx}`}>
-                  <div className="px-4 py-2 rounded-full bg-gray-800/50 border border-gray-700/50 text-white text-sm font-medium">
-                    {service}
-                  </div>
-                  <div className="w-1 h-1 rounded-full bg-gray-600"></div>
-                </React.Fragment>
+    <ErrorBoundary>
+      <div
+        ref={sliderRef}
+        className={`w-full ${className}`}
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+      >
+        {/* Service Marquee */}
+        {showServiceMarquee && uniqueServices.length > 0 && (
+          <div className="relative overflow-hidden mb-8 py-4 bg-gray-900/50 rounded-lg border border-gray-700/50">
+            <div className="flex" style={{ animationPlayState: pauseMarqueeOnHover && isPaused ? 'paused' : 'running' }}>
+              {[1, 2].map((set) => (
+                <div
+                  key={set}
+                  className="flex items-center gap-4 whitespace-nowrap"
+                  style={{ animation: `marqueeScroll ${speed}s infinite linear` }}
+                >
+                  {uniqueServices.map((service, idx) => (
+                    <React.Fragment key={`marquee-${set}-${idx}`}>
+                      <div className="px-4 py-2 rounded-full bg-gray-800/50 border border-gray-700/50 text-white text-sm font-medium">
+                        {service}
+                      </div>
+                      <div className="w-1 h-1 rounded-full bg-gray-600"></div>
+                    </React.Fragment>
+                  ))}
+                </div>
               ))}
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Infinite Image Carousel */}
-      <div className="relative w-full overflow-hidden">
-        <div
-          ref={carouselRef}
-          className="flex gap-6 overflow-x-auto scrollbar-hide select-none"
-          style={{
-            scrollBehavior: isDragging ? 'auto' : 'smooth',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-            WebkitOverflowScrolling: 'touch',
-            cursor: 'grab'
-          }}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseLeave}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          {duplicatedImages.map((work, idx) => (
-            <div
-              key={`${work.id}-${idx}`}
-              className={`flex-shrink-0 group cursor-pointer ${compact ? 'w-[260px] sm:w-[300px] md:w-[340px] lg:w-[380px]' : 'w-[400px] sm:w-[500px] md:w-[600px]'}`}
-              onClick={(e) => {
-                // Only open link if user didn't drag
-                if (!hasDragged.current && work.projectUrl && work.projectUrl !== '#') {
-                  window.open(work.projectUrl, '_blank');
-                }
-              }}
-            >
-              <div className="relative bg-gray-900 rounded-xl overflow-hidden border border-gray-700/50">
-                {/* Image - full width, vertically centered */}
-                <div className={`relative flex items-center justify-center w-full overflow-hidden bg-gray-900 ${compact ? 'h-[200px] sm:h-[220px] md:h-[260px] lg:h-[280px]' : 'h-[300px] sm:h-[400px] md:h-[500px]'}`}>
-                  <img
-                    src={work.image}
-                    alt={work.title}
-                    className="w-full h-full object-contain"
-                    loading="lazy"
-                  />
-                  {/* Service Badge */}
-                  {work.services.length > 0 && (
-                    <div className="absolute top-4 left-4">
-                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-900/90 backdrop-blur-sm border border-gray-700/50 text-white">
-                        {work.services[0]}
-                      </span>
+        {/* Slider */}
+        <div className="overflow-hidden max-w-6xl mx-auto" role="region" aria-label="Work portfolio slider" aria-live="polite">
+          <div
+            className="flex transition-transform duration-500 ease-in-out will-change-transform"
+            style={{ width: `${totalPages * 100}%`, transform: `translateX(-${slidePercent}%)` }}
+          >
+            {pages.map((pageItems, i) => {
+              // Only render current page + adjacent pages (buffer) for performance
+              const isVisible = Math.abs(i - safePage) <= 1;
+              return (
+                <div
+                  key={i}
+                  className="flex-shrink-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+                  style={{ width: `${100 / totalPages}%` }}
+                  aria-hidden={i !== safePage}
+                >
+                  {isVisible ? pageItems.map((work, idx) => (
+                    <div
+                      key={work.id}
+                      className={work.projectUrl && work.projectUrl !== '#' ? 'cursor-pointer' : ''}
+                      onClick={() => work.projectUrl && work.projectUrl !== '#' && window.open(work.projectUrl, '_blank')}
+                      role={work.projectUrl ? 'link' : undefined}
+                      tabIndex={i === safePage ? 0 : -1}
+                    >
+                      <WorkCard work={work} compact={compact} isPageScrolling={isPageScrolling} />
                     </div>
+                  )) : (
+                    // Placeholder for unrendered pages to maintain layout
+                    pageItems.map((work) => (
+                      <div key={work.id} className="bg-gray-800 rounded-xl border border-gray-700/50 h-[260px] sm:h-[280px] animate-pulse" />
+                    ))
                   )}
-
                 </div>
-                {/* Always-on strip: client + title */}
-                <div className="px-4 py-3 bg-gray-800/80 border-t border-gray-700/50">
-                  {work.clientName && (
-                    <p className="text-xs text-gray-400 truncate">{work.clientName}</p>
-                  )}
-                  <h3 className="text-sm font-semibold text-white truncate">{work.title}</h3>
-                </div>
-              </div>
-            </div>
-          ))}
+              );
+            })}
+          </div>
         </div>
+
+        {/* Navigation */}
+        <nav className="flex items-center justify-center gap-3 mt-6 sm:mt-8" aria-label="Slider navigation">
+          <button
+            type="button"
+            onClick={() => go(-1)}
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-800 border border-gray-700 text-gray-400 hover:text-white hover:border-green-500/50 hover:bg-gray-700 flex items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+            aria-label="Previous page"
+          >
+            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+          <span className="text-sm text-gray-400" aria-live="polite" aria-atomic="true">
+            Page {safePage + 1} of {totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => go(1)}
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-800 border border-gray-700 text-gray-400 hover:text-white hover:border-green-500/50 hover:bg-gray-700 flex items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+            aria-label="Next page"
+          >
+            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+        </nav>
+
+        <style>{`
+          @keyframes marqueeScroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+        `}</style>
       </div>
-
-      {/* CSS Animations */}
-      <style>{`
-        @keyframes marqueeScroll {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
-        }
-
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-
-        /* Auto-scroll animation for carousel */
-        @keyframes autoScroll {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-33.333%);
-          }
-        }
-
-        /* Apply auto-scroll if needed */
-        .auto-scroll {
-          animation: autoScroll ${speed * 2}s infinite linear;
-        }
-      `}</style>
-    </div>
+    </ErrorBoundary>
   );
 }

@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { User, Users, Code, Palette, Rocket, Brain, Sparkles, Calendar, Globe, Smartphone, Package, Award, BookOpen, ExternalLink } from 'lucide-react';
+import { User, Users, Code, Palette, Rocket, Brain, Sparkles, Calendar, Globe, Smartphone, Package, Award, BookOpen, ExternalLink, ArrowLeft } from 'lucide-react';
 import PageLayout from '../components/PageLayout';
-import PageHero from '../components/PageHero';
 import PageContainer from '../components/PageContainer';
 import PageSection from '../components/PageSection';
 import ScrollBrightness from '../components/ScrollBrightness';
@@ -30,18 +29,36 @@ export default function AboutPage() {
   }, [location.hash]);
   return (
     <PageLayout title="About Us - ShalConnects">
-      <PageHero
-        title="About Us"
-        description="Building digital solutions, one project at a time. Still learning. Still building. Still here."
-      />
-
       <PageSection>
         <PageContainer maxWidth="4xl">
-            <div className="flex items-center gap-3 mb-8 sm:mb-12">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-r from-green-500 to-orange-500 flex items-center justify-center">
-                <User size={24} className="sm:w-7 sm:h-7 text-white" />
+            {/* Back to Home Button */}
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6 sm:mb-8 group"
+            >
+              <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+              <span className="text-sm sm:text-base">Back to Home</span>
+            </Link>
+
+            {/* Circular Profile Image */}
+            <div className="flex justify-center mb-8 sm:mb-12">
+              <div className="relative w-40 h-40 xs:w-48 xs:h-48 sm:w-56 sm:h-56 lg:w-64 lg:h-64 rounded-full overflow-hidden border-4 lg:border-[6px] border-gray-700/50 shadow-2xl group">
+                <img 
+                  src="/images/profile.jpg" 
+                  alt="Shalauddin Kader"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const fallback = target.parentElement?.querySelector('.fallback-bg');
+                    if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                  }}
+                />
+                <div className="fallback-bg hidden absolute inset-0 items-center justify-center bg-gradient-to-br from-green-500/40 via-orange-500/30 to-green-500/40">
+                  <User className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 text-white opacity-90" />
+                </div>
+                <div className="absolute inset-0 rounded-full border-2 border-green-500/30 animate-pulse"></div>
               </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold">About Me</h2>
             </div>
 
             <div className="space-y-6 sm:space-y-8 text-gray-300 leading-relaxed">

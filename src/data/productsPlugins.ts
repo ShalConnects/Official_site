@@ -27,8 +27,26 @@ export const productsPlugins: ProductPlugin[] = [
     price: '$24.99',
     imagePath: '/images/plugin/preview.png',
     services: ['WordPress']
+  },
+  {
+    id: 'notipress',
+    title: 'Notipress',
+    category: 'WordPress Plugin',
+    description: 'Hide annoying admin notifications for a cleaner WordPress admin. Toggle all plugin notices or hide individual ones; core errors stay visible.',
+    results: 'Cleaner admin experience',
+    features: ['Hide All Notices', 'Per-Notice Hide', 'Core Errors Visible', 'Lightweight'],
+    isPlugin: true,
+    pluginSlug: 'notipress',
+    price: '$3.99',
+    imagePath: '/images/plugin/notipress-preview.png',
+    services: ['WordPress']
   }
 ];
+
+/** Display price by plugin slug (single source for store/plugin pages). */
+export function getPrice(slug: string): string {
+  return productsPlugins.find((p) => p.pluginSlug === slug)?.price ?? '';
+}
 
 /** Get products/plugins for a given service (e.g. WordPress, Wix). Used on service pages. */
 export function getProductsByService(serviceName: string): ProductPlugin[] {

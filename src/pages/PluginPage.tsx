@@ -1,9 +1,11 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, X, Download, ExternalLink, Image, Code, Zap, Palette, Settings, Plug, Menu, X as XIcon, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, Download, Image, Code, Zap, Palette, Settings, Plug, Menu, X as XIcon, ShoppingCart, Shield } from 'lucide-react';
 import PageLayout from '../components/PageLayout';
 import PageSidebar from '../components/PageSidebar';
+import BeforeAfterSlider from '../components/BeforeAfterSlider';
 import { useState, useEffect } from 'react';
 import { isStoreContext } from '../utils/storeUtils';
+import { getPrice } from '../data/productsPlugins';
 
 // Declare Paddle type
 declare global {
@@ -120,7 +122,6 @@ export default function PluginPage() {
       paddleProductId: 'pro_01kafwx8k4bw47cfh5w95smm7m', // Paddle Product ID
       paddlePriceId: 'pri_01kafx042cwqdh525d9ts9fj6v', // Paddle Price ID
       paddleVendorId: 252028, // Paddle Vendor ID
-      price: '$24.99', // Display price
       features: [
         { icon: Image, title: 'Custom Images', desc: 'Add custom images to each product variation' },
         { icon: Zap, title: 'Multiple Styles', desc: 'Choose from various display styles and layouts' },
@@ -200,7 +201,33 @@ export default function PluginPage() {
           alt: 'Frontend Product Page - Circular Thumbnails'
         }
       ],
-      heroImage: '/images/plugin/preview.png'
+      heroImage: '/images/plugin/preview.png',
+      paidOnly: false
+    },
+    'notipress': {
+      name: 'Notipress',
+      tagline: 'Hide annoying admin notifications. Cleaner WordPress dashboard.',
+      description: 'Notipress hides third-party plugin notices (rating requests, promos, update nags) so you can focus. Toggle "Hide All" or click × on any notice to hide it. WordPress core errors and warnings stay visible.',
+      paddleProductId: '',
+      paddlePriceId: 'pri_01khd9vscmynzpd3655cd1trrx',
+      paddleVendorId: 252028,
+      features: [
+        { icon: Zap, title: 'Hide All', desc: 'One toggle to hide all third-party notices' },
+        { icon: Settings, title: 'Per-Notice', desc: 'Click × on any notice to hide it' },
+        { icon: Shield, title: 'Core Safe', desc: 'Errors and warnings always visible' },
+        { icon: Code, title: 'Lightweight', desc: 'Minimal code, no bloat' }
+      ],
+      displayStyles: [],
+      freeFeatures: [],
+      screenshots: [],
+      heroImage: '/images/plugin/notipress-preview.png',
+      paidOnly: true,
+      tocItems: [
+        { id: 'overview', label: 'Overview' },
+        { id: 'features', label: 'Features' },
+        { id: 'installation', label: 'Installation' },
+        { id: 'download', label: 'Download' }
+      ]
     }
   };
 
@@ -230,7 +257,7 @@ export default function PluginPage() {
     );
   }
 
-  const tocItems = [
+  const defaultToc = [
     { id: 'overview', label: 'Overview' },
     { id: 'features', label: 'Key Features' },
     { id: 'comparison', label: 'Free vs Pro' },
@@ -238,6 +265,14 @@ export default function PluginPage() {
     { id: 'installation', label: 'Installation Guide' },
     { id: 'download', label: 'Download' }
   ];
+  const tocItems = 'tocItems' in plugin && plugin.tocItems ? plugin.tocItems : defaultToc;
+
+  const price = getPrice(slug ?? '');
+  const purchaseLabel = plugin.paidOnly ? (price ? `Buy - ${price}` : 'Buy') : (price ? `Buy Pro - ${price}` : 'Buy Pro Version');
+  const purchaseStepCopy = plugin.paidOnly
+    ? 'Click the "Buy" button above to purchase. After payment, you\'ll receive an email with the download link for the plugin ZIP file.'
+    : 'Click the "Buy Pro Version" button above to purchase. After payment, you\'ll receive an email with the download link for the Pro plugin ZIP file.';
+  const downloadCtaCopy = plugin.paidOnly ? 'Download now and unlock all features.' : 'Download the Pro version now and unlock all premium features.';
 
   const scrollToContact = () => {
     navigate('/#contact', { state: { prefillService: plugin.name } });
@@ -451,7 +486,7 @@ export default function PluginPage() {
           categoryColor="#176641"
           isVisible={isSidebarVisible}
           onToggle={() => setIsSidebarVisible(!isSidebarVisible)}
-          purchaseLabel={plugin.price ? `Buy Pro - ${plugin.price}` : 'Buy Pro Version'}
+          purchaseLabel={purchaseLabel}
         />
 
         {/* Main Content */}
@@ -478,17 +513,8 @@ export default function PluginPage() {
                 className="px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-medium text-white text-base sm:text-lg transition-all hover:scale-105 flex items-center justify-center gap-2 bg-gradient-theme"
               >
                   <ShoppingCart size={18} className="sm:w-5 sm:h-5" />
-                  Buy Pro Version {plugin.price && `- ${plugin.price}`}
+                  {purchaseLabel}
                 </button>
-              <a
-                href="https://wordpress.org/plugins/dynamic-variation-images/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
-              >
-                <ExternalLink size={18} className="sm:w-5 sm:h-5" />
-                View Free Version on WordPress.org
-              </a>
             </div>
             </div>
             {plugin.heroImage && (
@@ -513,16 +539,35 @@ export default function PluginPage() {
           {/* Feature Showcase Section - EDD Style */}
           <section id="feature-showcase" className="py-8 sm:py-12 md:py-16 bg-gray-900/50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-center px-2">
-                Powerful Features, Intuitive Interface
-              </h2>
-              <p className="text-sm sm:text-base text-center text-gray-400 mb-8 sm:mb-10 md:mb-12 max-w-2xl mx-auto px-2">
-                Everything you need to transform your WooCommerce product variations into beautiful, engaging experiences
-              </p>
-              
-              {/* Main Showcase Container */}
-              <div className="relative bg-gray-800/30 rounded-2xl border border-gray-700/50 p-4 sm:p-6 md:p-8 lg:p-12 overflow-hidden">
-                <div className="relative space-y-6 sm:space-y-8">
+              {slug === 'notipress' && (
+                <>
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-center px-2">
+                    See the difference
+                  </h2>
+                  <p className="text-sm sm:text-base text-center text-gray-400 mb-8 sm:mb-10 max-w-2xl mx-auto px-2">
+                    Drag the slider to compare your admin with and without Notipress.
+                  </p>
+                  <div className="relative bg-gray-800/30 rounded-2xl border border-gray-700/50 p-4 sm:p-6 md:p-8 overflow-hidden">
+                    <BeforeAfterSlider
+                      beforeSrc="/images/plugin/notipress-after.png"
+                      afterSrc="/images/plugin/notipress-before.png"
+                      beforeLabel="With notifications"
+                      afterLabel="With Notipress"
+                      alt="WordPress admin before and after Notipress"
+                    />
+                  </div>
+                </>
+              )}
+              {slug !== 'notipress' && (
+                <>
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-center px-2">
+                    Powerful Features, Intuitive Interface
+                  </h2>
+                  <p className="text-sm sm:text-base text-center text-gray-400 mb-8 sm:mb-10 md:mb-12 max-w-2xl mx-auto px-2">
+                    Everything you need to transform your WooCommerce product variations into beautiful, engaging experiences
+                  </p>
+                  <div className="relative bg-gray-800/30 rounded-2xl border border-gray-700/50 p-4 sm:p-6 md:p-8 lg:p-12 overflow-hidden">
+                    <div className="relative space-y-6 sm:space-y-8">
                   
                   {/* Top Row - Screenshots */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 items-stretch">
@@ -623,9 +668,11 @@ export default function PluginPage() {
                         </div>
                       </div>
                     </div>
-                        </div>
-                          </div>
-              </div>
+                    </div>
+                    </div>
+                    </div>
+                </>
+              )}
             </div>
           </section>
 
@@ -655,120 +702,6 @@ export default function PluginPage() {
         </div>
       </section>
 
-          {/* Free vs Pro Comparison Table */}
-          <section id="comparison" className="py-8 sm:py-12 md:py-16">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-center px-2">
-            Free vs Pro Comparison
-          </h2>
-          <p className="text-sm sm:text-base text-center text-gray-400 mb-8 sm:mb-10 md:mb-12 max-w-2xl mx-auto px-2">
-            Compare the features available in the free version versus the Pro version.
-          </p>
-          <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 overflow-hidden">
-            <div className="overflow-x-auto -mx-4 sm:mx-0">
-              <div className="inline-block min-w-full align-middle">
-                <table className="w-full min-w-[500px] sm:min-w-[600px]">
-                  <thead>
-                    <tr className="border-b border-gray-700/50">
-                      <th className="text-left px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-white font-semibold text-xs sm:text-sm md:text-base">Feature</th>
-                      <th className="text-center px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-white font-semibold text-xs sm:text-sm md:text-base">Free Version</th>
-                      <th className="text-center px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-white font-semibold text-xs sm:text-sm md:text-base" style={{ color: '#da651e' }}>Pro Version</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {plugin.freeFeatures.map((item, idx) => (
-                      <tr key={idx} className="border-b border-gray-700/30 hover:bg-gray-800/70 transition-colors">
-                        <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-gray-300 text-xs sm:text-sm md:text-base">{item.feature}</td>
-                        <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-center">
-                          {typeof item.free === 'boolean' ? (
-                            item.free ? (
-                              <CheckCircle size={18} className="sm:w-5 sm:h-5 mx-auto text-green-500" />
-                            ) : (
-                              <X size={18} className="sm:w-5 sm:h-5 mx-auto text-gray-600" />
-                            )
-                          ) : (
-                            <span className="text-gray-400 text-xs sm:text-sm md:text-base break-words">{item.free}</span>
-                          )}
-                        </td>
-                        <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-center">
-                          {typeof item.pro === 'boolean' ? (
-                            item.pro ? (
-                              <CheckCircle size={18} className="sm:w-5 sm:h-5 mx-auto" style={{ color: '#da651e' }} />
-                          ) : (
-                            <X size={18} className="sm:w-5 sm:h-5 mx-auto text-gray-600" />
-                          )
-                        ) : (
-                          <span className="text-xs sm:text-sm md:text-base break-words" style={{ color: '#da651e' }}>{item.pro}</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-          {/* Display Styles Section */}
-          <section id="display-styles" className="py-8 sm:py-12 md:py-16 bg-gray-800/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-center px-2">
-            See It In Action
-          </h2>
-          <p className="text-sm sm:text-base text-center text-gray-400 mb-6 sm:mb-8 md:mb-12 max-w-2xl mx-auto px-2">
-            Choose from 7 different display styles
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-10 md:mb-12 justify-items-center">
-            {plugin.displayStyles.map((style, idx) => (
-              <div
-                key={idx}
-                className="bg-gray-800/50 rounded-xl border border-gray-700/50 hover:border-gray-600/50 transition-all hover:scale-105 overflow-hidden w-full max-w-sm"
-              >
-                <div 
-                  className="h-40 sm:h-48 flex items-center justify-center relative"
-                  style={{ 
-                    background: '#fafafa',
-                    borderBottom: '2px solid #17664130'
-                  }}
-                >
-                  <img 
-                    src={style.image} 
-                    alt={style.name}
-                    className="w-full h-full object-contain"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      const placeholder = target.parentElement?.querySelector('.placeholder-icon');
-                      if (placeholder) {
-                        (placeholder as HTMLElement).style.display = 'flex';
-                      }
-                    }}
-                  />
-                  <div className="placeholder-icon hidden absolute inset-0 items-center justify-center">
-                    <Image size={40} className="sm:w-12 sm:h-12 opacity-50" style={{ color: '#176641' }} />
-                  </div>
-                </div>
-                <div className="p-3 sm:p-4">
-                  <h3 className="text-base sm:text-lg font-semibold text-white mb-1.5 sm:mb-2">{style.name}</h3>
-                  <p className="text-gray-400 text-xs sm:text-sm mb-2 sm:mb-3">{style.description}</p>
-                  <span 
-                    className={`inline-block text-[10px] sm:text-xs px-2 py-0.5 sm:py-1 rounded-full ${
-                      style.isPro 
-                        ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' 
-                        : 'bg-gray-700/50 text-gray-300 border border-gray-600/50'
-                    }`}
-                  >
-                    {style.badge}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
           {/* Installation Guide Section */}
           <section id="installation" className="py-8 sm:py-12 md:py-16">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -776,10 +709,13 @@ export default function PluginPage() {
             How to Install the Plugin
           </h2>
           <p className="text-sm sm:text-base text-center text-gray-400 mb-8 sm:mb-10 md:mb-12 max-w-2xl mx-auto px-2">
-            Choose your installation method based on whether you're using the free or pro version.
+            {plugin.paidOnly
+              ? "Install the plugin after purchase by following these steps."
+              : "Choose your installation method based on whether you're using the free or pro version."}
           </p>
 
-          {/* Free Version Instructions */}
+          {!plugin.paidOnly && (
+          /* Free Version Instructions */
           <div className="mb-12">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#17664120' }}>
@@ -833,14 +769,15 @@ export default function PluginPage() {
               </div>
             </div>
           </div>
+          )}
 
-          {/* Pro Version Instructions */}
+          {/* Pro / Paid Version Instructions */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#da651e20' }}>
                 <Download size={18} className="sm:w-5 sm:h-5" style={{ color: '#da651e' }} />
               </div>
-              <h3 className="text-xl sm:text-2xl font-semibold text-white">Pro Version (Manual Upload)</h3>
+              <h3 className="text-xl sm:text-2xl font-semibold text-white">{plugin.paidOnly ? 'Installation' : 'Pro Version (Manual Upload)'}</h3>
             </div>
             <div className="space-y-4">
               <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-4 sm:p-5">
@@ -850,9 +787,7 @@ export default function PluginPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="text-base sm:text-lg font-semibold text-white mb-2">Purchase & Download the Plugin</h4>
-                    <p className="text-gray-400 text-sm mb-2 leading-relaxed">
-                      Click the "Buy Pro Version" button above to purchase. After payment, you'll receive an email with the download link for the Pro plugin ZIP file.
-                    </p>
+                    <p className="text-gray-400 text-sm mb-2 leading-relaxed">{purchaseStepCopy}</p>
                     <p className="text-sm text-gray-500">Keep the ZIP file ready - do not extract it.</p>
                   </div>
                 </div>
@@ -905,18 +840,20 @@ export default function PluginPage() {
             </div>
           </div>
 
-          {/* Configuration Section (Common for both) */}
+          {/* Configuration Section */}
           <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-4 sm:p-6">
             <div className="flex items-start gap-3 sm:gap-4">
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#17664120' }}>
                 <Settings size={20} className="sm:w-6 sm:h-6" style={{ color: '#176641' }} />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">Configure Settings (Both Versions)</h3>
+                <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">{plugin.paidOnly ? 'Configure Settings' : 'Configure Settings (Both Versions)'}</h3>
                 <p className="text-gray-400 mb-3 text-sm sm:text-base leading-relaxed">
-                  After activation, the plugin will show up in WordPress dashboard in a separate menu called <strong className="text-white">Variation Images</strong>. Under that menu, it will have <strong className="text-white">Variation images</strong> and <strong className="text-white">Settings</strong>, two submenus.
+                  {plugin.paidOnly
+                    ? "After activation, find Notipress settings under Settings → Notipress in your WordPress dashboard."
+                    : <>After activation, the plugin will show up in WordPress dashboard in a separate menu called <strong className="text-white">Variation Images</strong>. Under that menu, it will have <strong className="text-white">Variation images</strong> and <strong className="text-white">Settings</strong>, two submenus.</>}
                 </p>
-                <p className="text-sm text-gray-500">You can choose display styles, enable features, and customize the appearance to match your store's design.</p>
+                {!plugin.paidOnly && <p className="text-sm text-gray-500">You can choose display styles, enable features, and customize the appearance to match your store's design.</p>}
               </div>
             </div>
           </div>
@@ -928,7 +865,7 @@ export default function PluginPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-5 md:mb-6 px-2">Ready to Get Started?</h2>
           <p className="text-base sm:text-lg md:text-xl text-gray-400 mb-6 sm:mb-7 md:mb-8 px-2">
-            Download the Pro version now and unlock all premium features.
+            {downloadCtaCopy}
           </p>
           
           <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4">
@@ -937,17 +874,8 @@ export default function PluginPage() {
               className="px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-medium text-white text-base sm:text-lg transition-all hover:scale-105 flex items-center justify-center gap-2 bg-gradient-theme"
             >
               <ShoppingCart size={18} className="sm:w-5 sm:h-5" />
-              Buy Pro Version {plugin.price && `- ${plugin.price}`}
+              {purchaseLabel}
             </button>
-            <a
-              href="https://wordpress.org/plugins/dynamic-variation-images/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
-            >
-              <ExternalLink size={18} className="sm:w-5 sm:h-5" />
-              Try Free Version
-            </a>
           </div>
           
           {/* Download Statistics - Side by Side Cards */}
@@ -976,7 +904,7 @@ export default function PluginPage() {
                 </div>
               </div>
               
-              {/* Free Version Card - Second */}
+              {!plugin.paidOnly && (
               <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-4 sm:p-5 md:p-6 w-full sm:w-auto sm:min-w-[140px] md:min-w-[160px]">
                 <div className="text-center">
                   <div className="text-sm sm:text-base font-medium text-gray-300 mb-2">Free Version</div>
@@ -998,6 +926,7 @@ export default function PluginPage() {
                   )}
                 </div>
               </div>
+              )}
             </div>
           )}
           
