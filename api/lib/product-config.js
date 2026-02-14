@@ -5,6 +5,7 @@
 const PRODUCT_MAP = {
   'pro_01kafwx8k4bw47cfh5w95smm7m': { slug: 'variation-images-pro', fileEnvKey: 'PLUGIN_FILE_URL' },
   'pri_01kafx042cwqdh525d9ts9fj6v': { slug: 'variation-images-pro', fileEnvKey: 'PLUGIN_FILE_URL' },
+  'pro_01khd9txcvgf70fhqwr1tsq3h5': { slug: 'notipress', fileEnvKey: 'NOTIPRESS_PLUGIN_FILE_URL' },
   'pri_01khd9vscmynzpd3655cd1trrx': { slug: 'notipress', fileEnvKey: 'NOTIPRESS_PLUGIN_FILE_URL' },
 };
 

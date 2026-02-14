@@ -80,25 +80,13 @@ export default async function handler(req, res) {
       throw new Error(`Paddle API error: ${response.status} ${response.statusText}`);
     }
 
-    const transaction = await response.json();
-    
-    // Log the FULL response for debugging - this is critical
+    const raw = await response.json();
+    const transaction = raw?.data ?? raw;
+
     console.log('=== PADDLE API FULL RESPONSE ===');
-    console.log(JSON.stringify(transaction, null, 2));
+    console.log(JSON.stringify(raw, null, 2));
     console.log('=== END PADDLE RESPONSE ===');
-    
-    // Log the full response for debugging
-    console.log('Paddle transaction response summary:', {
-      id: transaction.id,
-      status: transaction.status,
-      status_code: transaction.status_code,
-      hasStatus: 'status' in transaction,
-      hasStatusCode: 'status_code' in transaction,
-      keys: Object.keys(transaction),
-      fullObject: transaction,
-    });
-    
-    // Check if transaction object is valid
+
     if (!transaction || typeof transaction !== 'object') {
       console.error('Invalid transaction response:', transaction);
       return res.status(500).json({
@@ -109,12 +97,7 @@ export default async function handler(req, res) {
 
     // Check if status exists - Paddle API v2 might use different field names
     // Try multiple possible field names
-    const transactionStatus = transaction.status || 
-                              transaction.status_code || 
-                              transaction.payment_status ||
-                              transaction.state ||
-                              (transaction.data && transaction.data.status) ||
-                              'unknown';
+    const transactionStatus = transaction.status || transaction.status_code || transaction.payment_status || transaction.state || 'unknown';
     
     console.log('Extracted transaction status:', transactionStatus);
     

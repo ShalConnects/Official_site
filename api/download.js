@@ -52,21 +52,14 @@ export default async function handler(req, res) {
       throw new Error('Transaction verification failed');
     }
 
-    const transactionData = await verifyResponse.json();
-    
-    // Log the full response for debugging
+    const raw = await verifyResponse.json();
+    const transactionData = raw?.data ?? raw;
+
     console.log('=== DOWNLOAD API - PADDLE RESPONSE ===');
-    console.log(JSON.stringify(transactionData, null, 2));
+    console.log(JSON.stringify(raw, null, 2));
     console.log('=== END PADDLE RESPONSE ===');
 
-    // Check if status exists - Paddle API v2 might use different field names
-    // Try multiple possible field names (same as verify-transaction.js)
-    const transactionStatus = transactionData.status || 
-                              transactionData.status_code || 
-                              transactionData.payment_status ||
-                              transactionData.state ||
-                              (transactionData.data && transactionData.data.status) ||
-                              'unknown';
+    const transactionStatus = transactionData?.status || transactionData?.status_code || transactionData?.payment_status || transactionData?.state || 'unknown';
     
     console.log('Download API - Extracted transaction status:', transactionStatus);
 
@@ -111,7 +104,7 @@ export default async function handler(req, res) {
       // Don't block download if tracking fails
     }
 
-    const downloadUrl = transactionData.download_url || getDownloadUrl(transactionData, req);
+    const downloadUrl = transactionData?.download_url || getDownloadUrl(transactionData, req);
 
     // Redirect to the download URL
     return res.redirect(downloadUrl);
