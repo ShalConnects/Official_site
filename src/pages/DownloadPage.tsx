@@ -16,6 +16,13 @@ interface TransactionData {
   created_at: string;
 }
 
+const TRANSACTION_ID_STEPS = [
+  { step: 1, title: 'Check your inbox', caption: 'Look for the Paddle receipt email.', image: '/images/download-help/step1-inbox.png' },
+  { step: 2, title: 'Open the email', caption: 'Find and open the receipt. Look for the attachment.', image: '/images/download-help/step2-attachment.png' },
+  { step: 3, title: 'Find the Transaction ID', caption: 'Open the attachment. The Transaction ID is clearly marked.', image: '/images/download-help/step3-transaction-id.png' },
+  { step: 4, title: 'Paste and verify', caption: 'Copy the Transaction ID, paste it below, and click Verify.', image: '/images/download-help/step4-verify.png' },
+];
+
 export default function DownloadPage() {
   usePageTitle('Download');
   const isStoreSubdomain = isStoreContext();
@@ -28,7 +35,6 @@ export default function DownloadPage() {
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [productSlug, setProductSlug] = useState<string | null>(null);
   const [manualTransactionId, setManualTransactionId] = useState('');
-  const [showManualInput, setShowManualInput] = useState(false);
 
   // Try multiple ways to get transaction ID:
   // 1. URL query parameters (various names Paddle might use)
@@ -191,33 +197,48 @@ export default function DownloadPage() {
               </div>
             )}
             
-            {/* Manual Transaction ID Input */}
             {!transactionId && (
-              <div className="bg-gray-900/50 rounded-lg p-6 mb-6 text-left">
-                <div className="flex items-center gap-2 mb-4">
-                  <Key className="w-5 h-5 text-gray-400" />
-                  <h3 className="text-lg font-semibold text-white">Enter Transaction ID Manually</h3>
-                </div>
-                <p className="text-sm text-gray-400 mb-4">
-                  If you have your transaction ID from Paddle (check your email or Paddle dashboard), enter it below:
+              <>
+                <p className="text-gray-300 text-sm sm:text-base mb-6">
+                  You&apos;ll receive an email with your receipt. Open the receipt and look for the <strong className="text-white">Transaction ID</strong> — you&apos;ll use it below to get your download.
                 </p>
-                <form onSubmit={handleManualSubmit} className="space-y-4">
-                  <input
-                    type="text"
-                    value={manualTransactionId}
-                    onChange={(e) => setManualTransactionId(e.target.value)}
-                    placeholder="Enter transaction ID (e.g., txn_01...)"
-                    className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
-                  />
-                  <button
-                    type="submit"
-                    className="w-full px-6 py-3 rounded-lg font-medium text-white transition-all hover:scale-105"
-                    style={{ backgroundColor: '#176641' }}
-                  >
-                    Verify Transaction
-                  </button>
-                </form>
-              </div>
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Key className="w-5 h-5 text-gray-400" />
+                  How to find your Transaction ID
+                </h3>
+                <div className="space-y-6 mb-8">
+                  {TRANSACTION_ID_STEPS.map(({ step, title, caption, image }, i) => (
+                    <div key={step} className="download-step bg-gray-900/50 rounded-lg p-4 sm:p-5 border border-gray-700/50" style={{ animationDelay: `${i * 0.08}s` }}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-700 text-sm font-semibold text-white">{step}</span>
+                        <h4 className="text-base font-semibold text-white">{title}</h4>
+                      </div>
+                      <p className="text-sm text-gray-400 mb-3">{caption}</p>
+                      <img src={image} alt={title} className="rounded-lg border border-gray-700/50 w-full max-w-lg" />
+                    </div>
+                  ))}
+                </div>
+                <div className="bg-gray-900/50 rounded-lg p-6 text-left">
+                  <h3 className="text-lg font-semibold text-white mb-2">Enter Transaction ID</h3>
+                  <p className="text-sm text-gray-400 mb-4">Paste the Transaction ID from your receipt below and click Verify.</p>
+                  <form onSubmit={handleManualSubmit} className="space-y-4">
+                    <input
+                      type="text"
+                      value={manualTransactionId}
+                      onChange={(e) => setManualTransactionId(e.target.value)}
+                      placeholder="Enter transaction ID (e.g., txn_01...)"
+                      className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
+                    />
+                    <button
+                      type="submit"
+                      className="w-full px-6 py-3 rounded-lg font-medium text-white transition-all hover:scale-105"
+                      style={{ backgroundColor: '#176641' }}
+                    >
+                      Verify Transaction
+                    </button>
+                  </form>
+                </div>
+              </>
             )}
 
             <div className="flex flex-wrap justify-center gap-4">

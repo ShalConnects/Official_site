@@ -125,7 +125,7 @@ export default function StoreHome() {
                       <img 
                         src={product.imagePath || '/images/plugin/preview.png'} 
                         alt={product.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover object-top"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';
