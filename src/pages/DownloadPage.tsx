@@ -215,7 +215,7 @@ export default function DownloadPage() {
                     </button>
                   </form>
                 </div>
-                <div className="h-[350px] overflow-y-auto rounded-lg border border-gray-700/50">
+                <div className="h-[350px] overflow-y-auto rounded-lg border-0">
                   <p className="text-gray-300 text-sm sm:text-base mb-4">
                     You&apos;ll receive an email with your receipt. Open the receipt and look for the <strong className="text-white">Transaction ID</strong> — you&apos;ll use it below to get your download.
                   </p>

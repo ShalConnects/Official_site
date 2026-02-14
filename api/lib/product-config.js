@@ -29,4 +29,4 @@ function getDownloadUrl(transactionData, req) {
   return `${protocol}://${host}/downloads/${slug}.zip`;
 }
 
-module.exports = { getProductByPaddleId, getProductFromTransaction, getDownloadUrl };
+export { getProductByPaddleId, getProductFromTransaction, getDownloadUrl };

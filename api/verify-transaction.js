@@ -1,15 +1,11 @@
 // Backend API endpoint for verifying Paddle transactions
 // Vercel Serverless Function
+import { getProductFromTransaction } from './lib/product-config.js';
 
 // SECURITY: API key must be set via environment variable
-// Never hardcode API keys in source code
 const PADDLE_API_KEY = process.env.PADDLE_API_KEY;
-
-if (!PADDLE_API_KEY) {
-  console.error('PADDLE_API_KEY environment variable is not set');
-}
+if (!PADDLE_API_KEY) console.error('PADDLE_API_KEY environment variable is not set');
 const PADDLE_API_URL = 'https://api.paddle.com';
-const { getProductFromTransaction } = require('./lib/product-config');
 
 /**
  * Vercel Serverless Function
