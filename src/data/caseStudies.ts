@@ -13,11 +13,58 @@ export interface CaseStudy {
   results?: string;
   image?: string;
   workIds?: string[];
+  /** Custom gallery sections (title + image paths). Use when case study has its own images. */
+  gallerySections?: { title: string; images: string[] }[];
   projectUrl?: string;
   featured?: boolean;
 }
 
+const CASE_STUDIES_IMG = '/images/case-studies';
+
 const caseStudiesList: CaseStudy[] = [
+  {
+    id: 'rak',
+    slug: 'ebay-rak-consignment',
+    title: 'eBay Listing, Store Banner & Social – RAK Consignment',
+    clientName: 'RAK Consignment (Mindy)',
+    services: ['eBay', 'Brand Identity'],
+    challenge: 'Client needed a professional eBay listing template and a cohesive store presence. Through casual conversation during the first order, we identified an opportunity to improve the store banner and expand into social branding.',
+    solution: 'Delivered an eBay listing template (with revisions) and set it up in Auctiva. Proposed and delivered a new eBay store header, then a Facebook header. All work was done via Fiverr with clear communication and iterations.',
+    results: 'Listing live on eBay with a polished template; store header and Facebook banner completed. Client left positive Fiverr feedback and plans to do her website next.',
+    image: `${CASE_STUDIES_IMG}/rak-consignment/store-header.png`,
+    projectUrl: 'https://www.ebay.com/itm/287138820320',
+    featured: true,
+    gallerySections: [
+      {
+        title: 'Final deliverables',
+        images: [
+          `${CASE_STUDIES_IMG}/rak-consignment/listing-sample.png`,
+          `${CASE_STUDIES_IMG}/rak-consignment/store-header.png`,
+          `${CASE_STUDIES_IMG}/rak-consignment/fb-banner.jpg`,
+        ],
+      },
+      {
+        title: 'Conversation',
+        images: [
+          `${CASE_STUDIES_IMG}/rak-consignment/convo-7.png`,
+          `${CASE_STUDIES_IMG}/rak-consignment/convo-8.png`,
+          `${CASE_STUDIES_IMG}/rak-consignment/convo-9.png`,
+          `${CASE_STUDIES_IMG}/rak-consignment/convo-10.png`,
+          `${CASE_STUDIES_IMG}/rak-consignment/convo-11.png`,
+          `${CASE_STUDIES_IMG}/rak-consignment/convo-12.png`,
+          `${CASE_STUDIES_IMG}/rak-consignment/convo-13.png`,
+        ],
+      },
+      {
+        title: 'Fiverr feedback',
+        images: [
+          `${CASE_STUDIES_IMG}/rak-consignment/feedback-1.png`,
+          `${CASE_STUDIES_IMG}/rak-consignment/feedback-2.png`,
+          `${CASE_STUDIES_IMG}/rak-consignment/feedback-3.png`,
+        ],
+      },
+    ],
+  },
   {
     id: '1',
     slug: 'wordpress-trendrio',
@@ -70,3 +117,21 @@ export const getCaseStudiesByService = (serviceSlug: string): CaseStudy[] =>
 
 export const getFeaturedCaseStudies = (): CaseStudy[] =>
   caseStudiesList.filter((c) => c.featured);
+
+const idxBySlug = (slug: string) => caseStudiesList.findIndex((c) => c.slug === slug);
+
+export const getPrevNext = (slug: string): { prev: CaseStudy | null; next: CaseStudy | null } => {
+  const i = idxBySlug(slug);
+  if (i < 0) return { prev: null, next: null };
+  return {
+    prev: i > 0 ? caseStudiesList[i - 1] ?? null : null,
+    next: i < caseStudiesList.length - 1 && i >= 0 ? caseStudiesList[i + 1] ?? null : null,
+  };
+};
+
+export const getRelatedCaseStudies = (slug: string, limit = 3): CaseStudy[] => {
+  const study = getCaseStudyBySlug(slug);
+  if (!study?.services.length) return [];
+  const byFirst = getCaseStudiesByService(toServiceSlug(study.services[0]));
+  return byFirst.filter((c) => c.slug !== slug).slice(0, limit);
+};

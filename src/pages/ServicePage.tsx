@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, Zap, Shield, Clock, Users, TrendingUp, ChevronDown, ChevronUp, Star, ExternalLink, Mail, Share2, Download, ShoppingCart, X } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Zap, Shield, Clock, Users, TrendingUp, ChevronDown, ChevronUp, Star, ExternalLink, Mail, Share2, Download, ShoppingCart } from 'lucide-react';
 import { SiWhatsapp } from 'react-icons/si';
 import PageLayout from '../components/PageLayout';
 import WorkMarquee from '../components/WorkMarquee';
-import ContactForm from '../components/ContactForm';
+import ContactModal from '../components/ContactModal';
 import { getWorkByService, shuffleArray } from '../data/workPortfolio';
 import { getCaseStudiesByService } from '../data/caseStudies';
 import { getProductsByService } from '../data/productsPlugins';
@@ -1003,43 +1003,7 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
         )}
       </div>
 
-      {/* Quote / Contact modal - same form as landing */}
-      {showQuoteModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-          onClick={() => setShowQuoteModal(false)}
-          aria-modal="true"
-          role="dialog"
-          aria-labelledby="quote-modal-title"
-        >
-          <div
-            className="relative bg-gray-900 rounded-2xl border border-gray-700 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="sticky top-0 flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900 rounded-t-2xl z-10">
-              <h2 id="quote-modal-title" className="text-lg font-semibold text-white">
-                Get Your Custom Quote
-              </h2>
-              <button
-                type="button"
-                onClick={() => setShowQuoteModal(false)}
-                className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 transition-colors"
-                aria-label="Close modal"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-4 sm:p-6">
-              <ContactForm
-                prefillService={foundService.title}
-                onSuccess={() => setShowQuoteModal(false)}
-                accentColor={foundCategory.color}
-                successInline={false}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <ContactModal open={showQuoteModal} onClose={() => setShowQuoteModal(false)} title="Get Your Custom Quote" prefillService={foundService.title} accentColor={foundCategory.color} />
     </PageLayout>
   );
 }

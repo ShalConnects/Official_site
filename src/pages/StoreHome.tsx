@@ -98,7 +98,7 @@ export default function StoreHome() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
 <Link to="/download" className="flex items-center justify-center gap-2 rounded-lg border border-gray-700/50 bg-gray-800/30 py-3 text-base font-medium text-green-400 hover:bg-gray-800/50 hover:text-green-300 hover:underline">
-            <Download size={18} /> Already purchased? Get your download →
+            <Download size={18} /> Already purchased? Download your files
           </Link>
         </div>
 

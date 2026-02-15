@@ -824,6 +824,12 @@ html {
 }
 .download-step { opacity: 0; animation: download-step-in 0.4s ease forwards; }
 
+@keyframes case-study-strip-scroll {
+  to { transform: translateY(-50%); }
+}
+.case-study-strip-scroll { animation: case-study-strip-scroll 45s linear infinite; }
+.case-study-strip-paused .case-study-strip-scroll { animation-play-state: paused; }
+
 /* Respect reduced motion for loading screen */
 @media (prefers-reduced-motion: reduce) {
   .animate-pulse-slow,
@@ -834,5 +840,6 @@ html {
     animation: none;
   }
   .download-step { animation: none; opacity: 1; }
+  .case-study-strip-scroll { animation: none; }
 }
 
