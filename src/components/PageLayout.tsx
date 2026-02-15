@@ -1,6 +1,6 @@
 import React from 'react';
 import Footer from './Footer';
-import Header from './Header';
+import StoreTopBar from './StoreTopBar';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { isStoreContext } from '../utils/storeUtils';
 
@@ -15,7 +15,7 @@ export default function PageLayout({ children, title }: PageLayoutProps) {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
-      {isStore && <Header />}
+      {isStore && <StoreTopBar />}
       <main className="flex-1">
         {children}
       </main>
