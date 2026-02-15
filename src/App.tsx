@@ -30,6 +30,8 @@ const AboutPage = lazy(() => import('./pages/AboutPage'));
 const ReviewsPage = lazy(() => import('./pages/ReviewsPage'));
 const TestimonialsPage = lazy(() => import('./pages/TestimonialsPage'));
 const WorkPage = lazy(() => import('./pages/WorkPage'));
+const CaseStudiesPage = lazy(() => import('./pages/CaseStudiesPage'));
+const CaseStudyPage = lazy(() => import('./pages/CaseStudyPage'));
 
 function ShalConnectsPortfolio() {
   const location = useLocation();
@@ -51,7 +53,7 @@ function ShalConnectsPortfolio() {
     setIsLoading(false);
     sessionStorage.setItem('hasLoaded', 'true');
   };
-  const routeFallback = <div className="min-h-screen bg-gray-900 flex items-center justify-center"><div className="text-white">Loading...</div></div>;
+  const routeFallback = <LoadingScreen variant="minimal" />;
   return (
     <ThemeProvider>
       {isLoading && <LoadingScreen onComplete={handleLoadingComplete} />}
@@ -76,6 +78,8 @@ function ShalConnectsPortfolio() {
         <Route path="/reviews" element={<ReviewsPage />} />
         <Route path="/testimonials" element={<TestimonialsPage />} />
         <Route path="/work" element={<WorkPage />} />
+        <Route path="/case-studies" element={<CaseStudiesPage />} />
+        <Route path="/case-studies/:slug" element={<CaseStudyPage />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/refund" element={<RefundPolicy />} />

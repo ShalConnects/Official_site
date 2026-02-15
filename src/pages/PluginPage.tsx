@@ -6,6 +6,7 @@ import BeforeAfterSlider from '../components/BeforeAfterSlider';
 import { useState, useEffect } from 'react';
 import { isStoreContext, getStoreHomePath } from '../utils/storeUtils';
 import { getPrice } from '../data/productsPlugins';
+import LoadingScreen from '../components/LoadingScreen';
 
 // Declare Paddle type
 declare global {
@@ -889,7 +890,7 @@ export default function PluginPage() {
                   <div className="text-sm sm:text-base font-medium text-gray-300 mb-2">Premium Version</div>
                   <div className="text-xs text-gray-400 mb-1 break-words">(ShalConnects.com)</div>
                   {statsLoading ? (
-                    <div className="text-gray-500 text-xs">Loading...</div>
+                    <LoadingScreen variant="inline" />
                   ) : (
                     <>
                       <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 break-words">
@@ -912,7 +913,7 @@ export default function PluginPage() {
                   <div className="text-sm sm:text-base font-medium text-gray-300 mb-2">Free Version</div>
                   <div className="text-xs text-gray-400 mb-1 break-words">(WordPress.org)</div>
                   {statsLoading ? (
-                    <div className="text-gray-500 text-xs">Loading...</div>
+                    <LoadingScreen variant="inline" />
                   ) : (
                     <>
                       <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 break-words">

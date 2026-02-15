@@ -16,6 +16,9 @@ import { testimonials } from '../data/testimonials';
 import { serviceCategories } from '../data/serviceCategories';
 import { getRandomReviewImages, LANDING_REVIEW_COUNT } from '../data/reviewImages';
 import { usePageScrolling } from '../components/LongScreenshotScroll';
+import { productsPlugins, getPrice } from '../data/productsPlugins';
+
+const FEATURED_STORE_PRODUCTS = productsPlugins.filter(p => p.pluginSlug === 'variation-images-pro' || p.pluginSlug === 'notipress');
 
 // Type definitions
 interface Particle {
@@ -138,6 +141,7 @@ export default function LandingPage() {
   const productsAutoSlideIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [isProductsHovered, setIsProductsHovered] = useState(false);
   const [isProductsDragging, setIsProductsDragging] = useState(false);
+  const [featuredStoreIndex, setFeaturedStoreIndex] = useState(0);
   const productsDragStartX = useRef(0);
   const productsDragScrollLeft = useRef(0);
   const location = useLocation();
@@ -1833,12 +1837,12 @@ export default function LandingPage() {
         ref={(el) => (sectionRefs.current['products'] = el)}
         className="py-12 sm:py-16 md:py-20 relative"
         style={{ 
-          background: 'linear-gradient(to bottom, rgba(99, 102, 241, 0.03), transparent)'
+          background: 'linear-gradient(to bottom, rgba(21, 102, 65, 0.03), transparent)'
         }}
       >
         {/* Subtle Top Border */}
         <div className="absolute top-0 left-0 right-0 h-px opacity-20" style={{ 
-          background: 'linear-gradient(to right, transparent, rgba(99, 102, 241, 0.5), rgba(139, 92, 246, 0.5), transparent)'
+          background: 'linear-gradient(to right, transparent, rgba(21, 102, 65, 0.5), rgba(218, 101, 30, 0.5), transparent)'
         }}></div>
         <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
           <div className={`text-center mb-8 sm:mb-12 md:mb-16 transition-all duration-1000 ${
@@ -1850,54 +1854,81 @@ export default function LandingPage() {
             <p className="text-base sm:text-lg md:text-xl text-gray-400 px-2">Things we've built and launched</p>
           </div>
 
-          {/* Featured WordPress product */}
+          {/* Featured store products slider */}
           <div className={`max-w-4xl mx-auto mb-10 sm:mb-12 transition-all duration-1000 ${
             visibleSections.has('products') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
           }`}>
-            <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl sm:rounded-2xl p-6 sm:p-8 md:p-10 hover:border-gray-600/50 transition-all">
-              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-                <div className="flex-shrink-0">
-                  <img 
-                    src="/images/plugin/thumbnail.png" 
-                    alt="Variation Images Pro"
-                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      const fallback = target.parentElement?.querySelector('.fallback-icon');
-                      if (fallback) {
-                        (fallback as HTMLElement).style.display = 'flex';
-                      }
-                    }}
-                  />
-                  <div className="fallback-icon hidden w-16 h-16 sm:w-20 sm:h-20 rounded-lg items-center justify-center" style={{ backgroundColor: '#2271b1' }}>
-                    <Package size={32} className="sm:w-10 sm:h-10 text-white" />
-                  </div>
-                </div>
-                <div className="flex-1 text-center sm:text-left">
-                  <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">Variation Images Pro</h3>
-                  <p className="text-gray-400 text-sm sm:text-base mb-4">Add unlimited custom images to WooCommerce product variations. Transform dropdown menus into beautiful visual swatches and galleries.</p>
-                  <div className="flex flex-wrap gap-2 justify-center sm:justify-start mb-4">
-                    <span className="px-3 py-1 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: '#2271b1' }}>WordPress Plugin</span>
-                    <span className="px-3 py-1 rounded-full text-xs font-semibold text-gray-300 bg-gray-700">WooCommerce</span>
-                  </div>
-                  <a
-                    href="https://store.shalconnects.com/store/variation-images-pro"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm sm:text-base transition-all hover:scale-105"
-                    style={{ 
-                      background: 'linear-gradient(to right, #176641, #da651e)',
-                      color: 'white'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(21, 102, 65, 0.5)'}
-                    onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
-                  >
-                    <span>Buy Now - $24.99</span>
-                    <ExternalLink size={16} />
-                  </a>
-                </div>
+            <div className="relative flex items-center gap-2 sm:gap-4">
+              <button
+                type="button"
+                aria-label="Previous product"
+                onClick={() => setFeaturedStoreIndex(i => Math.max(0, i - 1))}
+                disabled={featuredStoreIndex === 0}
+                className="flex-shrink-0 p-2 rounded-full border border-gray-700/50 text-gray-400 hover:text-white hover:border-gray-600/50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              >
+                <ChevronLeft size={24} />
+              </button>
+              <div className="flex-1 min-w-0 bg-gray-800/50 border border-gray-700/50 rounded-xl sm:rounded-2xl p-6 sm:p-8 md:p-10 hover:border-gray-600/50 transition-all">
+                {FEATURED_STORE_PRODUCTS[featuredStoreIndex] && (() => {
+                  const product = FEATURED_STORE_PRODUCTS[featuredStoreIndex];
+                  const accent = product.pluginSlug === 'notipress' ? '#176641' : '#2271b1';
+                  return (
+                    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                      <div className="flex-shrink-0">
+                        <img
+                          src={product.pluginSlug === 'variation-images-pro' ? '/images/plugin/thumbnail.png' : (product.imagePath || '/images/plugin/thumbnail.png')}
+                          alt={product.title}
+                          className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const fallback = target.parentElement?.querySelector('.fallback-icon');
+                            if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                          }}
+                        />
+                        <div className="fallback-icon hidden w-16 h-16 sm:w-20 sm:h-20 rounded-lg items-center justify-center" style={{ backgroundColor: accent }}>
+                          <Package size={32} className="sm:w-10 sm:h-10 text-white" />
+                        </div>
+                      </div>
+                      <div className="flex-1 text-center sm:text-left">
+                        <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">{product.title}</h3>
+                        <p className="text-gray-400 text-sm sm:text-base mb-4">{product.description}</p>
+                        <div className="flex flex-wrap gap-2 justify-center sm:justify-start mb-4">
+                          {product.pluginSlug === 'variation-images-pro' ? (
+                            <>
+                              <span className="px-3 py-1 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: '#2271b1' }}>WordPress Plugin</span>
+                              <span className="px-3 py-1 rounded-full text-xs font-semibold text-gray-300 bg-gray-700">WooCommerce</span>
+                            </>
+                          ) : (
+                            <span className="px-3 py-1 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: accent }}>{product.category}</span>
+                          )}
+                        </div>
+                        <a
+                          href={`https://store.shalconnects.com/store/${product.pluginSlug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm sm:text-base transition-all hover:scale-105"
+                          style={{ background: 'linear-gradient(to right, #176641, #da651e)', color: 'white' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(21, 102, 65, 0.5)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
+                        >
+                          <span>Buy Now - {getPrice(product.pluginSlug!)}</span>
+                          <ExternalLink size={16} />
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
+              <button
+                type="button"
+                aria-label="Next product"
+                onClick={() => setFeaturedStoreIndex(i => Math.min(FEATURED_STORE_PRODUCTS.length - 1, i + 1))}
+                disabled={featuredStoreIndex === FEATURED_STORE_PRODUCTS.length - 1}
+                className="flex-shrink-0 p-2 rounded-full border border-gray-700/50 text-gray-400 hover:text-white hover:border-gray-600/50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              >
+                <ChevronRight size={24} />
+              </button>
             </div>
           </div>
 

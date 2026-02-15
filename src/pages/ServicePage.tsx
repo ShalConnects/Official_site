@@ -6,6 +6,7 @@ import PageLayout from '../components/PageLayout';
 import WorkMarquee from '../components/WorkMarquee';
 import ContactForm from '../components/ContactForm';
 import { getWorkByService, shuffleArray } from '../data/workPortfolio';
+import { getCaseStudiesByService } from '../data/caseStudies';
 import { getProductsByService } from '../data/productsPlugins';
 import { testimonials } from '../data/testimonials';
 import { TestimonialSlider } from '../components/TestimonialSlider';
@@ -123,6 +124,7 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
   const pageTitle = foundService ? foundService.title : 'Service';
 
   const serviceWorkImages = useMemo(() => foundService ? shuffleArray(getWorkByService(foundService.title)) : [], [foundService?.title]);
+  const serviceCaseStudies = useMemo(() => (serviceSlug ? getCaseStudiesByService(serviceSlug) : []), [serviceSlug]);
   // Get products/plugins for this service (service page shows only these; empty state when none)
   const serviceProducts = foundService ? getProductsByService(foundService.title) : [];
 
@@ -639,6 +641,32 @@ export default function ServicePage({ serviceCategories }: ServicePageProps) {
                     View all {foundService.title} work
                     <ExternalLink size={18} />
                   </Link>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {serviceCaseStudies.length > 0 && (
+            <section id="case-studies" className="flex flex-col relative py-10 sm:py-12 md:py-14" style={{ backgroundColor: 'rgba(21, 102, 65, 0.05)' }}>
+              <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 w-full">
+                <div className="text-center pb-7 sm:pb-8">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Case Studies</h2>
+                  <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto">Real {foundService.title} projects and outcomes.</p>
+                </div>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {serviceCaseStudies.map((c) => (
+                    <Link key={c.id} to={`/case-studies/${c.slug}`} className="bg-gray-800/50 border border-gray-700/50 rounded-xl overflow-hidden hover:border-gray-600/50 transition-all group">
+                      <div className="h-32 bg-gray-800"><img src={c.image || '/images/plugin/preview.png'} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} /></div>
+                      <div className="p-4">
+                        <h3 className="font-bold text-white group-hover:text-green-400 transition-colors">{c.title}</h3>
+                        <p className="text-xs text-gray-400 mt-1 line-clamp-2">{c.results || c.challenge}</p>
+                        <span className="inline-flex items-center gap-1 text-xs text-green-400 font-medium mt-2">Read case study <ExternalLink size={12} /></span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+                <div className="text-center pt-6">
+                  <Link to="/case-studies" className="text-sm font-medium text-green-400 hover:text-green-300">View all case studies</Link>
                 </div>
               </div>
             </section>

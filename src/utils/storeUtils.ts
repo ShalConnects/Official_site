@@ -26,3 +26,6 @@ export function getStoreHomePath(): string {
   return isStoreContext() ? '/' : '/store';
 }
 
+export const MAIN_SITE_URL = 'https://shalconnects.com';
+export const STORE_URL = 'https://store.shalconnects.com';
+

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Package, Image, Code, Palette, Zap, CheckCircle } from 'lucide-react';
+import { Package, Image, Code, Palette, Zap, CheckCircle, Download } from 'lucide-react';
 import PageLayout from '../components/PageLayout';
 import { isStoreContext } from '../utils/storeUtils';
 import { getPrice } from '../data/productsPlugins';
@@ -97,15 +97,13 @@ export default function StoreHome() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-          <Link to="/download" className="inline-flex items-center gap-2 text-green-400 hover:text-green-300 hover:underline text-sm font-medium">
-            Already purchased? Get your download →
+<Link to="/download" className="flex items-center justify-center gap-2 rounded-lg border border-gray-700/50 bg-gray-800/30 py-3 text-base font-medium text-green-400 hover:bg-gray-800/50 hover:text-green-300 hover:underline">
+            <Download size={18} /> Already purchased? Get your download →
           </Link>
         </div>
 
         {/* Products Grid */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-8 sm:mb-10 md:mb-12 text-white px-2">Our Products</h2>
-          
           {products.length === 0 ? (
             <div className="text-center py-8 sm:py-12">
               <Package className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3 sm:mb-4" />
@@ -191,7 +189,7 @@ export default function StoreHome() {
         </div>
 
         {/* Footer Info */}
-        <div className="bg-gray-800/30 py-8 sm:py-10 md:py-12">
+        <div className="bg-gray-800/30 border-t border-gray-700/50 py-8 sm:py-10 md:py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 text-center">
               <div>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { X, MoreHorizontal, Home, Zap, Briefcase, Mail, ExternalLink } from 'lucide-react';
 import Logo from './Logo';
-import { isStoreContext } from '../utils/storeUtils';
+import { isStoreContext, MAIN_SITE_URL, STORE_URL } from '../utils/storeUtils';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -20,11 +20,13 @@ export default function Header() {
     { label: 'Testimonials', path: '/testimonials', icon: null },
     { label: 'Reviews', path: '/reviews', icon: null },
     { label: 'Blog', path: '/blog', icon: null },
+    { label: 'Case Studies', path: '/case-studies', icon: null },
     { label: 'Tools', path: '/tools', icon: null },
   ];
 
   const moreNavItems = [
-    { label: 'Store', path: 'https://store.shalconnects.com', external: true, icon: ExternalLink },
+    { label: 'Store', path: STORE_URL, external: true, icon: ExternalLink },
+    ...(isStore ? [{ label: 'Main site', path: MAIN_SITE_URL, external: true, icon: ExternalLink }] : []),
   ];
 
   const isActive = (path: string) => {

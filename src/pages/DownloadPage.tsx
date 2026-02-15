@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Download, CheckCircle, XCircle, Loader2, ArrowLeft, AlertCircle, Key } from 'lucide-react';
+import { Download, CheckCircle, XCircle, ArrowLeft, AlertCircle, Key } from 'lucide-react';
 import PageLayout from '../components/PageLayout';
+import LoadingScreen from '../components/LoadingScreen';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { isStoreContext } from '../utils/storeUtils';
 
@@ -172,12 +173,7 @@ export default function DownloadPage() {
   if (loading) {
     return (
       <PageLayout title="Download">
-        <div className="flex items-center justify-center min-h-[80vh]">
-          <div className="text-center">
-            <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4" style={{ color: '#176641' }} />
-            <p className="text-gray-400">Verifying your purchase...</p>
-          </div>
-        </div>
+        <LoadingScreen variant="full" message="Verifying your purchase..." />
       </PageLayout>
     );
   }
