@@ -50,6 +50,8 @@ export default function Breadcrumbs() {
         label = 'Variation Images Pro';
       } else if (path === 'notipress') {
         label = 'Notipress';
+      } else if (path === 'share-link-generator') {
+        label = 'Share Link Generator';
       }
 
       breadcrumbs.push({

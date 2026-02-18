@@ -466,7 +466,7 @@ export default function FitQuest() {
   }, [workouts]);
 
   return (
-    <PageLayout title="FitQuest">
+    <PageLayout title="FitQuest" backTo={{ href: '/tools', label: 'Back to Tools' }}>
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         {/* Header */}
         <div className="text-center mb-4 sm:mb-6 md:mb-8">

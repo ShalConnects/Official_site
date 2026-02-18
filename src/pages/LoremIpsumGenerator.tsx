@@ -264,7 +264,7 @@ export default function LoremIpsumGenerator() {
   };
 
   return (
-    <PageLayout title="Lorem Ipsum Generator">
+    <PageLayout title="Lorem Ipsum Generator" backTo={{ href: '/tools', label: 'Back to Tools' }}>
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 md:py-6">
         {/* Toast Notification */}
         {showToast && (

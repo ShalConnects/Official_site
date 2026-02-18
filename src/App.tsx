@@ -22,11 +22,13 @@ const PasswordGenerator = lazy(() => import('./pages/PasswordGenerator'));
 const URLEncoderDecoder = lazy(() => import('./pages/URLEncoderDecoder'));
 const LoremIpsumGenerator = lazy(() => import('./pages/LoremIpsumGenerator'));
 const QRCodeGenerator = lazy(() => import('./pages/QRCodeGenerator'));
+const ShareLinkGenerator = lazy(() => import('./pages/ShareLinkGenerator'));
 const ToolsPage = lazy(() => import('./pages/ToolsPage'));
 const BlogPage = lazy(() => import('./pages/BlogPage'));
 const BlogPostPage = lazy(() => import('./pages/BlogPostPage'));
 const StoreHome = lazy(() => import('./pages/StoreHome'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
+const AboutCvPage = lazy(() => import('./pages/AboutCvPage'));
 const ReviewsPage = lazy(() => import('./pages/ReviewsPage'));
 const TestimonialsPage = lazy(() => import('./pages/TestimonialsPage'));
 const WorkPage = lazy(() => import('./pages/WorkPage'));
@@ -69,12 +71,14 @@ function ShalConnectsPortfolio() {
         <Route path="/tools/url-encoder-decoder" element={<URLEncoderDecoder />} />
         <Route path="/tools/lorem-ipsum" element={<LoremIpsumGenerator />} />
         <Route path="/tools/qr-code-generator" element={<QRCodeGenerator />} />
+        <Route path="/tools/share-link-generator" element={<ShareLinkGenerator />} />
         <Route path="/blog" element={<BlogPage />} />
         <Route path="/blog/:postId" element={<BlogPostPage />} />
       <Route path="/store" element={isStoreSubdomain ? <Navigate to="/" replace /> : <StoreHome />} />
       <Route path="/store/:productSlug" element={<PluginPage />} />
       <Route path="/services/:serviceSlug" element={<ServicePage serviceCategories={serviceCategories as any} />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/about-cv" element={<AboutCvPage />} />
         <Route path="/reviews" element={<ReviewsPage />} />
         <Route path="/testimonials" element={<TestimonialsPage />} />
         <Route path="/work" element={<WorkPage />} />

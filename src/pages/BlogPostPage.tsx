@@ -6,6 +6,7 @@ import PageSidebar from '../components/PageSidebar';
 import BlogSidebar from '../components/BlogSidebar';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { getPostById, getRelatedPosts, getPreviousPost, getNextPost, blogPosts } from '../utils/blogData';
+import { sanitizeHtml } from '../utils/sanitizeHtml';
 
 // Simple markdown to HTML converter for basic markdown syntax
 function markdownToHtml(markdown: string): string {
@@ -100,10 +101,11 @@ export default function BlogPostPage() {
 
   const articleUrl = typeof window !== 'undefined' ? window.location.href : '';
   const shareText = `${post.title} - ${post.excerpt}`;
-  const htmlContent = markdownToHtml(post.content);
+  const htmlContent = post.contentHtml ? sanitizeHtml(post.contentHtml) : markdownToHtml(post.content);
 
-  // Generate TOC from headings in content
+  // Generate TOC from headings (markdown only)
   const tocItems = useMemo(() => {
+    if (post.contentHtml) return [];
     const headings: { id: string; label: string; level: number }[] = [];
     const headingRegex = /^(#{1,3})\s+(.+)$/gm;
     let match;
@@ -117,7 +119,7 @@ export default function BlogPostPage() {
     }
 
     return headings;
-  }, [post.content]);
+  }, [post.content, post.contentHtml]);
 
   // Update heading IDs in HTML after render
   useEffect(() => {
@@ -188,7 +190,7 @@ export default function BlogPostPage() {
         });
       });
     }
-  }, [post.content]);
+  }, [htmlContent]);
 
   const handleShare = (platform: string) => {
     const url = encodeURIComponent(articleUrl);

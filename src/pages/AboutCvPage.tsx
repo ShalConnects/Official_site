@@ -1,11 +1,26 @@
 import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { User, Users, Code, Palette, Rocket, Brain, Sparkles, ArrowLeft } from 'lucide-react';
+import { User, Users, Package, Store, Globe, Palette, ArrowLeft, Award, BookOpen } from 'lucide-react';
 import PageLayout from '../components/PageLayout';
 import PageContainer from '../components/PageContainer';
 import PageSection from '../components/PageSection';
+import {
+  aboutHero,
+  aboutNarrative,
+  aboutHighlight,
+  aboutClosing,
+  expertiseCards,
+  achievements,
+  experienceStats,
+  education,
+  languages,
+} from '../data/aboutPage';
 
-export default function AboutPage() {
+const EXPERTISE_ICONS = [Package, Store, Globe, Palette] as const;
+const CARD_BORDER = { green: 'hover:border-green-500/50', orange: 'hover:border-orange-500/50' } as const;
+const ICON_COLOR = { green: 'text-green-400', orange: 'text-orange-400' } as const;
+
+export default function AboutCvPage() {
   const location = useLocation();
 
   useEffect(() => {
@@ -15,7 +30,7 @@ export default function AboutPage() {
   }, [location.hash]);
 
   return (
-    <PageLayout title="About Us - ShalConnects">
+    <PageLayout title="Profile (CV) - ShalConnects">
       <PageSection>
         <PageContainer maxWidth="4xl">
           <Link to="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6 sm:mb-8 group">
@@ -27,7 +42,7 @@ export default function AboutPage() {
             <div className="relative w-40 h-40 xs:w-48 xs:h-48 sm:w-56 sm:h-56 lg:w-64 lg:h-64 rounded-full overflow-hidden border-4 lg:border-[6px] border-gray-700/50 shadow-2xl group">
               <img
                 src="/images/profile.png"
-                alt="Shalauddin Kader"
+                alt={aboutHero.name}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 onError={(e) => {
                   const t = e.target as HTMLImageElement;
@@ -43,52 +58,90 @@ export default function AboutPage() {
             </div>
           </div>
 
+          <div className="text-center mb-6">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{aboutHero.name}</h1>
+            <p className="text-sm sm:text-base text-gray-400 mt-1">{aboutHero.title}</p>
+            <p className="text-sm text-gray-500 italic mt-2">"{aboutHero.quote}"</p>
+          </div>
+
           <div className="space-y-6 sm:space-y-8 text-gray-300 leading-relaxed">
-            <p className="text-base sm:text-lg">
-              I'm <span className="text-white font-semibold">Shalauddin</span>. I work in IT as a freelancer, but honestly, I'm more of a builder than a "job title." I design WordPress and Shopify sites, handle eCommerce listings, do graphics, social media, and virtual assistant work. Basically, if it lives on the internet and needs to work properly, I've probably touched it.
-            </p>
-            <p className="text-base sm:text-lg">
-              I like understanding why things work—not just how. That's why psychology pulls me in. Same reason astronomy does. Big questions, big patterns, small human problems floating in a massive universe. Keeps me grounded.
-            </p>
-            <p className="text-base sm:text-lg">
-              I'm curious about the future. AI, emerging tech, new systems—stuff that can change how we live and earn. Lately, I've been building AI-powered products instead of just selling my time, because deep down I know hourly work isn't the endgame for me.
-            </p>
+            {aboutNarrative.map((p, i) => (
+              <p key={i} className="text-base sm:text-lg">{p}</p>
+            ))}
             <div className="bg-gray-800/50 border-l-4 border-orange-500 p-4 sm:p-6 rounded-r-lg my-6 sm:my-8">
-              <p className="text-base sm:text-lg italic text-gray-200">
-                I'll be real: I lose motivation fast. I overthink. I get lazy when things feel slow or messy. I start strong, pause, then restart. But I always come back. That part matters.
-              </p>
+              <p className="text-base sm:text-lg italic text-gray-200">{aboutHighlight}</p>
             </div>
-            <p className="text-base sm:text-lg">
-              I don't want noise. I want leverage. Systems. Products. Something I can build once and improve over time instead of starting from zero every day.
-            </p>
-            <p className="text-base sm:text-lg font-medium text-white">
-              I'm not lost—I'm figuring it out in public, one project at a time.
-            </p>
-            <p className="text-base sm:text-lg font-medium text-white">
-              Still learning. Still building. Still here.
-            </p>
+            <p className="text-base sm:text-lg font-medium text-white">{aboutClosing}</p>
           </div>
 
           <div className="mt-12 sm:mt-16 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-            {[
-              { Icon: Code, title: 'What I Build', desc: 'WordPress & Shopify sites, eCommerce solutions, graphics, and digital products', color: 'green' },
-              { Icon: Brain, title: 'What Interests Me', desc: 'Psychology, astronomy, AI, emerging tech, and systems that create leverage', color: 'orange' },
-              { Icon: Rocket, title: "Where I'm Headed", desc: 'Building products over selling time. Creating systems that scale and improve over time', color: 'green' },
-              { Icon: Sparkles, title: 'My Approach', desc: 'Figuring it out in public, one project at a time. Learning, building, iterating', color: 'orange' },
-            ].map(({ Icon, title, desc, color }, i) => (
-              <div key={i} className={`bg-gray-800/50 p-4 sm:p-6 rounded-xl border border-gray-700/50 transition-all ${color === 'green' ? 'hover:border-green-500/50' : 'hover:border-orange-500/50'}`}>
-                <div className="flex items-center gap-3 mb-3">
-                  <Icon className={`w-6 h-6 sm:w-7 sm:h-7 ${color === 'green' ? 'text-green-400' : 'text-orange-400'}`} />
-                  <h3 className="text-lg sm:text-xl font-semibold">{title}</h3>
+            {expertiseCards.map((card, i) => {
+              const Icon = EXPERTISE_ICONS[i];
+              const border = CARD_BORDER[card.color];
+              const iconCls = ICON_COLOR[card.color];
+              return (
+                <div key={i} className={`bg-gray-800/50 p-4 sm:p-6 rounded-xl border border-gray-700/50 transition-all ${border}`}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <Icon className={`w-6 h-6 sm:w-7 sm:h-7 ${iconCls}`} />
+                    <h3 className="text-lg sm:text-xl font-semibold">{card.title}</h3>
+                  </div>
+                  <p className="text-sm sm:text-base text-gray-400">{card.desc}</p>
                 </div>
-                <p className="text-sm sm:text-base text-gray-400">{desc}</p>
+              );
+            })}
+          </div>
+        </PageContainer>
+      </PageSection>
+
+      <PageSection id="achievements" showBorder>
+        <PageContainer maxWidth="4xl">
+          <div className="flex items-center gap-3 mb-8 sm:mb-12">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-r from-green-500 to-orange-500 flex items-center justify-center">
+              <Award size={24} className="sm:w-7 sm:h-7 text-white" />
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold">Achievements & Experience</h2>
+          </div>
+          <ul className="space-y-3 mb-10">
+            {achievements.map((a, i) => (
+              <li key={i} className="flex gap-2 text-gray-300">
+                <span className="text-green-500 mt-1.5">•</span>
+                <span className="text-base sm:text-lg">{a}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+            {experienceStats.map((stat, i) => (
+              <div key={i} className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-4 sm:p-6 text-center">
+                <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-green-400 to-orange-500 bg-clip-text text-transparent">{stat.value}</div>
+                <div className="text-xs sm:text-sm text-gray-400 mt-1">{stat.label}</div>
               </div>
             ))}
           </div>
+        </PageContainer>
+      </PageSection>
 
-          <p className="mt-8 text-center text-sm text-gray-500">
-            For a CV-style profile with experience, achievements, and education, see <Link to="/about-cv" className="text-green-400 hover:text-green-300 underline">Profile (CV)</Link>.
-          </p>
+      <PageSection showBorder>
+        <PageContainer maxWidth="4xl">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-orange-500 to-green-500 flex items-center justify-center">
+              <BookOpen size={24} className="text-white" />
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold">Education & Languages</h2>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-6 mb-6">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Education</h3>
+              <ul className="space-y-2 text-gray-300">
+                {education.map((e, i) => (
+                  <li key={i}><span className="text-gray-500">{e.period}</span> — {e.desc}</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Languages</h3>
+              <p className="text-gray-300">{languages.join(', ')}</p>
+            </div>
+          </div>
         </PageContainer>
       </PageSection>
 

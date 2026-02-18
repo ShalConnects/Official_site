@@ -20,8 +20,26 @@ export interface CaseStudy {
 }
 
 const CASE_STUDIES_IMG = '/images/case-studies';
+const FEATURED_IMG = '/images/featured';
 
 const caseStudiesList: CaseStudy[] = [
+  {
+    id: 'bonterra',
+    slug: 'bonterra-home',
+    title: 'Bonterra Home – eBay, Walmart & Shopify',
+    clientName: 'Martin Evenson (Bonterra Home)',
+    services: ['eBay', 'Shopify', 'Walmart', 'Brand Identity'],
+    challenge: 'Full e-commerce support: eBay store banner and listing templates, Walmart and Shopify account management, plus a new Shopify store for mini splits and tankless water heaters.',
+    solution: 'Delivered company logo, eBay store banner, eBay listing template, and designed/built the Shopify store at bonterrahome.com.',
+    results: 'eBay templates & store banner, Shopify store design, multi-channel (eBay, Walmart, Shopify) management.',
+    image: `${FEATURED_IMG}/bonterra-shopify.png`,
+    projectUrl: 'https://bonterrahome.com/',
+    featured: true,
+    gallerySections: [
+      { title: 'Brand & store', images: [`${FEATURED_IMG}/bonterra-logo.png`, `${FEATURED_IMG}/bonterra-ebay-banner.png`] },
+      { title: 'eBay listing & Shopify', images: [`${FEATURED_IMG}/bonterra-ebay-template.png`, `${FEATURED_IMG}/bonterra-shopify.png`] },
+    ],
+  },
   {
     id: 'rak',
     slug: 'ebay-rak-consignment',

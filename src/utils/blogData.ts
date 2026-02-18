@@ -1,3 +1,5 @@
+import { balanzeBlogPosts } from '../data/balanzeBlogPosts';
+
 export interface BlogPost {
   id: string;
   title: string;
@@ -10,9 +12,10 @@ export interface BlogPost {
   image?: string;
   tags?: string[];
   featured?: boolean;
+  contentHtml?: string;
 }
 
-export const blogPosts: BlogPost[] = [
+const defaultPosts: BlogPost[] = [
   {
     id: 'getting-started-with-wordpress',
     title: 'Getting Started with WordPress: A Complete Guide',
@@ -280,6 +283,8 @@ Ready to update your website with the latest trends? [Contact us](/contact) for 
     tags: ['Web Design', 'Trends', 'UI/UX']
   }
 ];
+
+export const blogPosts: BlogPost[] = [...defaultPosts, ...balanzeBlogPosts];
 
 export function getPostById(id: string): BlogPost | undefined {
   return blogPosts.find(post => post.id === id);

@@ -6,7 +6,7 @@ import PageHero from '../components/PageHero';
 import PageContainer from '../components/PageContainer';
 import PageSection from '../components/PageSection';
 import { useMetaTags } from '../hooks/useMetaTags';
-import { blogPosts, getAllCategories, getFeaturedPost, getPostsByCategory } from '../utils/blogData';
+import { blogPosts, getCategoryCounts, getFeaturedPost, getPostsByCategory } from '../utils/blogData';
 
 export default function BlogPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -29,8 +29,9 @@ export default function BlogPage() {
     twitterImage: '/logo.png'
   });
 
-  const categories = getAllCategories();
+  const categoryCounts = getCategoryCounts();
   const featuredPost = getFeaturedPost();
+  const totalCount = blogPosts.length;
   
   const filteredPosts = useMemo(() => {
     let posts = blogPosts.filter(post => !post.featured);
@@ -100,7 +101,7 @@ export default function BlogPage() {
     <PageLayout title="Blog">
       <PageHero
         title="Blog"
-        description="Insights, tips, and guides about web development, design, e-commerce, and digital marketing"
+        description={`Insights, tips, and guides about web development, design, e-commerce, and digital marketing (${totalCount} article${totalCount !== 1 ? 's' : ''})`}
       />
 
       {/* Featured Post Section - Enhanced */}
@@ -169,7 +170,7 @@ export default function BlogPage() {
       <PageSection>
         <PageContainer maxWidth="7xl">
           {/* Categories Filter - Enhanced */}
-          {categories.length > 0 && (
+          {categoryCounts.length > 0 && (
             <div className="mb-8 sm:mb-10">
               <div className="flex flex-wrap gap-2 sm:gap-3 justify-center">
                 <button
@@ -180,9 +181,9 @@ export default function BlogPage() {
                       : 'bg-gray-800/50 text-gray-400 border-gray-700/50 hover:border-gray-600/50 hover:text-white hover:bg-gray-700/50'
                   }`}
                 >
-                  All Posts
+                  All Posts ({totalCount})
                 </button>
-                {categories.map((category) => (
+                {categoryCounts.map(({ category, count }) => (
                   <button
                     key={category}
                     onClick={() => setSelectedCategory(category)}
@@ -192,7 +193,7 @@ export default function BlogPage() {
                         : 'bg-gray-800/50 text-gray-400 border-gray-700/50 hover:border-gray-600/50 hover:text-white hover:bg-gray-700/50'
                     }`}
                   >
-                    {category}
+                    {category} ({count})
                   </button>
                 ))}
               </div>

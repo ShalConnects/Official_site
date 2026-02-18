@@ -15,6 +15,7 @@ export interface WorkImage {
   quote?: string; // Optional short testimonial or quote
   featured?: boolean; // Optional: show in featured highlights
   longScreenshot?: boolean; // Optional: show in scrollable auto-scroll container (full-page screenshot)
+  linkTo?: string; // Optional: card links to this path (e.g. /case-studies/:slug)
 }
 
 // Place images in: public/images/images/work/

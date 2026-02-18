@@ -1940,10 +1940,7 @@ export default function AITextFormatter() {
         return (
           <div
             className="w-full h-48 sm:h-64 md:h-96 p-2.5 sm:p-3 md:p-4 border-2 border-gray-600 rounded-lg sm:rounded-xl bg-gray-900 overflow-y-auto text-white"
-            style={{
-              ...baseStyle,
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-            }}
+            style={baseStyle}
           >
             <style>{`
               .rich-preview {
@@ -3904,7 +3901,7 @@ export default function AITextFormatter() {
       {mainContent}
     </div>
   ) : (
-    <PageLayout title="AI Text Formatter">
+    <PageLayout title="AI Text Formatter" backTo={{ href: '/tools', label: 'Back to Tools' }}>
       {mainContent}
     </PageLayout>
   );

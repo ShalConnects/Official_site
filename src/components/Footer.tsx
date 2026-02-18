@@ -260,20 +260,7 @@ export default function Footer() {
         {/* Large Background Logo */}
         <div className="relative pt-6 sm:pt-8 pb-0 flex items-center justify-center overflow-hidden w-full px-2 sm:px-4">
           <div className="text-center relative w-full">
-            <span 
-              className="inline-block text-gray-800/40 dark:text-gray-700/40"
-              style={{
-                fontSize: 'clamp(2rem, 8vw, 7rem)',
-                fontWeight: 700,
-                letterSpacing: '0.05em',
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-                display: 'inline-block',
-                position: 'relative',
-                width: '100%',
-                wordBreak: 'break-word',
-                textShadow: '0 0 20px rgba(0, 0, 0, 0.3)',
-              }}
-            >
+            <span className="inline-block relative w-full break-words text-gray-800/40 dark:text-gray-700/40 brand-hero-text">
               ShalConnects
             </span>
           </div>

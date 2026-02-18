@@ -17,6 +17,9 @@ import { serviceCategories } from '../data/serviceCategories';
 import { getRandomReviewImages, LANDING_REVIEW_COUNT } from '../data/reviewImages';
 import { usePageScrolling } from '../components/LongScreenshotScroll';
 import { productsPlugins, getPrice } from '../data/productsPlugins';
+import { featuredProjects as projects, type Project } from '../data/featuredProjects';
+import { getFeaturedCaseStudies } from '../data/caseStudies';
+import CaseStudyCard from '../components/CaseStudyCard';
 
 const FEATURED_STORE_PRODUCTS = productsPlugins.filter(p => p.pluginSlug === 'variation-images-pro' || p.pluginSlug === 'notipress');
 
@@ -53,20 +56,6 @@ interface FormErrors {
   email?: string;
   message?: string;
   service?: string;
-}
-
-interface Project {
-  id: number;
-  title: string;
-  category: string;
-  color: string;
-  description: string;
-  results: string;
-  services: string[];
-  techStack?: string[];
-  liveUrl?: string;
-  githubUrl?: string;
-  imageUrl?: string;
 }
 
 interface Product {
@@ -130,12 +119,14 @@ export default function LandingPage() {
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   // Random 15-21 items, shuffled once per load (stable across re-renders)
   const landingWorkImages = useMemo(() => shuffleArray(workPortfolio).slice(0, Math.floor(Math.random() * 7) + 15), []);
+  const featuredCaseStudy = getFeaturedCaseStudies()[0];
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const serviceCardRefs = useRef<Record<string, HTMLElement | null>>({});
   const serviceDropdownRef = useRef<HTMLDivElement>(null);
   const hasScrolledToContactRef = useRef(false);
   const toolsScrollRef = useRef<HTMLDivElement>(null);
   const autoSlideIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastToolsScrollByUserRef = useRef(0);
   const [isToolsHovered, setIsToolsHovered] = useState(false);
   const productsScrollRef = useRef<HTMLDivElement>(null);
   const productsAutoSlideIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -225,6 +216,15 @@ export default function LandingPage() {
       route: '/tools/qr-code-generator',
       color: '#14b8a6', // Teal
       isNew: true
+    },
+    {
+      id: 'share-link-generator',
+      name: 'Share Link Generator',
+      description: 'Create Facebook, Twitter/X, LinkedIn, Bluesky, Telegram, Pinterest share links and email mailto links from one URL.',
+      icon: Share2,
+      route: '/tools/share-link-generator',
+      color: '#f59e0b', // Amber
+      isNew: true
     }
   ];
 
@@ -279,6 +279,7 @@ export default function LandingPage() {
     if (scrollWidth <= clientWidth) return;
 
     autoSlideIntervalRef.current = setInterval(() => {
+      if (Date.now() - lastToolsScrollByUserRef.current < 10000) return;
       const currentScroll = scrollContainer.scrollLeft;
       const maxScroll = scrollWidth - clientWidth;
       const cardWidth = scrollContainer.querySelector('a')?.offsetWidth || 0;
@@ -577,46 +578,6 @@ export default function LandingPage() {
       subSteps: ['Final testing', 'Launch', 'Training', 'Support'],
       deliverables: ['Live project', 'Training materials', 'Support plan', 'Maintenance schedule'],
       keyQuestions: ['What support level do you need?', 'Training requirements?', 'Maintenance preferences?']
-    }
-  ];
-
-  // Projects data
-  const projects: Project[] = [
-    {
-      id: 1,
-      title: 'E-commerce Platform',
-      category: 'Web Development',
-      color: 'from-purple-500 to-pink-500',
-      description: 'A modern e-commerce platform with advanced features.',
-      results: '300% increase in sales',
-      services: ['WordPress', 'WooCommerce', 'Custom Development']
-    },
-    {
-      id: 2,
-      title: 'Brand Identity',
-      category: 'Design',
-      color: 'from-green-500 to-emerald-500',
-      description: 'Complete brand identity package for a tech startup.',
-      results: '50% brand recognition increase',
-      services: ['Brand Identity', 'Logo Design', 'Brand Guidelines']
-    },
-    {
-      id: 3,
-      title: 'Mobile App',
-      category: 'Development',
-      color: 'from-blue-500 to-cyan-500',
-      description: 'Native mobile app for iOS and Android.',
-      results: '100K+ downloads',
-      services: ['Android App', 'UI/UX Design', 'App Store Optimization']
-    },
-    {
-      id: 4,
-      title: 'Shopify Store',
-      category: 'E-commerce',
-      color: 'from-orange-500 to-red-500',
-      description: 'Custom Shopify store with unique design.',
-      results: '200% conversion rate increase',
-      services: ['Shopify', 'Custom Theme', 'Site Design']
     }
   ];
 
@@ -1743,6 +1704,13 @@ export default function LandingPage() {
             <p className="text-base sm:text-lg md:text-xl text-gray-400 px-2">Projects we're proud of</p>
           </div>
 
+          {featuredCaseStudy && (
+            <div className={`mb-8 sm:mb-10 max-w-2xl mx-auto transition-all duration-1000 ${visibleSections.has('work') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+              <span className="inline-block px-2.5 py-1 rounded text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30 mb-4">Featured</span>
+              <CaseStudyCard study={featuredCaseStudy} />
+            </div>
+          )}
+
           <div className="grid md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
             {projects.map((project, idx) => (
               <div
@@ -2498,25 +2466,22 @@ export default function LandingPage() {
           </div>
 
           <div className="max-w-7xl mx-auto">
-            {/* Horizontal Scrollable Container */}
             <div className="relative">
-              {/* Left fade gradient */}
               <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-24 bg-gradient-to-r from-gray-900 to-transparent pointer-events-none z-10"></div>
-              
-              {/* Right fade gradient */}
               <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-24 bg-gradient-to-l from-gray-900 to-transparent pointer-events-none z-10"></div>
-              
-              {/* Scrollable tools container */}
-              <div 
+              <button type="button" onClick={() => { const el = toolsScrollRef.current; if (el) { lastToolsScrollByUserRef.current = Date.now(); const card = el.querySelector('a'); el.scrollBy({ left: -((card?.offsetWidth ?? 0) + 24), behavior: 'smooth' }); } }} className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-gray-800/90 border border-gray-600 flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-colors" aria-label="Previous tools">
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button type="button" onClick={() => { const el = toolsScrollRef.current; if (el) { lastToolsScrollByUserRef.current = Date.now(); const card = el.querySelector('a'); el.scrollBy({ left: (card?.offsetWidth ?? 0) + 24, behavior: 'smooth' }); } }} className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-gray-800/90 border border-gray-600 flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-colors" aria-label="Next tools">
+                <ChevronRight className="w-5 h-5" />
+              </button>
+              <div
                 ref={toolsScrollRef}
                 onMouseEnter={() => setIsToolsHovered(true)}
                 onMouseLeave={() => setIsToolsHovered(false)}
+                onScroll={() => { lastToolsScrollByUserRef.current = Date.now(); }}
                 className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
-                style={{
-                  scrollbarWidth: 'none',
-                  msOverflowStyle: 'none',
-                  WebkitOverflowScrolling: 'touch'
-                }}
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
               >
                 {tools.map((tool) => {
                   const Icon = tool.icon;
@@ -2527,22 +2492,7 @@ export default function LandingPage() {
                       className="group bg-gray-800/50 p-6 rounded-xl border border-gray-700/50 transition-all duration-300 hover:border-gray-600/50 hover:scale-105 cursor-pointer flex-shrink-0 w-full sm:w-80 md:w-96 snap-center"
                     >
                       <div className="flex items-center gap-4 mb-4">
-                        <div 
-                          className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 ${
-                            tool.color === '#6366f1' 
-                              ? 'bg-gradient-to-r from-indigo-500 to-purple-500'
-                              : tool.color === '#8b5cf6'
-                              ? 'bg-gradient-to-r from-purple-500 to-pink-500'
-                              : tool.color === '#06b6d4'
-                              ? 'bg-gradient-to-r from-cyan-500 to-blue-500'
-                              : tool.color === '#ec4899'
-                              ? 'bg-gradient-to-r from-pink-500 to-rose-500'
-                              : tool.color === '#14b8a6'
-                              ? 'bg-gradient-to-r from-teal-500 to-cyan-500'
-                              : ''
-                          }`}
-                          style={!['#6366f1', '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6'].includes(tool.color) ? { backgroundColor: tool.color } : undefined}
-                        >
+                        <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6" style={{ backgroundColor: tool.color }}>
                           <Icon size={24} className="text-white transition-transform duration-300 group-hover:scale-110" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -2929,20 +2879,7 @@ export default function LandingPage() {
           {/* Large Background Logo */}
           <div className="relative pt-8 pb-0 flex items-center justify-center overflow-hidden w-full">
             <div className="text-center relative w-full">
-              <span 
-                className="inline-block text-gray-800/40 dark:text-gray-700/40"
-                style={{
-                  fontSize: 'clamp(2.5rem, 10vw, 8rem)',
-                  fontWeight: 700,
-                  letterSpacing: '0.05em',
-                  fontFamily: 'system-ui, -apple-system, sans-serif',
-                  display: 'inline-block',
-                  position: 'relative',
-                  width: '100%',
-                  wordBreak: 'break-word',
-                  textShadow: '0 0 20px rgba(0, 0, 0, 0.3)',
-                }}
-              >
+              <span className="inline-block relative w-full break-words text-gray-800/40 dark:text-gray-700/40 brand-hero-text">
                 ShalConnects
               </span>
             </div>

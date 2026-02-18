@@ -297,7 +297,7 @@ export default function QRCodeGenerator() {
   }, [input, size, foregroundColor, backgroundColor, margin, logoUrl, logoSize, handleGenerate]);
 
   return (
-    <PageLayout title="QR Code Generator">
+    <PageLayout title="QR Code Generator" backTo={{ href: '/tools', label: 'Back to Tools' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 md:py-6">
         {/* Toast Notification */}
         {showToast && (

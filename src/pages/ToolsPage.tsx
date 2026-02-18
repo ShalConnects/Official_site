@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Wand2, ArrowRight, Activity, Key, Link2, FileText, QrCode } from 'lucide-react';
+import { Wand2, ArrowRight, Activity, Key, Link2, FileText, QrCode, Share2 } from 'lucide-react';
 import PageLayout from '../components/PageLayout';
 import PageHero from '../components/PageHero';
 import PageContainer from '../components/PageContainer';
@@ -84,24 +84,27 @@ export default function ToolsPage() {
       route: '/tools/qr-code-generator',
       color: '#14b8a6', // Teal
       isNew: true
+    },
+    {
+      id: 'share-link-generator',
+      name: 'Share Link Generator',
+      description: 'Create Facebook, Twitter/X, LinkedIn, Bluesky, Telegram, Pinterest share links and email mailto links from one URL. No JavaScript required.',
+      icon: Share2,
+      route: '/tools/share-link-generator',
+      color: '#f59e0b', // Amber
+      isNew: true
     }
-    // Add more tools here as they are created
   ];
 
   return (
     <PageLayout title="Fun Project">
       <PageHero
         title="Fun Project"
-        description="Free utilities and tools crafted by ShalConnects to help you work smarter"
+        description={`${tools.length} free tools to help you work smarter`}
       />
 
       <PageSection>
         <PageContainer>
-          <div className="text-center mb-8">
-            <p className="text-gray-400 max-w-2xl mx-auto text-lg">
-              Free utilities and tools crafted by <Link to="/" className="text-gradient-theme font-semibold hover:opacity-80 transition-opacity cursor-pointer inline-block">ShalConnects</Link> to help you work smarter
-            </p>
-          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {tools.map((tool) => {
               const Icon = tool.icon;
