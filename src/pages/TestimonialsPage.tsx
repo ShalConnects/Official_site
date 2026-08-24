@@ -7,6 +7,7 @@ import PageHero from '../components/PageHero';
 import PageContainer from '../components/PageContainer';
 import PageSection from '../components/PageSection';
 import { TestimonialSlider } from '../components/TestimonialSlider';
+import TestimonialForm from '../components/TestimonialForm';
 import { testimonials, type Testimonial } from '../data/testimonials';
 
 function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
@@ -166,6 +167,8 @@ export default function TestimonialsPage() {
               </button>
             </div>
           )}
+
+          <TestimonialForm />
 
           {/* Back to home / featured */}
           <div className="mt-10 sm:mt-12 md:mt-16 text-center">

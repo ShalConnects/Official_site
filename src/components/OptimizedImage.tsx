@@ -33,7 +33,7 @@ export default function OptimizedImage({
 
   const handleLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     onLoad(e);
-    if (props.onLoad) props.onLoad(e as any);
+    props.onLoad?.(e);
   };
 
   React.useEffect(() => {

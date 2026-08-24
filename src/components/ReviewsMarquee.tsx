@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight, Maximize } from 'lucide-react';
 import type { ReviewImage } from '../data/reviewImages';
 import { LANDING_MARQUEE_DURATION_SEC } from '../data/reviewImages';
+import { useOverlayA11y } from '../hooks/useOverlayA11y';
 
 interface ReviewsMarqueeProps {
   images: ReviewImage[];
@@ -16,6 +17,7 @@ export default function ReviewsMarquee({ images, scrollDurationSec = LANDING_MAR
   const [hoveredImage, setHoveredImage] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const overlayRef = useRef<HTMLDivElement | null>(null);
+  const closeOverlay = useCallback(() => setHoveredImage(null), []);
 
   const handleNext = useCallback(() => {
     setCurrentImageIndex((prev) => (prev + 1) % totalImages);
@@ -25,11 +27,12 @@ export default function ReviewsMarquee({ images, scrollDurationSec = LANDING_MAR
     setCurrentImageIndex((prev) => (prev - 1 + totalImages) % totalImages);
   }, [totalImages]);
 
+  useOverlayA11y(!!hoveredImage, closeOverlay);
+
   useEffect(() => {
+    if (!hoveredImage) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!hoveredImage) return;
-      if (e.key === 'Escape') setHoveredImage(null);
-      else if (e.key === 'ArrowLeft') handlePrevious();
+      if (e.key === 'ArrowLeft') handlePrevious();
       else if (e.key === 'ArrowRight') handleNext();
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -39,11 +42,6 @@ export default function ReviewsMarquee({ images, scrollDurationSec = LANDING_MAR
   useEffect(() => {
     if (hoveredImage && images[currentImageIndex]) setHoveredImage(images[currentImageIndex].src);
   }, [currentImageIndex, hoveredImage, images]);
-
-  useEffect(() => {
-    document.body.style.overflow = hoveredImage ? 'hidden' : 'unset';
-    return () => { document.body.style.overflow = 'unset'; };
-  }, [hoveredImage]);
 
   if (totalImages === 0) {
     return (
@@ -235,7 +233,10 @@ export default function ReviewsMarquee({ images, scrollDurationSec = LANDING_MAR
         <div
           ref={overlayRef}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm animate-fade-in-scale"
-          onClick={() => setHoveredImage(null)}
+          onClick={closeOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Review image"
         >
           {/* Close button */}
           <button

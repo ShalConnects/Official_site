@@ -18,6 +18,11 @@ build/
 .env.production.local
 .env*.local
 
+# Sensitive (keys, replace scripts)
+keys.txt
+replace-key.txt
+*.key
+
 # Misc
 .DS_Store
 *.log

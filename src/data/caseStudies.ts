@@ -1,4 +1,4 @@
-/** Single source for service slug: title -> URL slug (DRY with ServicePage, LandingPage, ServiceModal). */
+/** Single source for service slug: title -> URL slug (DRY with ServicePage, LandingPage). */
 export const toServiceSlug = (title: string): string =>
   title.toLowerCase().replace(/\s+/g, '-');
 

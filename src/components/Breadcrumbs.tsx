@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronRight, Home } from 'lucide-react';
 import { isStoreContext } from '../utils/storeUtils';
+import { getToolBySlug } from '../data/toolsData';
 
 interface BreadcrumbItem {
   label: string;
@@ -35,24 +36,14 @@ export default function Breadcrumbs() {
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
 
-      // Special handling for known paths
-      if (path === 'services') {
-        label = 'Services';
-      } else if (path === 'tools') {
-        label = 'Fun Project';
-      } else if (path === 'ai-formatter') {
-        label = 'AI Text Formatter';
-      } else if (path === 'wordpress') {
-        label = 'WordPress';
-      } else if (path === 'plugins') {
-        label = 'Plugins';
-      } else if (path === 'variation-images-pro') {
-        label = 'Variation Images Pro';
-      } else if (path === 'notipress') {
-        label = 'Notipress';
-      } else if (path === 'share-link-generator') {
-        label = 'Share Link Generator';
-      }
+      const tool = getToolBySlug(path);
+      if (path === 'services') label = 'Services';
+      else if (path === 'tools') label = 'Fun Project';
+      else if (tool) label = tool.name;
+      else if (path === 'wordpress') label = 'WordPress';
+      else if (path === 'plugins') label = 'Plugins';
+      else if (path === 'variation-images-pro') label = 'Variation Images Pro';
+      else if (path === 'notipress') label = 'Notipress';
 
       breadcrumbs.push({
         label,

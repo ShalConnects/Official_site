@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { X, Zap, Target, TrendingUp, Clock, CheckCircle, Star, Quote, ExternalLink, XCircle, ChevronDown, ChevronLeft, ChevronRight, Palette, Code, Wrench, FileCode, Layout, Package, Store, List, Image, Smartphone, Globe, Share2, FileText, Layers, Home, Briefcase, MoreHorizontal, ArrowUp, ArrowRight, Mail, Search, Workflow, Rocket, Wand2, Activity, Key, Link2, QrCode, User, Heart } from 'lucide-react';
+import { X, Zap, Target, TrendingUp, Clock, CheckCircle, Star, Quote, ExternalLink, ChevronDown, ChevronLeft, ChevronRight, Palette, Code, Wrench, FileCode, Layout, Package, Store, List, Image, Smartphone, Globe, FileText, Layers, Home, Briefcase, MoreHorizontal, ArrowUp, ArrowRight, Mail, Search, Workflow, Rocket, User, Heart } from 'lucide-react';
 import { SiWordpress, SiShopify, SiWix, SiEbay, SiAmazon, SiWalmart, SiAndroid, SiLinkedin, SiQuora, SiX, SiWhatsapp, SiYoutube } from 'react-icons/si';
 import Logo from '../components/Logo';
 import WorkSlider from '../components/WorkSlider';
@@ -17,68 +17,13 @@ import { serviceCategories } from '../data/serviceCategories';
 import { getRandomReviewImages, LANDING_REVIEW_COUNT } from '../data/reviewImages';
 import { usePageScrolling } from '../components/LongScreenshotScroll';
 import { productsPlugins, getPrice } from '../data/productsPlugins';
+import { launchedProducts as products, type Product } from '../data/launchedProducts';
 import { featuredProjects as projects, type Project } from '../data/featuredProjects';
 import { getFeaturedCaseStudies } from '../data/caseStudies';
 import CaseStudyCard from '../components/CaseStudyCard';
+import { toolsData } from '../data/toolsData';
 
 const FEATURED_STORE_PRODUCTS = productsPlugins.filter(p => p.pluginSlug === 'variation-images-pro' || p.pluginSlug === 'notipress');
-
-// Type definitions
-interface Particle {
-  id: number;
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  baseSize: number;
-  size: number;
-  baseOpacity: number;
-  opacity: number;
-  colorIntensity: number;
-}
-
-interface ParticleConnection {
-  from: { x: number; y: number };
-  to: { x: number; y: number };
-  distance: number;
-  opacity: number;
-}
-
-interface FormData {
-  name: string;
-  email: string;
-  message: string;
-  service: string;
-}
-
-interface FormErrors {
-  name?: string;
-  email?: string;
-  message?: string;
-  service?: string;
-}
-
-interface Product {
-  id: number;
-  title: string;
-  category: string;
-  color: string;
-  description: string;
-  results: string;
-  services: string[];
-  techStack: string[];
-  liveUrl?: string;
-  githubUrl?: string;
-  imageUrl?: string;
-  playStoreLink?: string;
-  appVersion?: string;
-  screenshots?: string[];
-  platform?: string;
-  technologies?: string[];
-  status?: 'live' | 'new' | 'popular';
-  platformIcon?: 'web' | 'android' | 'ios' | 'windows';
-  quickStats?: string;
-}
 
 interface Stats {
   projects: number;
@@ -104,14 +49,8 @@ export default function LandingPage() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const isPageScrolling = usePageScrolling();
 
-  const [formData, setFormData] = useState<FormData>({ name: '', email: '', message: '', service: '' });
-  const [formErrors, setFormErrors] = useState<FormErrors>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [isServiceDropdownOpen, setIsServiceDropdownOpen] = useState(false);
-  const [hoveredServiceIndex, setHoveredServiceIndex] = useState<number | null>(null);
+  const [prefillService, setPrefillService] = useState<string | undefined>();
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
-  const [_activeTab] = useState(0);
   const [activeServiceCard, setActiveServiceCard] = useState(0);
   const [visibleServiceCards, setVisibleServiceCards] = useState<Set<string>>(new Set());
   const [selectedProcessStep, setSelectedProcessStep] = useState<number | null>(null);
@@ -122,7 +61,6 @@ export default function LandingPage() {
   const featuredCaseStudy = getFeaturedCaseStudies()[0];
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const serviceCardRefs = useRef<Record<string, HTMLElement | null>>({});
-  const serviceDropdownRef = useRef<HTMLDivElement>(null);
   const hasScrolledToContactRef = useRef(false);
   const toolsScrollRef = useRef<HTMLDivElement>(null);
   const autoSlideIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -141,92 +79,6 @@ export default function LandingPage() {
   // Stats counter animation
   const [stats, setStats] = useState<Stats>({ projects: 0, clients: 0, years: 0, satisfaction: 0 });
   const statsTarget: Stats = { projects: 250, clients: 500, years: 8, satisfaction: 98 };
-
-  // Mouse position for interactive effects
-  const [mousePosition, _setMousePosition] = useState({ x: 0, y: 0 });
-  const heroRef = useRef<HTMLDivElement | null>(null);
-  
-  // Interactive particles state
-  const [particles, _setParticles] = useState<Particle[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _particlesRef = useRef<Particle[]>([]);
-  const [particleConnections, _setParticleConnections] = useState<ParticleConnection[]>([]);
-
-  // Tools data
-  interface Tool {
-    id: string;
-    name: string;
-    description: string;
-    icon: React.ElementType;
-    route: string;
-    color: string;
-    isNew?: boolean;
-  }
-  const tools: Tool[] = [
-    {
-      id: 'ai-text-formatter',
-      name: 'AI Text Formatter',
-      description: 'Remove markdown formatting and convert AI-generated text to clean, human-readable format. Automatically detects and removes AI meta-commentary.',
-      icon: Wand2,
-      route: '/tools/ai-formatter',
-      color: '#6366f1', // Indigo
-      isNew: true
-    },
-    {
-      id: 'fitquest',
-      name: 'FitQuest',
-      description: 'Gamify your fitness journey with points, levels, streaks, and achievements. Track workouts and level up your fitness game.',
-      icon: Activity,
-      route: '/tools/fitquest',
-      color: '#10b981', // Green
-      isNew: true
-    },
-    {
-      id: 'password-generator',
-      name: 'Password Generator',
-      description: 'Generate strong, secure passwords with customizable options. Control length, character types, and security settings.',
-      icon: Key,
-      route: '/tools/password-generator',
-      color: '#8b5cf6', // Purple
-      isNew: true
-    },
-    {
-      id: 'url-encoder-decoder',
-      name: 'URL Encoder/Decoder',
-      description: 'Encode URLs to percent-encoded format or decode them back to readable text. Perfect for handling special characters in URLs.',
-      icon: Link2,
-      route: '/tools/url-encoder-decoder',
-      color: '#06b6d4', // Cyan
-      isNew: true
-    },
-    {
-      id: 'lorem-ipsum',
-      name: 'Lorem Ipsum Generator',
-      description: 'Generate placeholder text for your designs and layouts. Customize paragraphs, words, and sentences.',
-      icon: FileText,
-      route: '/tools/lorem-ipsum',
-      color: '#ec4899', // Pink
-      isNew: true
-    },
-    {
-      id: 'qr-code-generator',
-      name: 'QR Code Generator',
-      description: 'Generate QR codes from text or URLs. Download as PNG or SVG. Perfect for sharing links and information.',
-      icon: QrCode,
-      route: '/tools/qr-code-generator',
-      color: '#14b8a6', // Teal
-      isNew: true
-    },
-    {
-      id: 'share-link-generator',
-      name: 'Share Link Generator',
-      description: 'Create Facebook, Twitter/X, LinkedIn, Bluesky, Telegram, Pinterest share links and email mailto links from one URL.',
-      icon: Share2,
-      route: '/tools/share-link-generator',
-      color: '#f59e0b', // Amber
-      isNew: true
-    }
-  ];
 
   // Scroll progress and active section tracking
   useEffect(() => {
@@ -300,41 +152,40 @@ export default function LandingPage() {
         clearInterval(autoSlideIntervalRef.current);
       }
     };
-  }, [isToolsHovered, tools]);
+  }, [isToolsHovered, toolsData]);
 
   // Stats counter animation
   useEffect(() => {
-    const animateStats = () => {
-      const duration = 2000; // 2 seconds
-      const startTime = Date.now();
-      
-      const animate = (timestamp: number) => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        
-        // Easing function (ease-out)
-        const easeOut = 1 - Math.pow(1 - progress, 3);
-        
-        setStats({
-          projects: Math.floor(statsTarget.projects * easeOut),
-          clients: Math.floor(statsTarget.clients * easeOut),
-          years: Math.floor(statsTarget.years * easeOut),
-          satisfaction: Math.floor(statsTarget.satisfaction * easeOut)
-        });
-        
-        if (progress < 1) {
-          requestAnimationFrame(animate);
-        } else {
-          // Ensure final values are set
-          setStats(statsTarget);
-        }
-      };
-      
-      requestAnimationFrame(animate);
+    let rafId = 0;
+    let cancelled = false;
+    const duration = 2000;
+    const startTime = Date.now();
+
+    const animate = () => {
+      if (cancelled) return;
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+
+      setStats({
+        projects: Math.floor(statsTarget.projects * easeOut),
+        clients: Math.floor(statsTarget.clients * easeOut),
+        years: Math.floor(statsTarget.years * easeOut),
+        satisfaction: Math.floor(statsTarget.satisfaction * easeOut),
+      });
+
+      if (progress < 1) {
+        rafId = requestAnimationFrame(animate);
+      } else {
+        setStats(statsTarget);
+      }
     };
 
-    // Start animation when component mounts
-    animateStats();
+    rafId = requestAnimationFrame(animate);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(rafId);
+    };
   }, []);
 
   // Hash navigation (for #contact)
@@ -355,22 +206,19 @@ export default function LandingPage() {
       };
       
       // Small delay to ensure DOM is ready
-      setTimeout(scrollToContact, 100);
+      const timer = setTimeout(scrollToContact, 100);
+      return () => clearTimeout(timer);
     } else if (location.hash !== '#contact') {
       hasScrolledToContactRef.current = false;
     }
   }, [location.hash]);
 
-  // Pre-fill service from location state
+  // Pre-fill ContactForm from router state (e.g. service/plugin CTAs)
   useEffect(() => {
-    if (location.state?.prefillService) {
-      setFormData(prev => ({
-        ...prev,
-        service: location.state.prefillService
-      }));
-      // Clear the state after using it
-      navigate(location.pathname + location.search + location.hash, { replace: true, state: null });
-    }
+    const service = (location.state as { prefillService?: string } | null)?.prefillService;
+    if (!service) return;
+    setPrefillService(service);
+    navigate(location.pathname + location.search + location.hash, { replace: true, state: null });
   }, [location.state, location.pathname, location.search, location.hash, navigate]);
 
   // Calculate dropdown position for More Menu
@@ -496,51 +344,6 @@ export default function LandingPage() {
     }
   };
 
-  // Form validation
-  const validateForm = (): FormErrors => {
-    const errors: FormErrors = {};
-    if (!formData.name.trim()) {
-      errors.name = 'Name is required';
-    }
-    if (!formData.email.trim()) {
-      errors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = 'Please enter a valid email address';
-    }
-    if (!formData.message.trim()) {
-      errors.message = 'Message is required';
-    }
-    return errors;
-  };
-
-  // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const errors = validateForm();
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      return;
-    }
-    setFormErrors({});
-    setIsSubmitting(true);
-    // Form submission logic here
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setShowSuccess(true);
-      setFormData({ name: '', email: '', message: '', service: '' });
-      setTimeout(() => setShowSuccess(false), 5000);
-    }, 1000);
-  };
-
-  // Handle input change
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (formErrors[name as keyof FormErrors]) {
-      setFormErrors(prev => ({ ...prev, [name]: undefined }));
-    }
-  };
-
   // Process steps data
   const processSteps = [
     {
@@ -582,75 +385,6 @@ export default function LandingPage() {
   ];
 
   // Products data
-  const products: Product[] = [
-    {
-      id: 1,
-      title: 'Be Better You',
-      category: 'Motivational Website',
-      color: 'from-pink-500 to-rose-500',
-      description: 'Your personal hype squad in website form! A motivational platform dedicated to bringing back the fire inside you. Whether you\'re chasing career dreams, breaking free from bad habits, or just need a daily dose of "you got this," Be Better You is here to turn your "what ifs" into "holy moly, I DID IT!" moments. Daily motivational quotes, inspiring blog posts, and content designed to unleash the awesome that\'s been hiding inside you.',
-      results: 'Motivational content platform with daily quotes, blog posts, and resources to inspire personal growth and achievement',
-      services: ['WordPress Development', 'Content Management', 'Blog Platform', 'Daily Quotes', 'Motivational Content'],
-      techStack: ['WordPress', 'PHP', 'MySQL'],
-      liveUrl: 'https://bebetteryou.net/',
-      imageUrl: '/images/be-better-you-logo.png',
-      status: 'live',
-      platformIcon: 'web',
-      quickStats: 'Daily Quotes • Blog • Motivation'
-    },
-    {
-      id: 2,
-      title: 'Balanze',
-      category: 'Full-Stack SaaS',
-      color: 'from-indigo-500 to-purple-500',
-      description: 'A modern, multi-user personal finance management SaaS platform that helps users track accounts, transactions, savings, donations, and financial goals across multiple currencies. Built with React, TypeScript, and Supabase, featuring real-time analytics, dynamic dashboards, and a native Android mobile app.',
-      results: 'Full-stack SaaS platform with multi-currency support, real-time analytics, subscription management, and cross-platform mobile app',
-      services: ['Multi-User Authentication', 'Multi-Currency Support', 'Real-Time Analytics', 'Recurring Transactions', 'Mobile App', 'Subscription Management'],
-      techStack: ['React 18', 'TypeScript', 'Zustand', 'Tailwind CSS', 'Supabase', 'PostgreSQL', 'Capacitor', 'Paddle', 'Vercel'],
-      liveUrl: 'https://balanze.cash/',
-      githubUrl: 'https://github.com/ShalConnects/fin-tech',
-      imageUrl: '/images/balanze-icon.png',
-      status: 'live',
-      platformIcon: 'web',
-      quickStats: 'Multi-currency • Real-time • SaaS'
-    },
-    {
-      id: 3,
-      title: 'Screen Time Tracker',
-      category: 'Android App',
-      color: 'from-blue-500 to-cyan-500',
-      description: 'Monitor and manage your digital habits with beautiful real-time overlays and comprehensive analytics. Track your screen time, app usage, and productivity insights with a privacy-first approach. All data is stored locally on your device and never shared.',
-      results: 'Android productivity app with real-time overlay, detailed analytics, goal setting, and privacy-first local data storage',
-      services: ['Real-Time Overlay', 'Detailed Analytics', 'App Usage Tracking', 'Productivity Insights', 'Goal Setting', 'Export Data', 'Privacy-First'],
-      techStack: ['Android', 'Kotlin'],
-      technologies: ['Android', 'Kotlin', 'Windows', 'WinUI 3', '.NET 8'],
-      platform: 'Android (Windows in development)',
-      appVersion: '10.0.5+',
-      playStoreLink: 'https://play.google.com/store/apps/details?id=com.screentime.overlay',
-      imageUrl: '/images/screen-time-icon.png',
-      screenshots: ['/images/screen-time-screenshot.png'],
-      status: 'live',
-      platformIcon: 'android',
-      quickStats: '10.0.5+ • Privacy-first • Analytics'
-    },
-    {
-      id: 4,
-      title: 'Quran Verse Widget',
-      category: 'Web Widget',
-      color: 'from-amber-500 to-yellow-500',
-      description: 'A beautiful, responsive daily Quran verse widget with Arabic text and English translations. Features dark mode, offline support, social sharing, favorites, and full accessibility. Built with vanilla HTML/CSS/JS, optimized for performance and SEO.',
-      results: 'Fully accessible widget with offline support, retry mechanism, and service worker',
-      services: ['Web Development', 'UI/UX Design', 'Accessibility', 'PWA', 'SEO Optimization'],
-      techStack: ['HTML5', 'CSS3', 'JavaScript', 'Service Worker', 'PWA', 'Google Fonts'],
-      liveUrl: 'https://shalconnects.github.io/quran-verse-widget/',
-      githubUrl: 'https://github.com/ShalConnects/quran-verse-widget',
-      imageUrl: '/images/quran-widget-preview.png',
-      status: 'live',
-      platformIcon: 'web',
-      quickStats: 'PWA • Offline • Accessible'
-    }
-  ];
-
   // Auto-slide products carousel
   useEffect(() => {
     if (!productsScrollRef.current || isProductsHovered || isProductsDragging) return;
@@ -996,125 +730,30 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section 
         id="home" 
-        ref={(el) => {
-          sectionRefs.current.home = el;
-          heroRef.current = el as HTMLDivElement | null;
-        }}
+        ref={(el) => { sectionRefs.current.home = el; }}
         className="min-h-[600px] sm:min-h-[700px] md:min-h-[80vh] flex items-start justify-center relative overflow-hidden pt-4 sm:pt-6 md:pt-8"
       >
         {/* Enhanced Animated Background */}
         <div className="absolute inset-0 bg-gradient-to-br" style={{ background: 'linear-gradient(to bottom right, rgba(21, 102, 65, 0.2), rgba(17, 24, 39, 1), rgba(218, 101, 30, 0.2))' }}></div>
         
-        {/* Interactive Gradient Mesh */}
-        <div 
-          className="absolute inset-0 opacity-40 pointer-events-none transition-opacity duration-300"
+        <div
+          className="absolute inset-0 opacity-40 pointer-events-none"
           style={{
             background: `
-              radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(34, 197, 94, 0.2) 0%, transparent 40%),
-              radial-gradient(circle at ${100 - mousePosition.x}% ${100 - mousePosition.y}%, rgba(249, 115, 22, 0.15) 0%, transparent 50%)
+              radial-gradient(circle at 30% 40%, rgba(34, 197, 94, 0.2) 0%, transparent 40%),
+              radial-gradient(circle at 70% 60%, rgba(249, 115, 22, 0.15) 0%, transparent 50%)
             `,
           }}
         />
         
-        {/* Interactive Particles */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Particle Connections */}
-          <svg 
-            className="absolute inset-0 w-full h-full" 
-            style={{ pointerEvents: 'none' }}
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-          >
-            {particleConnections.map((connection, index) => (
-              <line
-                key={index}
-                x1={connection.from.x}
-                y1={connection.from.y}
-                x2={connection.to.x}
-                y2={connection.to.y}
-                stroke="url(#particleGradient)"
-                strokeWidth="0.1"
-                opacity={connection.opacity}
-                style={{ transition: 'opacity 0.2s ease-out' }}
-              />
-            ))}
-            <defs>
-              <linearGradient id="particleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="rgba(34, 197, 94, 0.6)" />
-                <stop offset="100%" stopColor="rgba(249, 115, 22, 0.4)" />
-              </linearGradient>
-            </defs>
-          </svg>
-          
-          {/* Particles with Enhanced Visuals */}
-          {particles.map((particle) => {
-            const greenIntensity = 0.6 * particle.colorIntensity;
-            const orangeIntensity = 0.4 * particle.colorIntensity;
-            
-            return (
-              <div
-                key={particle.id}
-                className="absolute rounded-full transition-all duration-75 ease-out"
-                style={{
-                  left: `${particle.x}%`,
-                  top: `${particle.y}%`,
-                  width: `${particle.size}px`,
-                  height: `${particle.size}px`,
-                  opacity: particle.opacity,
-                  background: `radial-gradient(circle, rgba(34, 197, 94, ${greenIntensity}) 0%, rgba(249, 115, 22, ${orangeIntensity}) 50%, transparent 100%)`,
-                  transform: 'translate(-50%, -50%)',
-                  boxShadow: `0 0 ${particle.size * 2}px rgba(34, 197, 94, ${0.3 * particle.colorIntensity}), 0 0 ${particle.size * 3}px rgba(249, 115, 22, ${0.2 * particle.colorIntensity})`,
-                  filter: `brightness(${1 + (particle.colorIntensity - 1) * 0.3})`,
-                }}
-              />
-            );
-          })}
-        </div>
-        
-        {/* Animated Particle/Geometric Background */}
+        {/* Animated geometric background */}
         <div className="absolute inset-0 overflow-hidden">
-          <div 
-            className="absolute top-20 left-10 w-48 sm:w-72 h-48 sm:h-72 bg-green-500/10 rounded-full blur-3xl animate-pulse transition-transform duration-300 ease-out"
-            style={{
-              transform: `translate(${(mousePosition.x - 50) * 0.1}px, ${(mousePosition.y - 50) * 0.1}px)`,
-            }}
-          ></div>
-          <div 
-            className="absolute bottom-20 right-10 w-64 sm:w-96 h-64 sm:h-96 bg-orange-500/10 rounded-full blur-3xl animate-pulse transition-transform duration-300 ease-out"
-            style={{
-              animationDelay: '1s',
-              transform: `translate(${(mousePosition.x - 50) * -0.15}px, ${(mousePosition.y - 50) * -0.15}px)`,
-            }}
-          ></div>
-          <div 
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-green-500/5 rounded-full blur-3xl animate-pulse transition-transform duration-300 ease-out"
-            style={{
-              animationDelay: '2s',
-              transform: `translate(calc(-50% + ${(mousePosition.x - 50) * 0.05}px), calc(-50% + ${(mousePosition.y - 50) * 0.05}px))`,
-            }}
-          ></div>
-          
-          {/* Floating Geometric Shapes */}
-          <div 
-            className="hidden sm:block absolute top-32 right-32 w-16 sm:w-20 h-16 sm:h-20 border-2 border-green-500/20 rounded-lg rotate-45 animate-float transition-transform duration-300 ease-out"
-            style={{
-              transform: `translate(${(mousePosition.x - 50) * 0.2}px, ${(mousePosition.y - 50) * 0.2}px) rotate(45deg)`,
-            }}
-          ></div>
-          <div 
-            className="absolute bottom-40 left-8 sm:left-24 w-12 sm:w-16 h-12 sm:h-16 border-2 border-orange-500/20 rounded-full animate-float transition-transform duration-300 ease-out"
-            style={{
-              animationDelay: '1.5s',
-              transform: `translate(${(mousePosition.x - 50) * -0.25}px, ${(mousePosition.y - 50) * -0.25}px)`,
-            }}
-          ></div>
-          <div 
-            className="hidden md:block absolute top-1/3 right-1/4 w-12 h-12 bg-green-500/10 rounded-lg rotate-12 animate-float transition-transform duration-300 ease-out"
-            style={{
-              animationDelay: '2.5s',
-              transform: `translate(${(mousePosition.x - 50) * 0.15}px, ${(mousePosition.y - 50) * 0.15}px) rotate(12deg)`,
-            }}
-          ></div>
+          <div className="absolute top-20 left-10 w-48 sm:w-72 h-48 sm:h-72 bg-green-500/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-20 right-10 w-64 sm:w-96 h-64 sm:h-96 bg-orange-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-green-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+          <div className="hidden sm:block absolute top-32 right-32 w-16 sm:w-20 h-16 sm:h-20 border-2 border-green-500/20 rounded-lg rotate-45 animate-float" />
+          <div className="absolute bottom-40 left-8 sm:left-24 w-12 sm:w-16 h-12 sm:h-16 border-2 border-orange-500/20 rounded-full animate-float" style={{ animationDelay: '1.5s' }} />
+          <div className="hidden md:block absolute top-1/3 right-1/4 w-12 h-12 bg-green-500/10 rounded-lg rotate-12 animate-float" style={{ animationDelay: '2.5s' }} />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pt-3 sm:pt-4 md:pt-6 pb-12 sm:pb-16 md:pb-20 lg:pb-24">
@@ -2254,7 +1893,7 @@ export default function LandingPage() {
                     style={{ backgroundColor: '#6366f1' }}
                   >
                     <ExternalLink size={18} />
-                    {selectedProduct.title === 'Be Better You' ? 'Visit Site' : 'View Product'}
+                    {selectedProduct.ctaLabel ?? 'View Product'}
                   </a>
                 )}
                 {selectedProduct.githubUrl && (
@@ -2483,7 +2122,7 @@ export default function LandingPage() {
                 className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
               >
-                {tools.map((tool) => {
+                {toolsData.map((tool) => {
                   const Icon = tool.icon;
                   return (
                     <Link
@@ -2764,7 +2403,7 @@ export default function LandingPage() {
             }`} style={{ background: 'linear-gradient(to bottom right, rgba(21, 102, 65, 0.2), rgba(218, 101, 30, 0.2))', borderColor: 'rgba(21, 102, 65, 0.3)' }}>
               <ContactForm
                 serviceCategories={serviceCategories.map(c => ({ name: c.name, services: c.services.map(s => ({ title: s.title })) }))}
-                prefillService={location.state?.prefillService as string | undefined}
+                prefillService={prefillService}
                 successInline={false}
                 accentColor="#176641"
               />

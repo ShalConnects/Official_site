@@ -7,55 +7,75 @@ import BlogSidebar from '../components/BlogSidebar';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { getPostById, getRelatedPosts, getPreviousPost, getNextPost, blogPosts } from '../utils/blogData';
 import { sanitizeHtml } from '../utils/sanitizeHtml';
+import { useOverlayA11y } from '../hooks/useOverlayA11y';
 
 // Simple markdown to HTML converter for basic markdown syntax
+function escapeHtmlText(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function isSafeUrl(url: string): boolean {
+  return /^(https?:\/\/|mailto:|\/|#)/i.test(url.trim());
+}
+
 function markdownToHtml(markdown: string): string {
   let html = markdown;
   
   // Code blocks (triple backticks) - must be processed before other replacements
-  html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-    const language = lang || 'text';
-    const codeId = `code-${Math.random().toString(36).substr(2, 9)}`;
+  html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (_match, lang, code) => {
+    const language = escapeHtmlText(lang || 'text');
+    const codeId = `code-${Math.random().toString(36).slice(2, 11)}`;
+    const safeCode = escapeHtmlText(code.trim());
     return `<div class="code-block-wrapper my-6" data-code-id="${codeId}">
       <div class="flex items-center justify-between bg-gray-800 px-4 py-2 rounded-t-lg border-b border-gray-700">
         <span class="text-xs text-gray-400 font-mono">${language}</span>
-        <button onclick="copyCode('${codeId}')" class="copy-code-btn flex items-center gap-1 px-2 py-1 text-xs text-gray-400 hover:text-white bg-gray-700/50 hover:bg-gray-700 rounded transition-colors" data-code-id="${codeId}">
+        <button type="button" class="copy-code-btn flex items-center gap-1 px-2 py-1 text-xs text-gray-400 hover:text-white bg-gray-700/50 hover:bg-gray-700 rounded transition-colors" data-code-id="${codeId}">
           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
           <span class="copy-text">Copy</span>
         </button>
       </div>
-      <pre class="bg-gray-900 p-4 rounded-b-lg overflow-x-auto border border-gray-700"><code class="language-${language}" id="${codeId}">${code.trim()}</code></pre>
+      <pre class="bg-gray-900 p-4 rounded-b-lg overflow-x-auto border border-gray-700"><code class="language-${language}" id="${codeId}">${safeCode}</code></pre>
     </div>`;
   });
   
   // Inline code (single backticks)
-  html = html.replace(/`([^`]+)`/g, '<code class="bg-gray-800 px-1.5 py-0.5 rounded text-sm font-mono text-pink-400 border border-gray-700">$1</code>');
+  html = html.replace(/`([^`]+)`/g, (_m, code) =>
+    `<code class="bg-gray-800 px-1.5 py-0.5 rounded text-sm font-mono text-pink-400 border border-gray-700">${escapeHtmlText(code)}</code>`
+  );
   
   // Headers with IDs for TOC navigation
   let headingCounter = 0;
-  html = html.replace(/^### (.*$)/gim, (match, text) => {
+  html = html.replace(/^### (.*$)/gim, (_match, text) => {
     const id = `heading-${headingCounter++}`;
-    return `<h3 id="${id}" class="text-2xl font-bold mt-8 mb-4 text-white">${text}</h3>`;
+    return `<h3 id="${id}" class="text-2xl font-bold mt-8 mb-4 text-white">${escapeHtmlText(text)}</h3>`;
   });
-  html = html.replace(/^## (.*$)/gim, (match, text) => {
+  html = html.replace(/^## (.*$)/gim, (_match, text) => {
     const id = `heading-${headingCounter++}`;
-    return `<h2 id="${id}" class="text-3xl font-bold mt-10 mb-6 text-white">${text}</h2>`;
+    return `<h2 id="${id}" class="text-3xl font-bold mt-10 mb-6 text-white">${escapeHtmlText(text)}</h2>`;
   });
-  html = html.replace(/^# (.*$)/gim, (match, text) => {
+  html = html.replace(/^# (.*$)/gim, (_match, text) => {
     const id = `heading-${headingCounter++}`;
-    return `<h1 id="${id}" class="text-4xl font-bold mt-12 mb-8 text-white">${text}</h1>`;
+    return `<h1 id="${id}" class="text-4xl font-bold mt-12 mb-8 text-white">${escapeHtmlText(text)}</h1>`;
   });
   
   // Bold
-  html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-white">$1</strong>');
+  html = html.replace(/\*\*(.*?)\*\*/g, (_m, text) => `<strong class="font-bold text-white">${escapeHtmlText(text)}</strong>`);
   
   // Italic
-  html = html.replace(/\*(.*?)\*/g, '<em class="italic">$1</em>');
+  html = html.replace(/\*(.*?)\*/g, (_m, text) => `<em class="italic">${escapeHtmlText(text)}</em>`);
   
-  // Links
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-gradient-theme hover:opacity-80 underline">$1</a>');
+  // Links — only allow safe URL schemes
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, text, url) => {
+    const href = isSafeUrl(url) ? escapeHtmlText(url.trim()) : '#';
+    return `<a href="${href}" class="text-gradient-theme hover:opacity-80 underline">${escapeHtmlText(text)}</a>`;
+  });
   
-  // Lists
+  // Lists (content may already include HTML from earlier transforms)
   html = html.replace(/^\* (.*$)/gim, '<li class="ml-6 mb-2">$1</li>');
   html = html.replace(/^- (.*$)/gim, '<li class="ml-6 mb-2">$1</li>');
   
@@ -88,24 +108,20 @@ export default function BlogPostPage() {
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [isBlogSidebarVisible, setIsBlogSidebarVisible] = useState(false);
-  
-  if (!postId) {
-    return <Navigate to="/blog" replace />;
-  }
 
-  const post = getPostById(postId);
+  useOverlayA11y(!!lightboxImage, () => setLightboxImage(null));
 
-  if (!post) {
-    return <Navigate to="/blog" replace />;
-  }
+  const post = postId ? getPostById(postId) : undefined;
 
-  const articleUrl = typeof window !== 'undefined' ? window.location.href : '';
-  const shareText = `${post.title} - ${post.excerpt}`;
-  const htmlContent = post.contentHtml ? sanitizeHtml(post.contentHtml) : markdownToHtml(post.content);
+  const htmlContent = useMemo(() => {
+    if (!post) return '';
+    if (post.contentHtml) return sanitizeHtml(post.contentHtml);
+    return sanitizeHtml(markdownToHtml(post.content));
+  }, [post]);
 
   // Generate TOC from headings (markdown only)
   const tocItems = useMemo(() => {
-    if (post.contentHtml) return [];
+    if (!post || post.contentHtml) return [];
     const headings: { id: string; label: string; level: number }[] = [];
     const headingRegex = /^(#{1,3})\s+(.+)$/gm;
     let match;
@@ -119,7 +135,7 @@ export default function BlogPostPage() {
     }
 
     return headings;
-  }, [post.content, post.contentHtml]);
+  }, [post]);
 
   // Update heading IDs in HTML after render
   useEffect(() => {
@@ -153,44 +169,55 @@ export default function BlogPostPage() {
   }, []);
 
   useEffect(() => {
-    // Add copy code function to window for inline handlers
-    (window as any).copyCode = (codeId: string) => {
+    const onClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      const btn = target?.closest?.('.copy-code-btn') as HTMLElement | null;
+      if (!btn) return;
+      const codeId = btn.getAttribute('data-code-id');
+      if (!codeId) return;
       const codeElement = document.getElementById(codeId);
-      if (codeElement) {
-        const text = codeElement.textContent || '';
-        navigator.clipboard.writeText(text).then(() => {
-          const btn = document.querySelector(`button[data-code-id="${codeId}"]`);
-          if (btn) {
-            const copyText = btn.querySelector('.copy-text');
-            if (copyText) {
-              copyText.textContent = 'Copied!';
-              setTimeout(() => {
-                copyText.textContent = 'Copy';
-              }, 2000);
-            }
-          }
-        });
-      }
+      if (!codeElement) return;
+      const text = codeElement.textContent || '';
+      navigator.clipboard.writeText(text).then(() => {
+        const copyText = btn.querySelector('.copy-text');
+        if (copyText) {
+          copyText.textContent = 'Copied!';
+          setTimeout(() => {
+            copyText.textContent = 'Copy';
+          }, 2000);
+        }
+      }).catch(() => {
+        /* clipboard may be unavailable */
+      });
     };
-    return () => {
-      delete (window as any).copyCode;
-    };
+    document.addEventListener('click', onClick);
+    return () => document.removeEventListener('click', onClick);
   }, []);
-
 
   useEffect(() => {
     // Make images clickable for lightbox
     const articleContent = document.querySelector('article .prose');
-    if (articleContent) {
-      const images = articleContent.querySelectorAll('img');
-      images.forEach((img) => {
-        img.style.cursor = 'pointer';
-        img.addEventListener('click', () => {
-          setLightboxImage(img.getAttribute('src') || null);
-        });
-      });
-    }
+    if (!articleContent) return;
+
+    const handlers: Array<{ img: HTMLImageElement; fn: () => void }> = [];
+    const images = articleContent.querySelectorAll('img');
+    images.forEach((img) => {
+      img.style.cursor = 'pointer';
+      const fn = () => setLightboxImage(img.getAttribute('src') || null);
+      img.addEventListener('click', fn);
+      handlers.push({ img, fn });
+    });
+    return () => {
+      handlers.forEach(({ img, fn }) => img.removeEventListener('click', fn));
+    };
   }, [htmlContent]);
+
+  if (!postId || !post) {
+    return <Navigate to="/blog" replace />;
+  }
+
+  const articleUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const shareText = `${post.title} - ${post.excerpt}`;
 
   const handleShare = (platform: string) => {
     const url = encodeURIComponent(articleUrl);
@@ -198,7 +225,7 @@ export default function BlogPostPage() {
     
     switch (platform) {
       case 'twitter':
-        window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank', 'width=550,height=420');
+        window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank', 'noopener,noreferrer,width=550,height=420');
         break;
       case 'facebook':
         window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'width=550,height=420');
@@ -582,6 +609,9 @@ export default function BlogPostPage() {
         <div
           className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4"
           onClick={() => setLightboxImage(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image preview"
         >
           <button
             onClick={() => setLightboxImage(null)}

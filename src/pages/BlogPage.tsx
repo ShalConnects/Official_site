@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, Clock, ArrowRight, FileText, Sparkles, Share2, Mail, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, ArrowRight, FileText, Sparkles, Share2, Mail, ChevronLeft, ChevronRight } from 'lucide-react';
 import PageLayout from '../components/PageLayout';
 import PageHero from '../components/PageHero';
 import PageContainer from '../components/PageContainer';
 import PageSection from '../components/PageSection';
+import NewsletterForm from '../components/NewsletterForm';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { blogPosts, getCategoryCounts, getFeaturedPost, getPostsByCategory } from '../utils/blogData';
 
@@ -12,10 +13,6 @@ export default function BlogPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 6;
-  
-  const [newsletterEmail, setNewsletterEmail] = useState('');
-  const [newsletterSubmitted, setNewsletterSubmitted] = useState(false);
-  const [isSubmittingNewsletter, setIsSubmittingNewsletter] = useState(false);
 
   useMetaTags({
     title: 'Blog | ShalConnects',
@@ -71,21 +68,6 @@ export default function BlogPage() {
         alert('Link copied to clipboard!');
       }).catch(() => {});
     }
-  };
-
-  const handleNewsletterSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newsletterEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newsletterEmail)) {
-      return;
-    }
-    setIsSubmittingNewsletter(true);
-    // Newsletter subscription logic here
-    setTimeout(() => {
-      setIsSubmittingNewsletter(false);
-      setNewsletterSubmitted(true);
-      setNewsletterEmail('');
-      setTimeout(() => setNewsletterSubmitted(false), 5000);
-    }, 1000);
   };
 
   const formatDate = (dateString: string) => {
@@ -202,6 +184,18 @@ export default function BlogPage() {
 
 
           {/* Posts Grid - Enhanced Cards */}
+          {paginatedPosts.length === 0 ? (
+            <div className="text-center py-16 px-4">
+              <p className="text-gray-400 mb-4">No posts found in this category.</p>
+              <button
+                type="button"
+                onClick={() => setSelectedCategory(null)}
+                className="px-4 py-2 rounded-lg border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 transition-colors"
+              >
+                View all posts
+              </button>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {paginatedPosts.map((post) => (
               <Link
@@ -272,12 +266,6 @@ export default function BlogPage() {
               </Link>
             ))}
           </div>
-
-          {/* Empty State */}
-          {filteredPosts.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-400 text-lg">No blog posts found. Check back soon!</p>
-            </div>
           )}
 
           {/* Pagination - Enhanced */}
@@ -345,34 +333,7 @@ export default function BlogPage() {
                 Subscribe to our newsletter and get the latest articles, tips, and updates delivered to your inbox.
               </p>
             </div>
-            {newsletterSubmitted ? (
-              <div className="text-center py-4">
-                <div className="inline-flex items-center gap-2 text-green-400 bg-green-500/20 px-3 sm:px-4 py-2 rounded-lg border border-green-500/30 text-sm sm:text-base">
-                  <Check className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span>Thank you for subscribing!</span>
-                </div>
-              </div>
-            ) : (
-              <form onSubmit={handleNewsletterSubmit} className="max-w-md mx-auto">
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                  <input
-                    type="email"
-                    value={newsletterEmail}
-                    onChange={(e) => setNewsletterEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-gradient-theme text-white placeholder-gray-500"
-                    required
-                  />
-                  <button
-                    type="submit"
-                    disabled={isSubmittingNewsletter}
-                    className="px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-gradient-theme text-white rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                  >
-                    {isSubmittingNewsletter ? 'Subscribing...' : 'Subscribe'}
-                  </button>
-                </div>
-              </form>
-            )}
+            <NewsletterForm />
           </div>
         </PageContainer>
       </PageSection>

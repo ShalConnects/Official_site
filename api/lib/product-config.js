@@ -9,6 +9,15 @@ const PRODUCT_MAP = {
   'pri_01khd9vscmynzpd3655cd1trrx': { slug: 'notipress', fileEnvKey: 'NOTIPRESS_PLUGIN_FILE_URL' },
 };
 
+const TRUSTED_HOSTS = new Set([
+  'shalconnects.com',
+  'www.shalconnects.com',
+  'store.shalconnects.com',
+  'localhost:5173',
+  'localhost:3000',
+  '127.0.0.1:5173',
+]);
+
 function getProductByPaddleId(id) {
   return id ? PRODUCT_MAP[id] || null : null;
 }
@@ -20,12 +29,28 @@ function getProductFromTransaction(transactionData) {
   return getProductByPaddleId(productId) || getProductByPaddleId(priceId);
 }
 
+function isTrustedHost(host) {
+  if (!host || typeof host !== 'string') return false;
+  const normalized = host.toLowerCase().split(',')[0].trim();
+  if (TRUSTED_HOSTS.has(normalized)) return true;
+  if (process.env.VERCEL_URL && normalized === process.env.VERCEL_URL.toLowerCase()) return true;
+  return normalized.endsWith('.shalconnects.com');
+}
+
 function getDownloadUrl(transactionData, req) {
   const product = getProductFromTransaction(transactionData);
   const url = product && process.env[product.fileEnvKey] ? process.env[product.fileEnvKey] : null;
   if (url) return url;
-  const protocol = req.headers['x-forwarded-proto'] || 'https';
-  const host = req.headers['x-forwarded-host'] || req.headers.host || process.env.VERCEL_URL || 'localhost:5173';
+
+  const forwardedHost = req.headers['x-forwarded-host'] || req.headers.host;
+  const host = isTrustedHost(forwardedHost)
+    ? String(forwardedHost).split(',')[0].trim()
+    : process.env.VERCEL_URL || 'store.shalconnects.com';
+
+  const protocol =
+    req.headers['x-forwarded-proto'] === 'http' && host.startsWith('localhost')
+      ? 'http'
+      : 'https';
   const slug = product?.slug || 'variation-images-pro';
   return `${protocol}://${host}/downloads/${slug}.zip`;
 }

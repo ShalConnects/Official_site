@@ -51,10 +51,11 @@ function generatePassword(options: PasswordOptions): string {
     return 'No characters available with current options';
   }
   
+  const values = new Uint32Array(options.length);
+  crypto.getRandomValues(values);
   let password = '';
   for (let i = 0; i < options.length; i++) {
-    const randomIndex = Math.floor(Math.random() * charset.length);
-    password += charset[randomIndex];
+    password += charset[values[i] % charset.length];
   }
   
   return password;

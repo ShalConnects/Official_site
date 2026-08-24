@@ -4,6 +4,7 @@ import PageLayout from '../components/PageLayout';
 import CustomSelect from '../components/CustomSelect';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { useMetaTags } from '../hooks/useMetaTags';
+import { useOverlayA11y } from '../hooks/useOverlayA11y';
 
 interface Workout {
   id: string;
@@ -181,24 +182,9 @@ export default function FitQuest() {
     setFormErrors({});
   }, []);
 
-  // Close modal on Escape key
-  useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && showAddWorkout) {
-        cancelEdit();
-      }
-    };
-
-    if (showAddWorkout) {
-      document.addEventListener('keydown', handleEscape);
-      // Prevent body scroll when modal is open
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.removeEventListener('keydown', handleEscape);
-        document.body.style.overflow = 'unset';
-      };
-    }
-  }, [showAddWorkout, cancelEdit]);
+  // Close modal on Escape key + lock scroll
+  useOverlayA11y(showAddWorkout, cancelEdit);
+  useOverlayA11y(!!deleteConfirmId, () => setDeleteConfirmId(null));
 
   useEffect(() => {
     if (workouts.length === 0) return;
@@ -414,7 +400,7 @@ export default function FitQuest() {
   }, [workouts, historyFilter, historyTypeFilter]);
 
   // Format filter labels for display
-  const timeFilterOptions = [
+  const timeFilterOptions: { value: 'all' | 'week' | 'month' | 'year'; label: string }[] = [
     { value: 'all', label: 'All Time' },
     { value: 'week', label: 'Last 7 Days' },
     { value: 'month', label: 'Last 30 Days' },
@@ -591,7 +577,13 @@ export default function FitQuest() {
 
         {/* Modal Dialog for Add/Edit Workout */}
         {showAddWorkout && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3 sm:p-4" onClick={cancelEdit}>
+          <div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3 sm:p-4"
+            onClick={cancelEdit}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="workout-modal-title"
+          >
             <div 
               className="bg-gray-800 border border-gray-700 rounded-lg sm:rounded-xl shadow-2xl w-full max-w-md animate-fade-in max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
@@ -599,7 +591,7 @@ export default function FitQuest() {
             >
               <div className="p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
-                  <h3 className="text-lg sm:text-xl font-bold text-white">
+                  <h3 id="workout-modal-title" className="text-lg sm:text-xl font-bold text-white">
                     {editingWorkout ? 'Edit Workout' : 'Log New Workout'}
                   </h3>
                   <button
@@ -731,7 +723,7 @@ export default function FitQuest() {
                     onChange={(value) => {
                       const option = timeFilterOptions.find(opt => opt.label === value);
                       if (option) {
-                        setHistoryFilter(option.value as any);
+                        setHistoryFilter(option.value);
                       }
                     }}
                     options={timeFilterOptions.map(opt => opt.label)}
@@ -986,9 +978,15 @@ export default function FitQuest() {
             
             {/* Delete Confirmation Modal */}
             {deleteConfirmId && (
-              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3 sm:p-4">
-                <div className="bg-gray-800 border border-gray-700 rounded-lg sm:rounded-xl p-4 sm:p-5 md:p-6 max-w-md w-full animate-fade-in">
-                  <h3 className="text-lg sm:text-xl font-bold mb-2">Delete Workout?</h3>
+              <div
+                className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3 sm:p-4"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="delete-workout-title"
+                onClick={() => setDeleteConfirmId(null)}
+              >
+                <div className="bg-gray-800 border border-gray-700 rounded-lg sm:rounded-xl p-4 sm:p-5 md:p-6 max-w-md w-full animate-fade-in" onClick={(e) => e.stopPropagation()}>
+                  <h3 id="delete-workout-title" className="text-lg sm:text-xl font-bold mb-2">Delete Workout?</h3>
                   <p className="text-gray-400 text-sm sm:text-base mb-4 sm:mb-5 md:mb-6">
                     Are you sure you want to delete this workout? This action cannot be undone.
                   </p>

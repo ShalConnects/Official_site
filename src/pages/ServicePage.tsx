@@ -29,7 +29,7 @@ interface Service {
   idealClient?: string[];
 }
 
-interface ServiceCategory {
+export interface ServiceCategory {
   name: string;
   icon: React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }>;
   color: string;

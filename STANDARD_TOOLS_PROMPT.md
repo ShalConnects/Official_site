@@ -13,14 +13,13 @@ Add a new free tool with the following. Follow DRY, separation of concerns, and 
 - Slug: [e.g. my-tool]
 - Name: [display name, e.g. My Tool]
 - Description: [1–2 sentences for cards and meta]
-- Route: /tools/[slug]
+- Route: /tools/[slug] (e.g. /tools/my-tool)
 
-**Place everywhere needed**
-- src/App.tsx — add <Route path="/tools/[slug]" element={<MyTool />} /> and import
-- src/pages/ — create [MyTool].tsx (or [ToolName].tsx) with PageLayout, usePageTitle, useMetaTags
-- src/pages/ToolsPage.tsx — add to tools array: id, name, description, icon (lucide-react), route, color (hex), isNew (optional)
-- src/pages/LandingPage.tsx — add same tool entry to the tools list used in "Our Free Tools" (id, name, description, icon, route, color)
-- src/components/Breadcrumbs.tsx — if the auto-generated label from slug is wrong, add: else if (path === '[slug]') { label = '[Display Name]'; }
+**Single source of truth**
+- src/data/toolsData.ts — add one entry: id, name, description, icon (lucide-react), route, color (hex), isNew (optional), Load: lazy(() => import('../pages/[MyTool]'))
+- src/pages/ — create [MyTool].tsx with PageLayout, usePageTitle, useMetaTags
+
+ToolsPage, LandingPage, Breadcrumbs, and App routing derive from toolsData automatically. No changes needed there.
 
 **Page behavior**
 - Use PageLayout, usePageTitle, useMetaTags. Content width aligned with breadcrumb/footer; responsive.
@@ -39,7 +38,7 @@ Update the [Tool Name] tool with the following. Keep existing structure (PageLay
 
 **Files**
 - Primary: src/pages/[ToolComponent].tsx
-- If name/route/description changes: src/pages/ToolsPage.tsx, src/pages/LandingPage.tsx, src/components/Breadcrumbs.tsx
+- If name/route/description/icon/color changes: src/data/toolsData.ts
 
 Do not duplicate logic; no console.logs; no new public API surface or exposed keys.
 ```
@@ -49,9 +48,9 @@ Do not duplicate logic; no console.logs; no new public API surface or exposed ke
 ## Checklist (before requesting a new tool)
 
 - [ ] Slug is kebab-case (e.g. `my-tool`)
-- [ ] Route is `/tools/[slug]`
+- [ ] Route is `/tools/[slug]` (e.g. `/tools/my-tool`)
 - [ ] Display name and 1–2 sentence description ready
-- [ ] Icon chosen from `lucide-react` (used on Tools and Landing)
+- [ ] Icon chosen from `lucide-react`
 - [ ] Hex color chosen for card accent (e.g. `#6366f1`)
 
 ---
@@ -60,11 +59,8 @@ Do not duplicate logic; no console.logs; no new public API surface or exposed ke
 
 | Location | Purpose |
 |----------|---------|
-| `src/App.tsx` | Route and component import for `/tools/[slug]` |
+| `src/data/toolsData.ts` | **Single source:** Add entry (id, name, description, icon, route, color, isNew, Load). ToolsPage, LandingPage, Breadcrumbs, App all derive from here. |
 | `src/pages/[ToolName].tsx` | New page: PageLayout, usePageTitle, useMetaTags, main UI |
-| `src/pages/ToolsPage.tsx` | Add to `tools` array: id, name, description, icon, route, color, isNew |
-| `src/pages/LandingPage.tsx` | Add same entry to tools list for "Our Free Tools" section |
-| `src/components/Breadcrumbs.tsx` | Add path → label override only if auto label is wrong (e.g. slug `qr-code-generator` → "QR Code Generator") |
 
 ---
 
@@ -72,5 +68,5 @@ Do not duplicate logic; no console.logs; no new public API surface or exposed ke
 
 - **Layout:** `PageLayout` with title; main content in a container that matches site content width (e.g. same max-width as breadcrumb/footer).
 - **Meta:** `usePageTitle(title)` and `useMetaTags({ title, description, keywords, og*, twitter* })`.
-- **Icons:** Use `lucide-react`; same icon as in ToolsPage/LandingPage for consistency.
+- **Icons:** Use `lucide-react`; same icon as in toolsData for consistency.
 - **No** console.logs, no exposed API keys, no new public API surface unless required.

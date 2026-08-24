@@ -121,8 +121,6 @@ export default function BrandMarquee({
     const transform = `translate3d(${offset}px, 0, 0)`;
     element.style.transform = transform;
     element.style.webkitTransform = transform;
-    (element.style as any).mozTransform = transform;
-    (element.style as any).msTransform = transform;
   }, []);
 
   // Scroll wheel handler - simple and smooth
@@ -148,7 +146,7 @@ export default function BrandMarquee({
     if (animationRef.current) {
       // Get current animation transform
       const computedStyle = window.getComputedStyle(animationRef.current);
-      const currentTransform = computedStyle.transform || (computedStyle as any).webkitTransform;
+      const currentTransform = computedStyle.transform;
       let currentOffset = 0;
       
       if (currentTransform && currentTransform !== 'none') {
@@ -172,8 +170,6 @@ export default function BrandMarquee({
       if (animationRef.current) {
         animationRef.current.style.transform = '';
         animationRef.current.style.webkitTransform = '';
-        (animationRef.current.style as any).mozTransform = '';
-        (animationRef.current.style as any).msTransform = '';
       }
       isInteractingRef.current = false;
       wheelTimeoutRef.current = null;

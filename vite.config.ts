@@ -3,6 +3,10 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{ts,tsx}', 'api/**/*.{test,spec}.{js,ts}'],
+  },
   build: {
     rollupOptions: {
       output: {
@@ -11,7 +15,7 @@ export default defineConfig({
             if (id.includes('framer-motion')) return 'framer-motion';
             if (id.includes('react-icons') || id.includes('lucide-react')) return 'icons';
             if (id.includes('@tiptap')) return 'tiptap';
-            if (id.includes('react') || id.includes('react-dom')) return 'react-vendor';
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) return 'react-vendor';
           }
         },
       },

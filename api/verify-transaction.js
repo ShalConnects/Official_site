@@ -1,43 +1,34 @@
 // Backend API endpoint for verifying Paddle transactions
 // Vercel Serverless Function
 import { getProductFromTransaction } from './lib/product-config.js';
+import { createDownloadToken } from './lib/download-token.js';
+import {
+  setCorsHeaders,
+  setNoCacheHeaders,
+  handleMethodGuard,
+  isValidTransactionId,
+} from './lib/http.js';
 
-// SECURITY: API key must be set via environment variable
 const PADDLE_API_KEY = process.env.PADDLE_API_KEY;
 if (!PADDLE_API_KEY) console.error('PADDLE_API_KEY environment variable is not set');
 const PADDLE_API_URL = 'https://api.paddle.com';
 
-/**
- * Vercel Serverless Function
- * Verifies Paddle transactions and returns transaction status
- */
+const ALLOWED_STATUSES = ['completed', 'paid', 'pending'];
+
 export default async function handler(req, res) {
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  // Prevent caching - always get fresh data from Paddle
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
+  setCorsHeaders(req, res, 'GET, OPTIONS');
+  setNoCacheHeaders(res);
 
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (handleMethodGuard(req, res, ['GET'])) return;
 
-  // Only allow GET requests
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  const transactionId = typeof req.query.transaction === 'string'
+    ? req.query.transaction.trim()
+    : '';
 
-  const transactionId = req.query.transaction;
-
-  if (!transactionId) {
-    return res.status(400).json({ 
-      valid: false, 
-      message: 'Transaction ID is required' 
+  if (!transactionId || !isValidTransactionId(transactionId)) {
+    return res.status(400).json({
+      valid: false,
+      message: 'A valid transaction ID is required',
     });
   }
 
@@ -50,25 +41,21 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Verify transaction with Paddle API
-    const response = await fetch(`${PADDLE_API_URL}/transactions/${transactionId}`, {
+    const response = await fetch(`${PADDLE_API_URL}/transactions/${encodeURIComponent(transactionId)}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${PADDLE_API_KEY}`,
+        Authorization: `Bearer ${PADDLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      // Get error details from Paddle
       const errorData = await response.json().catch(() => ({}));
       console.error('Paddle API error:', {
         status: response.status,
-        statusText: response.statusText,
-        error: errorData,
+        errorCode: errorData?.error?.code,
       });
-      
-      // Return more specific error messages
+
       if (response.status === 404) {
         return res.status(200).json({
           valid: false,
@@ -76,37 +63,40 @@ export default async function handler(req, res) {
           transaction: null,
         });
       }
-      
-      throw new Error(`Paddle API error: ${response.status} ${response.statusText}`);
+
+      throw new Error(`Paddle API error: ${response.status}`);
     }
 
     const raw = await response.json();
     const transaction = raw?.data ?? raw;
 
-    console.log('=== PADDLE API FULL RESPONSE ===');
-    console.log(JSON.stringify(raw, null, 2));
-    console.log('=== END PADDLE RESPONSE ===');
-
     if (!transaction || typeof transaction !== 'object') {
-      console.error('Invalid transaction response:', transaction);
+      console.error('Invalid transaction response shape');
       return res.status(500).json({
         valid: false,
-        message: 'Invalid response from Paddle API. Please contact support.',
+        message: 'Invalid response from payment provider. Please contact support.',
       });
     }
 
-    // Check if status exists - Paddle API v2 might use different field names
-    // Try multiple possible field names
-    const transactionStatus = transaction.status || transaction.status_code || transaction.payment_status || transaction.state || 'unknown';
-    
-    console.log('Extracted transaction status:', transactionStatus);
-    
-    // Allow downloads for both 'completed' and 'pending' transactions
-    // Pending transactions are usually just waiting for bank processing
-    const allowedStatuses = ['completed', 'pending'];
-    
-    if (allowedStatuses.includes(transactionStatus)) {
-      const downloadToken = Buffer.from(`${transactionId}:${Date.now()}`).toString('base64');
+    const transactionStatus =
+      transaction.status ||
+      transaction.status_code ||
+      transaction.payment_status ||
+      transaction.state ||
+      'unknown';
+
+    if (ALLOWED_STATUSES.includes(transactionStatus)) {
+      let downloadToken;
+      try {
+        downloadToken = createDownloadToken(transactionId);
+      } catch (err) {
+        console.error('Failed to create download token:', err.message);
+        return res.status(500).json({
+          valid: false,
+          message: 'Server configuration error. Please contact support.',
+        });
+      }
+
       const product = getProductFromTransaction(transaction);
 
       return res.status(200).json({
@@ -121,48 +111,21 @@ export default async function handler(req, res) {
         downloadToken,
         productSlug: product ? product.slug : null,
       });
-    } else {
-      // Return transaction info even if status is not allowed
-      // Include full transaction object for debugging
-      return res.status(200).json({
-        valid: false,
-        message: `Transaction status: ${transactionStatus}. Payment may still be processing.`,
-        transaction: {
-          id: transaction.id || transactionId,
-          status: transactionStatus,
-        },
-        // Include full response for debugging (remove in production)
-        debug: {
-          fullResponse: transaction,
-          availableFields: Object.keys(transaction),
-        },
-      });
     }
+
+    return res.status(200).json({
+      valid: false,
+      message: `Transaction status: ${transactionStatus}. Payment may still be processing.`,
+      transaction: {
+        id: transaction.id || transactionId,
+        status: transactionStatus,
+      },
+    });
   } catch (error) {
-    console.error('Transaction verification error:', error);
+    console.error('Transaction verification error:', error.message);
     return res.status(500).json({
       valid: false,
       message: 'Failed to verify transaction. Please contact support.',
     });
   }
 }
-
-/**
- * Express.js Route Example
- * 
- * app.get('/api/verify-transaction', async (req, res) => {
- *   const transactionId = req.query.transaction;
- *   // ... same logic as above
- * });
- */
-
-/**
- * Netlify Function Example
- * Place in: /netlify/functions/verify-transaction.js
- * 
- * exports.handler = async (event, context) => {
- *   const transactionId = event.queryStringParameters.transaction;
- *   // ... same logic as above, return { statusCode, body: JSON.stringify(...) }
- * };
- */
-

@@ -1,38 +1,34 @@
-// Analytics utility
-// Replace GA_MEASUREMENT_ID with your actual Google Analytics Measurement ID
-// Set VITE_GA_MEASUREMENT_ID in your .env file or environment variables
-const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID || '';
+// Analytics utility — Google Analytics 4 (optional via VITE_GA_MEASUREMENT_ID)
+
+const RAW_GA_ID = import.meta.env.VITE_GA_MEASUREMENT_ID || '';
+const GA_MEASUREMENT_ID = /^G-[A-Z0-9]+$/i.test(RAW_GA_ID) ? RAW_GA_ID : '';
 
 export const initAnalytics = () => {
-  if (typeof window !== 'undefined' && GA_MEASUREMENT_ID) {
-    // Google Analytics 4
-    const script1 = document.createElement('script');
-    script1.async = true;
-    script1.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
-    document.head.appendChild(script1);
+  if (typeof window === 'undefined' || !GA_MEASUREMENT_ID) return;
 
-    const script2 = document.createElement('script');
-    script2.innerHTML = `
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', '${GA_MEASUREMENT_ID}');
-    `;
-    document.head.appendChild(script2);
-  }
+  const script1 = document.createElement('script');
+  script1.async = true;
+  script1.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(GA_MEASUREMENT_ID)}`;
+  document.head.appendChild(script1);
+
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function gtag(...args: unknown[]) {
+    window.dataLayer?.push(args);
+  };
+  window.gtag('js', new Date());
+  window.gtag('config', GA_MEASUREMENT_ID);
 };
 
-export const trackEvent = (eventName: string, eventParams?: Record<string, any>) => {
-  if (typeof window !== 'undefined' && (window as any).gtag) {
-    (window as any).gtag('event', eventName, eventParams);
+export const trackEvent = (eventName: string, eventParams?: Record<string, unknown>) => {
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', eventName, eventParams);
   }
 };
 
 export const trackPageView = (path: string) => {
-  if (typeof window !== 'undefined' && (window as any).gtag) {
-    (window as any).gtag('config', GA_MEASUREMENT_ID, {
+  if (typeof window !== 'undefined' && window.gtag && GA_MEASUREMENT_ID) {
+    window.gtag('config', GA_MEASUREMENT_ID, {
       page_path: path,
     });
   }
 };
-

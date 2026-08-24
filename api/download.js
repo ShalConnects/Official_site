@@ -1,36 +1,41 @@
 // Backend API endpoint for secure file downloads
 // Vercel Serverless Function
 import { getDownloadUrl } from './lib/product-config.js';
+import { verifyDownloadToken } from './lib/download-token.js';
+import { incrementPremiumDownload } from './lib/premium-stats.js';
+import {
+  setCorsHeaders,
+  handleMethodGuard,
+  isValidTransactionId,
+} from './lib/http.js';
 
-// SECURITY: API key must be set via environment variable
 const PADDLE_API_KEY = process.env.PADDLE_API_KEY;
 if (!PADDLE_API_KEY) console.error('PADDLE_API_KEY environment variable is not set');
 const PADDLE_API_URL = 'https://api.paddle.com';
 
-/**
- * Vercel Serverless Function
- * Handles secure file downloads after transaction verification
- */
+const ALLOWED_STATUSES = ['completed', 'paid', 'pending'];
+
 export default async function handler(req, res) {
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  setCorsHeaders(req, res, 'GET, OPTIONS');
 
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (handleMethodGuard(req, res, ['GET'])) return;
 
-  // Only allow GET requests
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const { transaction, token } = req.query;
+  const transaction = typeof req.query.transaction === 'string'
+    ? req.query.transaction.trim()
+    : '';
+  const token = typeof req.query.token === 'string' ? req.query.token.trim() : '';
 
   if (!transaction || !token) {
     return res.status(400).json({ error: 'Missing transaction or token' });
+  }
+
+  if (!isValidTransactionId(transaction)) {
+    return res.status(400).json({ error: 'Invalid transaction ID' });
+  }
+
+  const tokenCheck = verifyDownloadToken(token, transaction);
+  if (!tokenCheck.valid) {
+    return res.status(403).json({ error: tokenCheck.reason || 'Invalid or expired download token' });
   }
 
   if (!PADDLE_API_KEY) {
@@ -39,84 +44,45 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Verify transaction again for security
-    const verifyResponse = await fetch(`${PADDLE_API_URL}/transactions/${transaction}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${PADDLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    const verifyResponse = await fetch(
+      `${PADDLE_API_URL}/transactions/${encodeURIComponent(transaction)}`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${PADDLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
     if (!verifyResponse.ok) {
-      throw new Error('Transaction verification failed');
+      return res.status(403).json({ error: 'Transaction verification failed' });
     }
 
     const raw = await verifyResponse.json();
     const transactionData = raw?.data ?? raw;
+    const transactionStatus =
+      transactionData?.status ||
+      transactionData?.status_code ||
+      transactionData?.payment_status ||
+      transactionData?.state ||
+      'unknown';
 
-    console.log('=== DOWNLOAD API - PADDLE RESPONSE ===');
-    console.log(JSON.stringify(raw, null, 2));
-    console.log('=== END PADDLE RESPONSE ===');
-
-    const transactionStatus = transactionData?.status || transactionData?.status_code || transactionData?.payment_status || transactionData?.state || 'unknown';
-    
-    console.log('Download API - Extracted transaction status:', transactionStatus);
-
-    // Allow downloads for both 'completed' and 'pending' transactions
-    // Pending transactions are usually just waiting for bank processing
-    const allowedStatuses = ['completed', 'pending'];
-    if (!allowedStatuses.includes(transactionStatus)) {
-      return res.status(403).json({ 
-        error: `Transaction status is ${transactionStatus}. Payment may still be processing.` 
+    if (!ALLOWED_STATUSES.includes(transactionStatus)) {
+      return res.status(403).json({
+        error: `Transaction status is ${transactionStatus}. Payment may still be processing.`,
       });
     }
 
-    // Verify the token (basic validation)
-    // In production, use proper JWT or signed token verification
-    if (token) {
-      try {
-        const decoded = Buffer.from(token, 'base64').toString('utf-8');
-        const [tokenTxnId] = decoded.split(':');
-        if (tokenTxnId !== transaction) {
-          console.warn('Token transaction ID mismatch');
-          // Still allow download if transaction is valid (token is for additional security)
-        }
-      } catch (e) {
-        console.warn('Token validation error:', e);
-        // Continue with download if transaction is valid
-      }
-    }
-
-    // Track premium download
-    try {
-      // Call tracking endpoint asynchronously (don't wait for response)
-      fetch(`${req.headers['x-forwarded-proto'] || 'https'}://${req.headers['x-forwarded-host'] || req.headers.host || process.env.VERCEL_URL || 'localhost:5173'}/api/track-premium-download`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }).catch(err => {
-        console.error('Failed to track download (non-blocking):', err);
-      });
-    } catch (error) {
-      console.error('Error tracking download:', error);
-      // Don't block download if tracking fails
-    }
+    // Track download without blocking the redirect
+    incrementPremiumDownload().catch((err) => {
+      console.error('Failed to track download (non-blocking):', err.message);
+    });
 
     const downloadUrl = transactionData?.download_url || getDownloadUrl(transactionData, req);
-
-    // Redirect to the download URL
-    return res.redirect(downloadUrl);
+    return res.redirect(302, downloadUrl);
   } catch (error) {
-    console.error('Download error:', error);
+    console.error('Download error:', error.message);
     return res.status(500).json({ error: 'Failed to process download' });
   }
 }
-
-/**
- * Alternative: Use Paddle's built-in file delivery
- * Paddle automatically emails download links after purchase
- * You can also configure download URLs in Paddle dashboard
- */
-

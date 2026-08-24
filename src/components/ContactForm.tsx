@@ -34,6 +34,8 @@ interface ContactFormProps {
 }
 
 const defaultAccent = '#176641';
+const FORMSPREE_ID = import.meta.env.VITE_FORMSPREE_CONTACT_ID as string | undefined;
+const CONTACT_ENDPOINT = FORMSPREE_ID ? `https://formspree.io/f/${FORMSPREE_ID}` : '';
 
 export default function ContactForm({
   prefillService,
@@ -51,9 +53,17 @@ export default function ContactForm({
   const [formErrors, setFormErrors] = useState<ContactFormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [isServiceDropdownOpen, setIsServiceDropdownOpen] = useState(false);
   const [hoveredServiceIndex, setHoveredServiceIndex] = useState<number | null>(null);
   const serviceDropdownRef = useRef<HTMLDivElement>(null);
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (successTimerRef.current) clearTimeout(successTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (prefillService) setFormData(prev => ({ ...prev, service: prefillService }));
@@ -82,24 +92,45 @@ export default function ContactForm({
     return errors;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       return;
     }
+    if (!CONTACT_ENDPOINT) {
+      setSubmitError('Contact form is not configured. Please email hello@shalconnects.com.');
+      return;
+    }
     setFormErrors({});
+    setSubmitError('');
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      const res = await fetch(CONTACT_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          message: formData.message.trim(),
+          service: formData.service || undefined,
+          _subject: `Contact from ${formData.name.trim()}${formData.service ? ` — ${formData.service}` : ''}`,
+        }),
+      });
+      if (!res.ok) throw new Error('Submit failed');
       setShowSuccess(true);
       setFormData({ name: '', email: '', message: '', service: prefillService ?? '' });
-      setTimeout(() => {
+      if (successTimerRef.current) clearTimeout(successTimerRef.current);
+      successTimerRef.current = setTimeout(() => {
         setShowSuccess(false);
         onSuccess?.();
       }, 5000);
-    }, 1000);
+    } catch {
+      setSubmitError('Something went wrong. Please try again or email hello@shalconnects.com.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -123,6 +154,8 @@ export default function ContactForm({
               value={formData.name}
               onChange={handleInputChange}
               placeholder="Your Name"
+              aria-label="Your name"
+              autoComplete="name"
               className={`w-full bg-gray-900 border rounded-lg sm:rounded-xl px-4 py-3 sm:px-6 sm:py-4 text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none transition-colors ${
                 formErrors.name ? 'border-red-500 focus:border-red-500' : 'border-gray-700'
               }`}
@@ -143,6 +176,8 @@ export default function ContactForm({
               value={formData.email}
               onChange={handleInputChange}
               placeholder="Your Email"
+              aria-label="Your email"
+              autoComplete="email"
               className={`w-full bg-gray-900 border rounded-lg sm:rounded-xl px-4 py-3 sm:px-6 sm:py-4 text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none transition-colors ${
                 formErrors.email ? 'border-red-500 focus:border-red-500' : 'border-gray-700'
               }`}
@@ -292,6 +327,7 @@ export default function ContactForm({
             onChange={handleInputChange}
             rows={4}
             placeholder="Tell us about your project"
+            aria-label="Your message"
             className={`w-full bg-gray-900 border rounded-lg sm:rounded-xl px-4 py-3 sm:px-6 sm:py-4 text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none transition-colors resize-none ${
               formErrors.message ? 'border-red-500 focus:border-red-500' : 'border-gray-700'
             }`}
@@ -322,6 +358,12 @@ export default function ContactForm({
             </>
           )}
         </button>
+        {submitError && (
+          <p className="text-red-400 text-xs sm:text-sm flex items-center" role="alert">
+            <XCircle size={12} className="sm:w-3.5 sm:h-3.5 mr-1 flex-shrink-0" />
+            {submitError}
+          </p>
+        )}
       </form>
 
       {showSuccess && (

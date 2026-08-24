@@ -1,11 +1,4 @@
-// Paddle API utility functions
-// ⚠️ SECURITY WARNING: These functions should ONLY be called from your backend, NOT from the frontend
-// This file is for reference and type definitions only
-// API keys should NEVER be in frontend code
-
-// NOTE: This file should not contain any API keys
-// All API calls should be made from your backend serverless functions
-// const PADDLE_API_URL = 'https://api.paddle.com'; // Unused - API calls go through backend
+/** Paddle types and thin client helpers. API keys must never live in the frontend. */
 
 export interface PaddleTransaction {
   id: string;
@@ -21,57 +14,42 @@ export interface PaddleTransaction {
   updated_at: string;
 }
 
+export interface VerifyTransactionResponse {
+  valid: boolean;
+  message?: string;
+  downloadToken?: string;
+  productSlug?: string | null;
+  transaction?: {
+    id: string;
+    status: string;
+    customer_email?: string | null;
+    items?: PaddleTransaction['items'];
+    created_at?: string;
+  } | null;
+}
+
 /**
- * Verify a transaction with Paddle API
- * NOTE: This should be done on your backend, not in the frontend
- * 
- * @param transactionId - The transaction ID from Paddle
- * @returns Transaction data if valid, null otherwise
+ * Verify a transaction via the backend API (never call Paddle directly from the browser).
  */
-/**
- * ⚠️ WARNING: This function should NOT be used in frontend code
- * API keys must never be exposed in client-side code
- * Use your backend API endpoint (/api/verify-transaction) instead
- */
-export async function verifyTransaction(transactionId: string): Promise<PaddleTransaction | null> {
-  // This is a reference implementation only
-  // In production, call your backend API: /api/verify-transaction?transaction=xxx
-  console.warn('⚠️ This function should not be called from frontend. Use backend API instead.');
-  
-  try {
-    // Call your backend API instead of Paddle directly
-    const response = await fetch(`/api/verify-transaction?transaction=${transactionId}`, {
+export async function verifyTransactionViaApi(
+  transactionId: string
+): Promise<VerifyTransactionResponse> {
+  const apiUrl = import.meta.env.VITE_API_URL || '/api';
+  const response = await fetch(
+    `${apiUrl}/verify-transaction?transaction=${encodeURIComponent(transactionId)}&_t=${Date.now()}`,
+    {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
       },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Paddle API error: ${response.statusText}`);
     }
+  );
 
-    const data = await response.json();
-    
-    // Check if transaction is completed
-    if (data.status === 'completed') {
-      return data;
-    }
-
-    return null;
-  } catch (error) {
-    console.error('Error verifying transaction:', error);
-    return null;
+  if (!response.ok) {
+    const errorData = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(errorData.message || `Verification failed: ${response.statusText}`);
   }
-}
 
-/**
- * Generate a secure download token
- * This should be done on your backend
- */
-export function generateDownloadToken(transactionId: string): string {
-  // In production, use a proper JWT or signed token
-  // This is just a placeholder
-  return btoa(`${transactionId}:${Date.now()}`);
+  return (await response.json()) as VerifyTransactionResponse;
 }
-

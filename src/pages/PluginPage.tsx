@@ -4,32 +4,9 @@ import PageLayout from '../components/PageLayout';
 import PageSidebar from '../components/PageSidebar';
 import BeforeAfterSlider from '../components/BeforeAfterSlider';
 import { useState, useEffect } from 'react';
-import { isStoreContext, getStoreHomePath } from '../utils/storeUtils';
+import { isStoreContext, getStoreHomePath, MAIN_SITE_URL } from '../utils/storeUtils';
 import { getPrice } from '../data/productsPlugins';
 import LoadingScreen from '../components/LoadingScreen';
-
-// Declare Paddle type
-declare global {
-  interface Window {
-    Paddle?: {
-      Initialize: (options: { seller?: number; token?: string }) => void;
-      Setup?: (options: { vendor: number }) => void; // Legacy v1 API
-      Checkout: {
-        open: (options: { 
-          items?: Array<{ priceId: string; quantity?: number }>;
-          product?: number | string;
-          settings?: {
-            successUrl?: string;
-            displayMode?: 'overlay' | 'inline';
-          };
-        }) => void;
-      };
-      Environment?: {
-        set: (env: 'sandbox' | 'production') => void;
-      };
-    };
-  }
-}
 
 export default function PluginPage() {
   const { pluginSlug, productSlug } = useParams<{ pluginSlug?: string; productSlug?: string }>();
@@ -46,19 +23,20 @@ export default function PluginPage() {
 
   // Fetch download statistics
   useEffect(() => {
+    const controller = new AbortController();
     const fetchStats = async () => {
       setStatsLoading(true);
       setStatsError(null);
       try {
-        const response = await fetch('/api/get-download-stats');
+        const response = await fetch('/api/get-download-stats', { signal: controller.signal });
         if (response.ok) {
           const data = await response.json();
           setDownloadStats(data);
-          console.log('Download stats loaded:', data);
         } else {
           throw new Error(`API returned ${response.status}`);
         }
       } catch (error) {
+        if (controller.signal.aborted) return;
         console.error('Error fetching download statistics:', error);
         // In local development, API routes don't work (they're Vercel serverless functions)
         // Show mock data so the component is visible
@@ -79,11 +57,12 @@ export default function PluginPage() {
           });
         }
       } finally {
-        setStatsLoading(false);
+        if (!controller.signal.aborted) setStatsLoading(false);
       }
     };
 
     fetchStats();
+    return () => controller.abort();
   }, []);
 
   // Helper function to format "Last updated" time
@@ -275,7 +254,14 @@ export default function PluginPage() {
   const downloadCtaCopy = plugin.paidOnly ? 'Download now and unlock all features.' : 'Download the Pro version now and unlock all premium features.';
 
   const scrollToContact = () => {
-    navigate('/#contact', { state: { prefillService: plugin.name } });
+    const serviceName = plugin?.name;
+    if (isStoreSubdomain) {
+      const url = new URL(`${MAIN_SITE_URL}/`);
+      url.hash = 'contact';
+      window.location.href = url.toString();
+      return;
+    }
+    navigate('/#contact', serviceName ? { state: { prefillService: serviceName } } : undefined);
   };
 
   // Initialize Paddle
@@ -287,14 +273,11 @@ export default function PluginPage() {
           // Vendor ID is the same as Seller ID
           // Note: Environment is determined by the seller ID (production vs sandbox seller)
           if (window.Paddle.Initialize) {
-            console.log('Initializing Paddle with seller ID:', plugin.paddleVendorId);
             window.Paddle.Initialize({
               seller: plugin.paddleVendorId,
             });
-            console.log('Paddle initialized successfully');
           } else if (window.Paddle.Setup) {
             // Fallback for v1 API
-            console.log('Using Paddle v1 API');
             if (window.Paddle.Environment) {
               window.Paddle.Environment.set('production');
             }
@@ -313,21 +296,23 @@ export default function PluginPage() {
     // Wait for Paddle to load if not already available
     if (window.Paddle) {
       initPaddle();
-    } else {
-      // Check periodically for Paddle to load (max 5 seconds)
-      let attempts = 0;
-      const maxAttempts = 50; // 5 seconds at 100ms intervals
-      const checkPaddle = setInterval(() => {
-        attempts++;
-        if (window.Paddle) {
-          clearInterval(checkPaddle);
-          initPaddle();
-        } else if (attempts >= maxAttempts) {
-          clearInterval(checkPaddle);
-          console.warn('Paddle failed to load after 5 seconds');
-        }
-      }, 100);
+      return;
     }
+
+    let attempts = 0;
+    const maxAttempts = 50;
+    const checkPaddle = setInterval(() => {
+      attempts++;
+      if (window.Paddle) {
+        clearInterval(checkPaddle);
+        initPaddle();
+      } else if (attempts >= maxAttempts) {
+        clearInterval(checkPaddle);
+        console.warn('Paddle failed to load after 5 seconds');
+      }
+    }, 100);
+
+    return () => clearInterval(checkPaddle);
   }, [plugin]);
 
   // Handle Paddle checkout
@@ -349,44 +334,28 @@ export default function PluginPage() {
       const currentUrl = window.location.origin;
       const redirectUrl = `${currentUrl}/download`;
 
-      console.log('Opening Paddle checkout with:', {
-        priceId: plugin.paddlePriceId,
-        productId: plugin.paddleProductId,
-        vendorId: plugin.paddleVendorId,
-        redirectUrl,
-      });
-
       // Set up Paddle event listeners BEFORE opening checkout
-      // Paddle Checkout v2 events - try multiple event names
-      const handleCheckoutEvent = (event: any) => {
-        console.log('Paddle checkout event received:', event);
-        console.log('Event type:', event.type);
-        console.log('Event detail:', event.detail);
-        
-        // Try multiple ways to extract transaction ID
-        const transactionId = 
-          event?.detail?.transactionId || 
-          event?.detail?.transaction?.id ||
-          event?.detail?.id ||
-          event?.transactionId ||
-          event?.transaction?.id ||
-          event?.id;
-        
+      const handleCheckoutEvent = (event: Event) => {
+        const detail = (event as CustomEvent<Record<string, unknown>>).detail;
+        const detailObj = detail && typeof detail === 'object' ? detail : {};
+        const nestedTxn = detailObj.transaction;
+        const transactionId =
+          (detailObj.transactionId as string | undefined) ||
+          (nestedTxn && typeof nestedTxn === 'object' && 'id' in nestedTxn
+            ? String((nestedTxn as { id: string }).id)
+            : undefined) ||
+          (detailObj.id as string | undefined);
+
         if (transactionId) {
-          console.log('✅ Transaction ID captured from event:', transactionId);
           sessionStorage.setItem('paddle_transaction_id', transactionId);
-          // Also try to update URL if possible
           if (window.location.pathname === '/download') {
             const url = new URL(window.location.href);
             url.searchParams.set('transaction', transactionId);
             window.history.replaceState({}, '', url.toString());
           }
-        } else {
-          console.warn('⚠️ Transaction ID not found in event:', event);
         }
       };
 
-      // Listen for ALL possible Paddle checkout events
       const eventNames = [
         'paddle:checkout:completed',
         'paddle:checkout:transaction-completed',
@@ -395,17 +364,22 @@ export default function PluginPage() {
         'checkout:transaction-completed',
       ];
 
-      eventNames.forEach(eventName => {
+      eventNames.forEach((eventName) => {
         window.addEventListener(eventName, handleCheckoutEvent);
-        console.log(`Listening for event: ${eventName}`);
       });
 
-      // Paddle Checkout v2 API - Try priceId first, fallback to productId
-      let checkoutOptions: any;
+      const cleanupListeners = () => {
+        eventNames.forEach((eventName) => {
+          window.removeEventListener(eventName, handleCheckoutEvent);
+        });
+      };
+
+      // Auto-cleanup after checkout session window
+      window.setTimeout(cleanupListeners, 30 * 60 * 1000);
+
+      let checkoutOptions: PaddleCheckoutOptions;
 
       if (plugin.paddlePriceId) {
-        // Use priceId (recommended for Paddle v2)
-        // Add event callbacks if available
         checkoutOptions = {
           items: [{
             priceId: plugin.paddlePriceId,
@@ -414,40 +388,33 @@ export default function PluginPage() {
           settings: {
             successUrl: redirectUrl,
             displayMode: 'overlay',
-            // Try to get transaction ID in success URL
-            // Paddle should append _ptxn parameter, but we'll also listen for events
           },
-          // Add event callbacks if Paddle v2 supports them
-          onComplete: (data: any) => {
-            console.log('Paddle onComplete callback:', data);
+          onComplete: (data) => {
             if (data?.transactionId) {
               sessionStorage.setItem('paddle_transaction_id', data.transactionId);
-              console.log('✅ Transaction ID from onComplete:', data.transactionId);
             }
+            cleanupListeners();
           },
         };
       } else if (plugin.paddleProductId) {
-        // Fallback to productId
         checkoutOptions = {
           product: plugin.paddleProductId,
           settings: {
             successUrl: redirectUrl,
             displayMode: 'overlay',
           },
-          onComplete: (data: any) => {
-            console.log('Paddle onComplete callback:', data);
+          onComplete: (data) => {
             if (data?.transactionId) {
               sessionStorage.setItem('paddle_transaction_id', data.transactionId);
-              console.log('✅ Transaction ID from onComplete:', data.transactionId);
             }
+            cleanupListeners();
           },
         };
       } else {
+        cleanupListeners();
         throw new Error('No valid Paddle product or price ID');
       }
 
-      // Open checkout with error handling
-      console.log('Opening Paddle checkout with options:', checkoutOptions);
       window.Paddle.Checkout.open(checkoutOptions);
     } catch (error) {
       console.error('Error opening Paddle checkout:', error);

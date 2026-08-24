@@ -12,53 +12,50 @@ interface MetaTags {
   twitterImage?: string;
 }
 
-export function useMetaTags(meta: MetaTags) {
-  useEffect(() => {
-    const updateMetaTag = (name: string, content: string, attribute: string = 'name') => {
-      let element = document.querySelector(`meta[${attribute}="${name}"]`);
-      if (!element) {
-        element = document.createElement('meta');
-        element.setAttribute(attribute, name);
-        document.head.appendChild(element);
-      }
-      element.setAttribute('content', content);
-    };
-
-    if (meta.title) {
-      document.title = meta.title;
-    }
-
-    if (meta.description) {
-      updateMetaTag('description', meta.description);
-    }
-
-    if (meta.keywords) {
-      updateMetaTag('keywords', meta.keywords);
-    }
-
-    if (meta.ogTitle) {
-      updateMetaTag('og:title', meta.ogTitle, 'property');
-    }
-
-    if (meta.ogDescription) {
-      updateMetaTag('og:description', meta.ogDescription, 'property');
-    }
-
-    if (meta.ogImage) {
-      updateMetaTag('og:image', meta.ogImage, 'property');
-    }
-
-    if (meta.twitterTitle) {
-      updateMetaTag('twitter:title', meta.twitterTitle);
-    }
-
-    if (meta.twitterDescription) {
-      updateMetaTag('twitter:description', meta.twitterDescription);
-    }
-
-    if (meta.twitterImage) {
-      updateMetaTag('twitter:image', meta.twitterImage);
-    }
-  }, [meta]);
+function updateMetaTag(name: string, content: string, attribute: string = 'name') {
+  let element = document.querySelector(`meta[${attribute}="${name}"]`);
+  if (!element) {
+    element = document.createElement('meta');
+    element.setAttribute(attribute, name);
+    document.head.appendChild(element);
+  }
+  element.setAttribute('content', content);
 }
 
+export function useMetaTags(meta: MetaTags) {
+  const {
+    title,
+    description,
+    keywords,
+    ogTitle,
+    ogDescription,
+    ogImage,
+    twitterTitle,
+    twitterDescription,
+    twitterImage,
+  } = meta;
+
+  useEffect(() => {
+    if (title) {
+      document.title = title;
+    }
+    if (description) updateMetaTag('description', description);
+    if (keywords) updateMetaTag('keywords', keywords);
+    if (ogTitle) updateMetaTag('og:title', ogTitle, 'property');
+    if (ogDescription) updateMetaTag('og:description', ogDescription, 'property');
+    if (ogImage) updateMetaTag('og:image', ogImage, 'property');
+    if (twitterTitle) updateMetaTag('twitter:title', twitterTitle);
+    if (twitterDescription) updateMetaTag('twitter:description', twitterDescription);
+    if (twitterImage) updateMetaTag('twitter:image', twitterImage);
+  }, [
+    title,
+    description,
+    keywords,
+    ogTitle,
+    ogDescription,
+    ogImage,
+    twitterTitle,
+    twitterDescription,
+    twitterImage,
+  ]);
+}

@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { X } from 'lucide-react';
 import ContactForm from './ContactForm';
+import { useOverlayA11y } from '../hooks/useOverlayA11y';
 
 interface ContactModalProps {
   open: boolean;
@@ -10,6 +12,8 @@ interface ContactModalProps {
 }
 
 export default function ContactModal({ open, onClose, title = 'Get in touch', prefillService, accentColor }: ContactModalProps) {
+  useOverlayA11y(open, onClose);
+
   if (!open) return null;
   return (
     <div

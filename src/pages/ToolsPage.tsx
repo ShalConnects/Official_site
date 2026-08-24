@@ -1,21 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Wand2, ArrowRight, Activity, Key, Link2, FileText, QrCode, Share2 } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import PageLayout from '../components/PageLayout';
 import PageHero from '../components/PageHero';
 import PageContainer from '../components/PageContainer';
 import PageSection from '../components/PageSection';
 import { useMetaTags } from '../hooks/useMetaTags';
+import { toolsData } from '../data/toolsData';
 
-interface Tool {
-  id: string;
-  name: string;
-  description: string;
-  icon: React.ElementType;
-  route: string;
-  color: string;
-  isNew?: boolean;
-}
+const GRADIENT: Record<string, string> = { '#6366f1': 'from-indigo-500 to-purple-500', '#8b5cf6': 'from-purple-500 to-pink-500', '#06b6d4': 'from-cyan-500 to-blue-500', '#ec4899': 'from-pink-500 to-rose-500', '#14b8a6': 'from-teal-500 to-cyan-500', '#14a34a': 'from-green-500 to-emerald-500', '#10b981': 'from-emerald-500 to-green-500', '#059669': 'from-emerald-600 to-green-600', '#f59e0b': 'from-amber-500 to-orange-500', '#3b82f6': 'from-blue-500 to-indigo-500' };
 
 export default function ToolsPage() {
   useMetaTags({
@@ -30,83 +23,17 @@ export default function ToolsPage() {
     twitterImage: '/logo.png'
   });
 
-  const tools: Tool[] = [
-    {
-      id: 'ai-text-formatter',
-      name: 'AI Text Formatter',
-      description: 'Remove markdown formatting and convert AI-generated text to clean, human-readable format. Automatically detects and removes AI meta-commentary.',
-      icon: Wand2,
-      route: '/tools/ai-formatter',
-      color: '#6366f1', // Indigo
-      isNew: true
-    },
-    {
-      id: 'fitquest',
-      name: 'FitQuest',
-      description: 'Gamify your fitness journey with points, levels, streaks, and achievements. Track workouts and level up your fitness game.',
-      icon: Activity,
-      route: '/tools/fitquest',
-      color: '#10b981', // Green
-      isNew: true
-    },
-    {
-      id: 'password-generator',
-      name: 'Password Generator',
-      description: 'Generate strong, secure passwords with customizable options. Control length, character types, and security settings.',
-      icon: Key,
-      route: '/tools/password-generator',
-      color: '#8b5cf6', // Purple
-      isNew: true
-    },
-    {
-      id: 'url-encoder-decoder',
-      name: 'URL Encoder/Decoder',
-      description: 'Encode URLs to percent-encoded format or decode them back to readable text. Perfect for handling special characters in URLs.',
-      icon: Link2,
-      route: '/tools/url-encoder-decoder',
-      color: '#06b6d4', // Cyan
-      isNew: true
-    },
-    {
-      id: 'lorem-ipsum',
-      name: 'Lorem Ipsum Generator',
-      description: 'Generate placeholder text for your designs and layouts. Customize paragraphs, words, and sentences.',
-      icon: FileText,
-      route: '/tools/lorem-ipsum',
-      color: '#ec4899', // Pink
-      isNew: true
-    },
-    {
-      id: 'qr-code-generator',
-      name: 'QR Code Generator',
-      description: 'Generate QR codes from text or URLs. Download as PNG or SVG. Perfect for sharing links and information.',
-      icon: QrCode,
-      route: '/tools/qr-code-generator',
-      color: '#14b8a6', // Teal
-      isNew: true
-    },
-    {
-      id: 'share-link-generator',
-      name: 'Share Link Generator',
-      description: 'Create Facebook, Twitter/X, LinkedIn, Bluesky, Telegram, Pinterest share links and email mailto links from one URL. No JavaScript required.',
-      icon: Share2,
-      route: '/tools/share-link-generator',
-      color: '#f59e0b', // Amber
-      isNew: true
-    }
-  ];
-
   return (
     <PageLayout title="Fun Project">
       <PageHero
         title="Fun Project"
-        description={`${tools.length} free tools to help you work smarter`}
+        description={`${toolsData.length} free tools to help you work smarter`}
       />
 
       <PageSection>
         <PageContainer>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tools.map((tool) => {
+            {toolsData.map((tool) => {
               const Icon = tool.icon;
               return (
                 <Link
@@ -115,21 +42,9 @@ export default function ToolsPage() {
                   className="group bg-gray-800/50 p-6 rounded-xl border border-gray-700/50 transition-all duration-300 hover:border-gray-600/50 hover:scale-105 cursor-pointer"
                 >
                   <div className="flex items-center gap-4 mb-4">
-                    <div 
-                      className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 ${
-                        tool.color === '#6366f1' 
-                          ? 'bg-gradient-to-r from-indigo-500 to-purple-500'
-                          : tool.color === '#8b5cf6'
-                          ? 'bg-gradient-to-r from-purple-500 to-pink-500'
-                          : tool.color === '#06b6d4'
-                          ? 'bg-gradient-to-r from-cyan-500 to-blue-500'
-                          : tool.color === '#ec4899'
-                          ? 'bg-gradient-to-r from-pink-500 to-rose-500'
-                          : tool.color === '#14b8a6'
-                          ? 'bg-gradient-to-r from-teal-500 to-cyan-500'
-                          : ''
-                      }`}
-                      style={!['#6366f1', '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6'].includes(tool.color) ? { backgroundColor: tool.color } : undefined}
+                    <div
+                      className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 ${GRADIENT[tool.color] ? `bg-gradient-to-r ${GRADIENT[tool.color]}` : ''}`}
+                      style={GRADIENT[tool.color] ? undefined : { backgroundColor: tool.color }}
                     >
                       <Icon size={24} className="text-white transition-transform duration-300 group-hover:scale-110" />
                     </div>
@@ -159,7 +74,7 @@ export default function ToolsPage() {
           </div>
 
           {/* Empty State (if no tools) */}
-          {tools.length === 0 && (
+          {toolsData.length === 0 && (
             <div className="text-center py-12">
               <p className="text-gray-400 text-lg">No tools available yet. Check back soon!</p>
             </div>

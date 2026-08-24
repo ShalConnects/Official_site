@@ -77,7 +77,7 @@ Once your WordPress site is set up, you can start:
 - Adding functionality with plugins
 - Optimizing for search engines
 
-Need help with your WordPress site? [Contact us](/contact) for professional WordPress development and customization services.`,
+Need help with your WordPress site? [Contact us](/#contact) for professional WordPress development and customization services.`,
     author: 'ShalConnects Team',
     date: '2024-01-15',
     category: 'WordPress',
@@ -175,7 +175,7 @@ Continuously improve by:
 
 ## Conclusion
 
-Optimizing your Shopify store is an ongoing process. Start with these tips and continue to test and improve. Need help optimizing your store? [Contact us](/contact) for professional Shopify development services.`,
+Optimizing your Shopify store is an ongoing process. Start with these tips and continue to test and improve. Need help optimizing your store? [Contact us](/#contact) for professional Shopify development services.`,
     author: 'ShalConnects Team',
     date: '2024-01-10',
     category: 'E-commerce',
@@ -275,7 +275,7 @@ Designing for everyone:
 
 These trends reflect a focus on user experience, accessibility, and modern aesthetics. The best designs combine multiple trends while maintaining usability and brand identity.
 
-Ready to update your website with the latest trends? [Contact us](/contact) for professional web design services.`,
+Ready to update your website with the latest trends? [Contact us](/#contact) for professional web design services.`,
     author: 'ShalConnects Team',
     date: '2024-01-05',
     category: 'Design',

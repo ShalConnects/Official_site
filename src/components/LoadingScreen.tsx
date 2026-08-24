@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 const BAR_CLASS = 'h-full bg-gradient-to-r from-green-500 via-green-400 to-orange-500 rounded-full transition-all duration-300 ease-out relative';
 const SHIMMER = <div className="absolute inset-0 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer-loading" />;
@@ -12,6 +12,7 @@ interface LoadingScreenProps {
 export default function LoadingScreen({ variant = 'full', message, onComplete }: LoadingScreenProps) {
   const [progress, setProgress] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const completeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInline = variant === 'inline';
   const showProgress = variant === 'full' && typeof onComplete === 'function';
 
@@ -22,14 +23,17 @@ export default function LoadingScreen({ variant = 'full', message, onComplete }:
         if (prev >= 100) {
           clearInterval(interval);
           setIsComplete(true);
-          setTimeout(() => onComplete?.(), 300);
+          completeTimerRef.current = setTimeout(() => onComplete?.(), 300);
           return 100;
         }
         const inc = prev < 70 ? 8 : prev < 90 ? 4 : 2;
         return Math.min(prev + inc, 100);
       });
     }, 50);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (completeTimerRef.current) clearTimeout(completeTimerRef.current);
+    };
   }, [showProgress, onComplete]);
 
   const label = showProgress ? (progress < 100 ? `Loading... ${progress}%` : 'Ready!') : 'Loading...';
@@ -53,6 +57,9 @@ export default function LoadingScreen({ variant = 'full', message, onComplete }:
   return (
     <div
       className={`fixed inset-0 z-[9999] bg-gray-900 flex items-center justify-center transition-opacity duration-500 ${isComplete ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+      role="status"
+      aria-live="polite"
+      aria-busy={!isComplete}
     >
       <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-br from-green-500/20 to-transparent rounded-full blur-3xl animate-pulse-slow" />
